@@ -20,3 +20,9 @@ export const uploadFileRequest = async (file: File): Promise<User> => {
   });
   return data;
 };
+
+// API function to call the delete endpoint
+export const removeProfilePicture = async (): Promise<User> => {
+    const { data } = await api.delete('/upload'); // Calls the new DELETE /api/upload route
+    return data;
+};

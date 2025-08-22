@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 import { User, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
-import { updateUserProfile, changeUserPassword, removeProfilePicture } from '../../api/user';
-import { uploadFileRequest } from '../../api/upload';
+import { updateUserProfile, changeUserPassword } from '../../api/user';
+import { uploadFileRequest, removeProfilePicture } from '../../api/upload';
 
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';

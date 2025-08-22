@@ -26,9 +26,3 @@ export const changeUserPassword = async (passwords: ChangePasswordData): Promise
     const { data } = await api.put('/auth/change-password', passwords);
     return data;
 };
-
-// NEW function to call the delete endpoint
-export const removeProfilePicture = async (): Promise<User> => {
-    const { data } = await api.delete('/upload'); // Calls the new DELETE /api/upload route
-    return data;
-};
