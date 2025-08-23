@@ -40,3 +40,9 @@ export const resetPasswordRequest = async (payload: { token: string; password: s
   const { data } = await api.post(`/auth/reset-password/${token}`, { password });
   return data;
 };
+
+// NEW function to call the logout endpoint
+export const logoutUser = async (): Promise<{ message: string }> => {
+  const { data } = await api.post('/auth/logout');
+  return data;
+};

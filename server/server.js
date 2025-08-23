@@ -5,6 +5,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import meetingRoutes from './routes/meetingRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import userRoutes from './routes/userRoutes.js'
 import cors from 'cors';
 
 connectDB();
@@ -19,6 +20,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('Nexus API is running...');

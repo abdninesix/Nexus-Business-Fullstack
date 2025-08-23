@@ -8,6 +8,7 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  logout,
 } from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -25,5 +26,7 @@ router.post('/reset-password/:token', resetPassword);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
+
+router.post('/logout', protect, logout);
 
 export default router;

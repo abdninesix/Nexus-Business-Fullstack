@@ -53,6 +53,10 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid password' });
     }
 
+    // Set user to online
+    user.isOnline = true;
+    await user.save();
+
     // Prepare the response payload
     const payload = {
       _id: user._id,
@@ -99,7 +103,7 @@ export const updateProfile = async (req, res) => {
     if (name) user.name = name;
     if (bio) user.bio = bio;
     if (avatarUrl) user.avatarUrl = avatarUrl;
-    
+
     // Update role-specific fields within the nested profile object
     if (user.role === 'entrepreneur') {
       Object.assign(user.entrepreneurProfile, profileFields);
@@ -181,5 +185,18 @@ export const changePassword = async (req, res) => {
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to change password', error: error.message });
+  }
+};
+
+// NEW Logout User controller
+export const logout = async (req, res) => {
+  try {
+    // req.user is added by your 'protect' middleware
+    if (req.user) {
+      await User.findByIdAndUpdate(req.user._id, { isOnline: false });
+    }
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Logout failed', error: error.message });
   }
 };

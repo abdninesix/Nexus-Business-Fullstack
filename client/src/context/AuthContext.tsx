@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, AuthContextType, AuthSuccessData } from '../types';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import { logoutUser } from '../api/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_STORAGE_KEY = 'business_nexus_token';
@@ -41,12 +42,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    delete api.defaults.headers.common['Authorization'];
-    toast.success('Logged out successfully');
+  const logout = async () => {
+    // Call the API to update the backend first
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.error("Failed to update status on backend", error);
+      // We still proceed with frontend logout even if the API fails,
+      // to ensure the user is logged out on their end.
+    } finally {
+      // Clear all local state
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('business_nexus_token');
+      toast.success('Logged out successfully');
+    }
   };
 
   const updateUser = (newUserData: User) => {
