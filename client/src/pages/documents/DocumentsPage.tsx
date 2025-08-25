@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Upload, Download, Trash2, Share2 } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import toast from 'react-hot-toast';
+import { fetchDocuments, uploadDocument, deleteDocument, Document } from '../../api/documents';
 
 const documents = [
   {
@@ -39,7 +42,73 @@ const documents = [
   }
 ];
 
+// Helper function to format bytes into KB/MB/GB
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+// Helper function to format date strings
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 export const DocumentsPage: React.FC = () => {
+
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // === DATA FETCHING ===
+  const { data: documents = [], isLoading, isError } = useQuery<Document[]>({
+    queryKey: ['documents'],
+    queryFn: fetchDocuments,
+  });
+
+  // === MUTATIONS ===
+  const uploadMutation = useMutation({
+    mutationFn: uploadDocument,
+    onSuccess: () => {
+      toast.success('Document uploaded successfully!');
+      queryClient.invalidateQueries({ queryKey: ['documents'] }); // Refetch the documents list
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || 'Upload failed.'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: () => {
+      toast.success('Document deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['documents'] }); // Refetch the documents list
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || 'Delete failed.'),
+  });
+
+  // === HANDLERS ===
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadMutation.mutate(file);
+    }
+  };
+
+  const handleDelete = (documentId: string) => {
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      deleteMutation.mutate(documentId);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -47,12 +116,13 @@ export const DocumentsPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
           <p className="text-gray-600">Manage your startup's important files</p>
         </div>
-        
-        <Button leftIcon={<Upload size={18} />}>
+
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+        <Button onClick={handleUploadClick} leftIcon={<Upload size={18} />} isLoading={uploadMutation.isPending}>
           Upload Document
         </Button>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Storage info */}
         <Card className="lg:col-span-1">
@@ -73,7 +143,7 @@ export const DocumentsPage: React.FC = () => {
                 <span className="font-medium text-gray-900">7.5 GB</span>
               </div>
             </div>
-            
+
             <div className="pt-4 border-t border-gray-200">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Access</h3>
               <div className="space-y-2">
@@ -93,7 +163,7 @@ export const DocumentsPage: React.FC = () => {
             </div>
           </CardBody>
         </Card>
-        
+
         {/* Document list */}
         <div className="lg:col-span-3">
           <Card>
@@ -110,59 +180,33 @@ export const DocumentsPage: React.FC = () => {
             </CardHeader>
             <CardBody>
               <div className="space-y-2">
+                {isLoading && <p>Loading documents...</p>}
+                {isError && <p className="text-red-500">Failed to load documents.</p>}
                 {documents.map(doc => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors duration-200"
-                  >
-                    <div className="p-2 bg-primary-50 rounded-lg mr-4">
-                      <FileText size={24} className="text-primary-600" />
-                    </div>
-                    
+                  <div key={doc._id} className="flex items-center p-4 hover:bg-gray-50 rounded-lg">
+                    <div className="p-2 bg-primary-50 rounded-lg mr-4"><FileText size={24} className="text-primary-600" /></div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
-                          {doc.name}
-                        </h3>
-                        {doc.shared && (
-                          <Badge variant="secondary" size="sm">Shared</Badge>
-                        )}
+                        <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
+                        {/* <Badge variant="secondary" size="sm">Shared</Badge> */}
                       </div>
-                      
                       <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                         <span>{doc.type}</span>
-                        <span>{doc.size}</span>
-                        <span>Modified {doc.lastModified}</span>
+                        <span>{formatBytes(doc.size)}</span>
+                        <span>Modified {formatDate(doc.updatedAt)}</span>
                       </div>
+
                     </div>
-                    
                     <div className="flex items-center gap-2 ml-4">
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="sm" className="p-2" aria-label="Download"><Download size={18} /></Button>
+                      </a>
+                      <Button variant="ghost" size="sm" className="p-2" aria-label="Share"><Share2 size={18} /></Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-2"
-                        aria-label="Download"
-                      >
-                        <Download size={18} />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-2"
-                        aria-label="Share"
-                      >
-                        <Share2 size={18} />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-2 text-error-600 hover:text-error-700"
-                        aria-label="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </Button>
+                        variant="ghost" size="sm" className="p-2 text-error-600 hover:text-error-700"
+                        aria-label="Delete" onClick={() => handleDelete(doc._id)}
+                        isLoading={deleteMutation.isLoading && deleteMutation.variables === doc._id}
+                      ><Trash2 size={18} /></Button>
                     </div>
                   </div>
                 ))}

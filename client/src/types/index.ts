@@ -129,3 +129,19 @@ export interface AuthContextType {
   // This is for the initial load check, not for mutations
   isInitializing: boolean;
 }
+
+export interface ProfileState {
+  name: string;
+  email: string;
+  bio: string;
+  // Common fields end
+  // Entrepreneur fields
+  startupName?: string;
+  industry?: string;
+  location?: string;
+  fundingNeeded?: string;
+  // Investor fields
+  investmentInterests?: string; // Stored as a comma-separated string for the input
+  minimumInvestment?: string;
+  maximumInvestment?: string;
+}

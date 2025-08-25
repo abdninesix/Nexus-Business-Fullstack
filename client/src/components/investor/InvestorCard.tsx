@@ -1,14 +1,15 @@
+// src/components/investor/InvestorCard.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ExternalLink } from 'lucide-react';
-import { Investor } from '../../types';
+import { User } from '../../types'; // <-- Use the general User type
 import { Card, CardBody, CardFooter } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
 interface InvestorCardProps {
-  investor: Investor;
+  investor: User; // <-- The prop type is updated
   showActions?: boolean;
 }
 
@@ -18,22 +19,30 @@ export const InvestorCard: React.FC<InvestorCardProps> = ({
 }) => {
   const navigate = useNavigate();
   
+  // Safely access the nested profile data
+  const profile = investor.investorProfile;
+
   const handleViewProfile = () => {
-    navigate(`/profile/investor/${investor.id}`);
+    navigate(`/profile/investor/${investor._id}`); // <-- Use _id
   };
   
   const handleMessage = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    navigate(`/chat/${investor.id}`);
+    navigate(`/chat/${investor._id}`); // <-- Use _id
   };
   
+  // Safety check: Don't render the card if there's no investor profile
+  if (!profile) {
+    return null;
+  }
+
   return (
     <Card 
       hoverable 
-      className="transition-all duration-300 h-full"
+      className="transition-all duration-300 h-full flex flex-col" // Added flex to ensure footer sticks to bottom
       onClick={handleViewProfile}
     >
-      <CardBody className="flex flex-col">
+      <CardBody className="flex flex-col flex-grow"> {/* Added flex-grow */}
         <div className="flex items-start">
           <Avatar
             src={investor.avatarUrl}
@@ -45,10 +54,11 @@ export const InvestorCard: React.FC<InvestorCardProps> = ({
           
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">{investor.name}</h3>
-            <p className="text-sm text-gray-500 mb-2">Investor • {investor.totalInvestments} investments</p>
+            {/* All data is now read from `profile` or `investor` */}
+            <p className="text-sm text-gray-500 mb-2">Investor • {profile.totalInvestments || 0} investments</p>
             
             <div className="flex flex-wrap gap-2 mb-3">
-              {investor.investmentStage.map((stage, index) => (
+              {profile.investmentStage?.map((stage, index) => (
                 <Badge key={index} variant="secondary" size="sm">{stage}</Badge>
               ))}
             </div>
@@ -58,7 +68,7 @@ export const InvestorCard: React.FC<InvestorCardProps> = ({
         <div className="mt-3">
           <h4 className="text-sm font-medium text-gray-900 mb-1">Investment Interests</h4>
           <div className="flex flex-wrap gap-2">
-            {investor.investmentInterests.map((interest, index) => (
+            {profile.investmentInterests?.map((interest, index) => (
               <Badge key={index} variant="primary" size="sm">{interest}</Badge>
             ))}
           </div>
@@ -68,10 +78,10 @@ export const InvestorCard: React.FC<InvestorCardProps> = ({
           <p className="text-sm text-gray-600 line-clamp-2">{investor.bio}</p>
         </div>
         
-        <div className="mt-3 flex justify-between items-center">
+        <div className="mt-auto pt-3 flex justify-between items-center"> {/* mt-auto pushes this to the bottom */}
           <div>
             <span className="text-xs text-gray-500">Investment Range</span>
-            <p className="text-sm font-medium text-gray-900">{investor.minimumInvestment} - {investor.maximumInvestment}</p>
+            <p className="text-sm font-medium text-gray-900">{profile.minimumInvestment} - {profile.maximumInvestment}</p>
           </div>
         </div>
       </CardBody>

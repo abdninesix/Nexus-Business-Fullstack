@@ -13,3 +13,32 @@ export const getEntrepreneurs = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching entrepreneurs' });
   }
 };
+
+export const getInvestors = async (req, res) => {
+  try {
+    // Find all users with the role 'investor'
+    const investors = await User.find({ role: 'investor' }).select(
+      'name email role avatarUrl isOnline bio investorProfile'
+    );
+    res.status(200).json(investors);
+  } catch (error) {
+    console.error('Error fetching investors:', error);
+    res.status(500).json({ message: 'Server error while fetching investors' });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    // Find user by the ID in the URL, and exclude their password from the response
+    const user = await User.findById(req.params.id).select('-password');
+    
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user by ID:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

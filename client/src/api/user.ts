@@ -31,3 +31,13 @@ export const fetchEntrepreneurs = async (): Promise<User[]> => {
   const { data } = await api.get('/users/entrepreneurs');
   return data;
 };
+
+export const fetchInvestors = async (): Promise<User[]> => {
+  const { data } = await api.get('/users/investors');
+  return data;
+};
+
+export const fetchUserById = async (userId: string): Promise<User> => {
+  const { data } = await api.get(`/users/${userId}`);
+  return data;
+};

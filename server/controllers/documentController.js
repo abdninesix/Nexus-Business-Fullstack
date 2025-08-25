@@ -51,8 +51,8 @@ export const deleteDocument = async (req, res) => {
 
     await imageKit.deleteFile(document.fileId);
     await imageKit.purgeCache(document.url);
-    
-    await document.remove();
+
+    await Document.deleteOne({ _id: req.params.id });
 
     res.json({ message: 'Document deleted.' });
   } catch (error) {
@@ -71,7 +71,7 @@ export const addSignature = async (req, res) => {
     const result = await imageKit.upload({
       file: req.file.buffer,
       fileName: req.file.originalname,
-      folder: '/signatures',
+      folder: '/nexus/documents',
     });
 
     document.signatureUrl = result.url;

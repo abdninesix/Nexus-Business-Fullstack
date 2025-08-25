@@ -12,13 +12,14 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import { ProfileState } from '../../types';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for controlled form inputs
-  const [profile, setProfile] = useState({ name: '', email: '', location: '', bio: '' });
+  const [profile, setProfile] = useState<ProfileState>({ name: '', email: '', bio: '' });
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
   // Populate form state when user data is loaded
@@ -27,8 +28,16 @@ export const SettingsPage: React.FC = () => {
       setProfile({
         name: user.name || '',
         email: user.email || '',
-        location: user.entrepreneurProfile?.location || '',
         bio: user.bio || '',
+        // Populate entrepreneur fields
+        startupName: user.entrepreneurProfile?.startupName || '',
+        industry: user.entrepreneurProfile?.industry || '',
+        location: user.entrepreneurProfile?.location || '',
+        fundingNeeded: user.entrepreneurProfile?.fundingNeeded || '',
+        // Populate investor fields
+        investmentInterests: user.investorProfile?.investmentInterests?.join(', ') || '',
+        minimumInvestment: user.investorProfile?.minimumInvestment || '',
+        maximumInvestment: user.investorProfile?.maximumInvestment || '',
       });
     }
   }, [user]);
@@ -83,7 +92,13 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleProfileSubmit = () => {
-    profileMutation.mutate(profile);
+    // Prepare the data to be sent
+    const dataToSend: any = { ...profile };
+    // Convert comma-separated string back to an array for the backend
+    if (user?.role === 'investor' && dataToSend.investmentInterests) {
+      dataToSend.investmentInterests = dataToSend.investmentInterests.split(',').map((item: string) => item.trim());
+    }
+    profileMutation.mutate(dataToSend);
   };
 
   const handlePasswordSubmit = () => {
@@ -180,6 +195,35 @@ export const SettingsPage: React.FC = () => {
                   onChange={handleProfileChange}
                 ></textarea>
               </div>
+              {/* --- DYNAMIC ENTREPRENEUR FIELDS --- */}
+              {user.role === 'entrepreneur' && (
+                <div className="space-y-6 pt-6 border-t">
+                  <h3 className="text-md font-medium text-gray-900">Startup Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input label="Startup Name" name="startupName" value={profile.startupName} onChange={handleProfileChange} />
+                    <Input label="Industry" name="industry" value={profile.industry} onChange={handleProfileChange} />
+                    <Input label="Location" name="location" value={profile.location} onChange={handleProfileChange} />
+                    <Input label="Funding Needed" name="fundingNeeded" value={profile.fundingNeeded} onChange={handleProfileChange} />
+                  </div>
+                </div>
+              )}
+              {/* --- DYNAMIC INVESTOR FIELDS --- */}
+              {user.role === 'investor' && (
+                <div className="space-y-6 pt-6 border-t">
+                  <h3 className="text-md font-medium text-gray-900">Investor Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Input
+                      label="Investment Interests"
+                      name="investmentInterests"
+                      value={profile.investmentInterests}
+                      onChange={handleProfileChange}
+                      placeholder="e.g., SaaS, FinTech, AI"
+                    />
+                    <Input label="Minimum Investment" name="minimumInvestment" value={profile.minimumInvestment} onChange={handleProfileChange} placeholder="$250K" />
+                    <Input label="Maximum Investment" name="maximumInvestment" value={profile.maximumInvestment} onChange={handleProfileChange} placeholder="$1.5M" />
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-3">
                 <Button variant="outline">Cancel</Button>
                 <Button onClick={handleProfileSubmit} isLoading={profileMutation.isPending}>Save Changes</Button>

@@ -26,7 +26,7 @@ export const Navbar: React.FC = () => {
   
   // User profile route based on role and ID
   const profileRoute = user 
-    ? `/profile/${user.role}/${user.id}` 
+    ? `/profile/${user.role}/${user._id}` 
     : '/login';
   
   const navLinks = [
