@@ -90,13 +90,20 @@ export const InvestorProfile: React.FC = () => {
 
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-2 justify-center sm:justify-end">
             {!isCurrentUser && (
-              <Button leftIcon={<MessageCircle size={18} />} onClick={() => navigate(`/chat/${investor._id}`)}>
+              <Button
+                leftIcon={<MessageCircle size={18} />}
+                onClick={() => navigate(`/chat/${investor._id}`)} // Navigate to the chat page
+              >
                 Message
               </Button>
             )}
 
             {isCurrentUser && (
-              <Button variant="outline" leftIcon={<UserCircle size={18} />} onClick={() => navigate('/settings')}>
+              <Button
+                variant="outline"
+                leftIcon={<UserCircle size={18} />}
+                onClick={() => navigate('/settings')}
+              >
                 Edit Profile
               </Button>
             )}

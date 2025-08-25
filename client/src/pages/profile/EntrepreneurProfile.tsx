@@ -89,16 +89,34 @@ export const EntrepreneurProfile: React.FC = () => {
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-2 justify-center sm:justify-end">
             {!isCurrentUser && (
               <>
-                <Button variant="outline" leftIcon={<MessageCircle size={18} />} onClick={() => navigate(`/chat/${entrepreneur._id}`)}>Message</Button>
+                <Button
+                  variant="outline"
+                  leftIcon={<MessageCircle size={18} />}
+                  onClick={() => navigate(`/chat/${entrepreneur._id}`)} // Navigate to the chat page with the user's ID
+                >
+                  Message
+                </Button>
+
                 {isInvestor && (
-                  <Button leftIcon={<Send size={18} />} disabled={hasRequestedCollaboration} onClick={handleSendRequest}>
+                  <Button
+                    leftIcon={<Send size={18} />}
+                    disabled={hasRequestedCollaboration}
+                    onClick={handleSendRequest}
+                  >
                     {hasRequestedCollaboration ? 'Request Sent' : 'Request Collaboration'}
                   </Button>
                 )}
               </>
             )}
+
             {isCurrentUser && (
-              <Button variant="outline" leftIcon={<UserCircle size={18} />} onClick={() => navigate('/settings')}>Edit Profile</Button>
+              <Button
+                variant="outline"
+                leftIcon={<UserCircle size={18} />}
+                onClick={() => navigate('/settings')}
+              >
+                Edit Profile
+              </Button>
             )}
           </div>
         </CardBody>
@@ -118,21 +136,21 @@ export const EntrepreneurProfile: React.FC = () => {
                 <div>
                   <h3 className="text-md font-medium text-gray-900">Problem Statement</h3>
                   <p className="text-gray-700 mt-1">
-                    {entrepreneur?.pitchSummary?.split('.')[0]}.
+                    {entrepreneur.entrepreneurProfile?.pitchSummary?.split('.')[0]}.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="text-md font-medium text-gray-900">Solution</h3>
                   <p className="text-gray-700 mt-1">
-                    {entrepreneur.pitchSummary}
+                    {entrepreneur.entrepreneurProfile?.pitchSummary}
                   </p>
                 </div>
 
                 <div>
                   <h3 className="text-md font-medium text-gray-900">Market Opportunity</h3>
                   <p className="text-gray-700 mt-1">
-                    The {entrepreneur.industry} market is experiencing significant growth, with a projected CAGR of 14.5% through 2027. Our solution addresses key pain points in this expanding market.
+                    The {entrepreneur.entrepreneurProfile?.industry} market is experiencing significant growth, with a projected CAGR of 14.5% through 2027. Our solution addresses key pain points in this expanding market.
                   </p>
                 </div>
 
@@ -162,9 +180,9 @@ export const EntrepreneurProfile: React.FC = () => {
                   </div>
                 </div>
 
-                {entrepreneur.teamSize > 3 && (
+                {entrepreneur.entrepreneurProfile?.teamSize > 3 && (
                   <div className="flex items-center justify-center p-3 border border-dashed border-gray-200 rounded-md">
-                    <p className="text-sm text-gray-500">+ {entrepreneur.teamSize - 3} more team members</p>
+                    <p className="text-sm text-gray-500">+ {entrepreneur.entrepreneurProfile?.teamSize - 3} more team members</p>
                   </div>
                 )}
               </div>
@@ -182,7 +200,7 @@ export const EntrepreneurProfile: React.FC = () => {
                   <span className="text-sm text-gray-500">Current Round</span>
                   <div className="flex items-center mt-1">
                     <DollarSign size={18} className="text-accent-600 mr-1" />
-                    <p className="text-lg font-semibold text-gray-900">{entrepreneur.fundingNeeded}</p>
+                    <p className="text-lg font-semibold text-gray-900">{entrepreneur.entrepreneurProfile?.fundingNeeded}</p>
                   </div>
                 </div>
 
