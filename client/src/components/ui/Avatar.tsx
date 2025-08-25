@@ -3,7 +3,7 @@ import React from 'react';
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
-  src: string;
+  src: string | any;
   alt: string;
   size?: AvatarSize;
   className?: string;

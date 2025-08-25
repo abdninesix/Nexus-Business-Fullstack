@@ -62,7 +62,7 @@ export const EntrepreneursPage: React.FC = () => {
     });
   }, [entrepreneurs, searchQuery, selectedIndustries, selectedFundingRange]);
 
-  const toggleIndustry = (industry: string) => {
+  const toggleIndustry = (industry: string | any) => {
     setSelectedIndustries(prev => prev.includes(industry) ? prev.filter(i => i !== industry) : [...prev, industry]);
   };
 

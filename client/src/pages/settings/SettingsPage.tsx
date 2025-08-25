@@ -63,7 +63,7 @@ export const SettingsPage: React.FC = () => {
 
   const uploadMutation = useMutation({
     mutationFn: uploadFileRequest,
-    onSuccess: (data) => profileMutation.mutate({ avatarUrl: data.url }),
+    onSuccess: (data) => profileMutation.mutate({ avatarUrl: data.avatarUrl }),
     onError: (error: any) => toast.error(error.response?.data?.message || 'Image upload failed.'),
   });
 

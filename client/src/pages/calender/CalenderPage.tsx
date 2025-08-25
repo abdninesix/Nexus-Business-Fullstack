@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
-import enUS from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -17,6 +16,7 @@ import { CustomDateTimePicker } from '../../components/ui/DateTimePicker';
 import { User } from '../../types';
 import { Clock, Trash2, Users, X } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
+import { enUS } from 'date-fns/locale';
 
 // Setup for react-big-calendar
 const locales = { 'en-US': enUS };
