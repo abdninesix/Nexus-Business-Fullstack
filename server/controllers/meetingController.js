@@ -1,67 +1,54 @@
 import Meeting from '../models/Meeting.js';
 
-// Create a new meeting
-export const createMeeting = async (req, res) => {
-  try {
-    const { title, description, participants, startTime, endTime } = req.body;
-
-    // Optional: check for conflicts
-    const conflict = await Meeting.findOne({
-      $or: [
-        { startTime: { $lt: new Date(endTime) }, endTime: { $gt: new Date(startTime) } },
-      ],
-      participants: { $in: participants.concat(req.user._id) },
-    });
-
-    if (conflict) {
-      return res.status(400).json({ message: 'Meeting conflict detected.' });
-    }
-
-    const meeting = await Meeting.create({
-      title,
-      description,
-      organizer: req.user._id,
-      participants,
-      startTime,
-      endTime,
-    });
-
-    res.status(201).json(meeting);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get all meetings for current user
+// Get all meetings for the current user
 export const getMeetings = async (req, res) => {
   try {
-    const meetings = await Meeting.find({
-      $or: [{ organizer: req.user._id }, { participants: req.user._id }],
-    }).sort({ startTime: 1 });
-
-    res.json(meetings);
+    const meetings = await Meeting.find({ participants: req.user._id })
+      .populate('participants', 'name role avatarUrl')
+      .populate('organizer', 'name');
+    res.status(200).json(meetings);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to fetch meetings' });
   }
 };
 
-// Update meeting status (accept/reject)
-export const updateMeetingStatus = async (req, res) => {
+// Create a new meeting with clash detection
+export const createMeeting = async (req, res) => {
   try {
-    const meeting = await Meeting.findById(req.params.id);
-    if (!meeting) return res.status(404).json({ message: 'Meeting not found.' });
+    const { title, start, end, participantIds, location } = req.body;
+    const organizerId = req.user._id;
 
-    const { status } = req.body;
-    if (!['pending', 'accepted', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status.' });
+    const allParticipantIds = [...new Set([...participantIds, organizerId])]; // Ensure organizer is included
+
+    // --- CLASH DETECTION LOGIC ---
+    // Find any existing meeting that involves ANY of the participants AND overlaps with the new meeting time.
+    const existingMeeting = await Meeting.findOne({
+      participants: { $in: allParticipantIds }, // Check for any participant
+      status: 'confirmed', // Only check against confirmed meetings
+      $or: [
+        { start: { $lt: end, $gte: start } }, // An existing meeting starts during the new one
+        { end: { $gt: start, $lte: end } }, // An existing meeting ends during the new one
+        { start: { $lte: start }, end: { $gte: end } }, // An existing meeting engulfs the new one
+      ],
+    });
+
+    if (existingMeeting) {
+      return res.status(409).json({ message: 'A meeting with one of the participants is already scheduled at this time.' });
     }
+    // --- END OF CLASH DETECTION ---
 
-    meeting.status = status;
-    await meeting.save();
+    const newMeeting = await Meeting.create({
+      title,
+      start: new Date(start),
+      end: new Date(end),
+      participants: allParticipantIds,
+      organizer: organizerId,
+      location,
+    });
 
-    res.json(meeting);
+    res.status(201).json(newMeeting);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to create meeting' });
   }
 };
 
@@ -69,16 +56,16 @@ export const updateMeetingStatus = async (req, res) => {
 export const deleteMeeting = async (req, res) => {
   try {
     const meeting = await Meeting.findById(req.params.id);
-    if (!meeting) return res.status(404).json({ message: 'Meeting not found.' });
+    if (!meeting) return res.status(404).json({ message: 'Meeting not found' });
 
-    // Only organizer can delete
+    // Optional: Check if the user is the organizer before deleting
     if (meeting.organizer.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized.' });
+      return res.status(403).json({ message: 'Only the organizer can delete this meeting.' });
     }
 
-    await meeting.remove();
-    res.json({ message: 'Meeting deleted.' });
+    await meeting.deleteOne();
+    res.status(200).json({ message: 'Meeting deleted successfully.' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to delete meeting' });
   }
 };

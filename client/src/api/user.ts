@@ -27,6 +27,11 @@ export const changeUserPassword = async (passwords: ChangePasswordData): Promise
     return data;
 };
 
+export const fetchAllUsers = async (): Promise<User[]> => {
+  const { data } = await api.get('/users');
+  return data;
+};
+
 export const fetchEntrepreneurs = async (): Promise<User[]> => {
   const { data } = await api.get('/users/entrepreneurs');
   return data;

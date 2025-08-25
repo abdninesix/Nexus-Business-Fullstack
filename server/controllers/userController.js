@@ -1,5 +1,17 @@
 import User from "../models/User.js";
 
+export const getAllUsers = async (req, res) => {
+  try {
+    // Find all users EXCEPT the currently logged-in one
+    const users = await User.find({ _id: { $ne: req.user._id } }).select(
+      'name avatarUrl role' // Only send the data we need
+    );
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+};
+
 export const getEntrepreneurs = async (req, res) => {
   try {
     // We find all users with the role 'entrepreneur' and select only the fields needed for the cards
