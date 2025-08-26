@@ -8,12 +8,61 @@ import transactionRoutes from './routes/transactionRoutes.js';
 import userRoutes from './routes/userRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 connectDB();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// --- SOCKET.IO INTEGRATION ---
+const httpServer = createServer(app); // Wrap the Express app
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173", // Your frontend URL
+    methods: ["GET", "POST"],
+  },
+  transports: ['websocket', 'polling'],
+});
+
+// We need a way to track which user is connected to which socket
+let onlineUsers = new Map();
+
+const addUser = (userId, socketId) => {
+  !onlineUsers.has(userId) && onlineUsers.set(userId, socketId);
+};
+
+const removeUser = (socketId) => {
+  for (let [key, value] of onlineUsers.entries()) {
+    if (value === socketId) {
+      onlineUsers.delete(key);
+      break;
+    }
+  }
+};
+
+const getUserSocketId = (userId) => {
+  return onlineUsers.get(userId);
+};
+
+io.on("connection", (socket) => {
+  console.log(`A user connected: ${socket.id}`);
+
+  // Client identifies itself by sending its userId
+  socket.on("addNewUser", (userId) => {
+    addUser(userId, socket.id);
+    console.log("Online users:", Array.from(onlineUsers.keys()));
+  });
+
+  socket.on("disconnect", () => {
+    removeUser(socket.id);
+    console.log(`A user disconnected: ${socket.id}`);
+    console.log("Online users:", Array.from(onlineUsers.keys()));
+  });
+});
+// --- END OF SOCKET.IO INTEGRATION ---
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -29,4 +78,6 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+export { io, getUserSocketId };

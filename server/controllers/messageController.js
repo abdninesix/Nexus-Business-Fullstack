@@ -1,6 +1,7 @@
 // controllers/messageController.js
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
+import { getUserSocketId, io } from '../server.js';
 
 // Get all conversations for the logged-in user
 export const getConversations = async (req, res) => {
@@ -93,6 +94,18 @@ export const sendMessage = async (req, res) => {
 
     // 6. Save the conversation (either the found one or the newly created one).
     await conversation.save();
+
+    // --- EMIT NOTIFICATION ---
+    const receiverSocketId = getUserSocketId(receiverId);
+    if (receiverSocketId) {
+      const sender = await User.findById(senderId).select('name');
+      io.to(receiverSocketId).emit("getNotification", {
+        senderName: sender.name,
+        type: "newMessage",
+        message: `You have a new message from ${sender.name}`,
+        createdAt: new Date(),
+      });
+    }
 
     // 7. Respond with the successfully saved message.
     res.status(201).json(savedMessage);

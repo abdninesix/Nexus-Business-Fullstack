@@ -24,9 +24,14 @@ export const LoginPage: React.FC = () => {
     onSuccess: (data) => {
       toast.success('Successfully logged in!');
       login(data); // Update global state
-      navigate('/profile'); // Redirect on success
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     },
     // onError is handled by the `error` state variable from the hook
+    onError: (error) => {
+      toast.error("Invalid credentials. Please try again.");
+    }
   });
 
   // 2. The handleSubmit function now calls `mutate`
@@ -84,8 +89,8 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'entrepreneur'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   onClick={() => setRole('entrepreneur')}
                 >
@@ -95,8 +100,8 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'investor'
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   onClick={() => setRole('investor')}
                 >

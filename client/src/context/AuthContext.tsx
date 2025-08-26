@@ -14,23 +14,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    // On initial load, verify the stored token
+    // This effect should ONLY run once on initial app mount to check for an existing session.
     const verifyToken = async () => {
-      if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const storedToken = localStorage.getItem('business_nexus_token');
+
+      if (storedToken) {
         try {
-          // You should have a '/me' or '/profile' endpoint to get the user
+          api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           const { data } = await api.get('/auth/profile');
           setUser(data);
+          setToken(storedToken);
         } catch (error) {
-          // Token is invalid, so clear it
-          localStorage.removeItem(TOKEN_STORAGE_KEY);
+          localStorage.removeItem('business_nexus_token');
           setToken(null);
+          setUser(null);
           delete api.defaults.headers.common['Authorization'];
         }
       }
       setIsInitializing(false);
     };
+
     verifyToken();
   }, []);
 

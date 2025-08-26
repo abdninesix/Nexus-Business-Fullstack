@@ -136,7 +136,7 @@ export const Navbar: React.FC = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {user ? (
               <>
-                <div className="flex items-center space-x-3 px-3 py-2">
+                <Link to={profileRoute} className="flex items-center space-x-3 px-3 py-2">
                   <Avatar
                     src={user.avatarUrl}
                     alt={user.name}
@@ -147,7 +147,7 @@ export const Navbar: React.FC = () => {
                     <p className="text-sm font-medium text-gray-800">{user.name}</p>
                     <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                   </div>
-                </div>
+                </Link>
 
                 <div className="border-t border-gray-200 pt-2">
                   {navLinks.map((link, index) => (

@@ -1,0 +1,70 @@
+// src/context/SocketContext.tsx
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import toast from 'react-hot-toast';
+import { useAuth } from './AuthContext';
+
+interface Notification {
+    senderName: string;
+    type: string;
+    message: string;
+    createdAt: string;
+}
+
+interface SocketContextType {
+    socket: Socket | null;
+    notifications: Notification[];
+}
+
+const SocketContext = createContext<SocketContextType | undefined>(undefined);
+
+export const useSocket = () => {
+    const context = useContext(SocketContext);
+    if (!context) throw new Error("useSocket must be used within a SocketProvider");
+    return context;
+};
+
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+
+    useEffect(() => {
+        // Only connect if the user is logged in
+        if (user) {
+            const newSocket = io("http://localhost:3000"); // Your backend URL
+            setSocket(newSocket);
+
+            // Identify this client to the server
+            newSocket.emit("addNewUser", user._id);
+
+            // Cleanup on dismount or user change
+            return () => {
+                newSocket.disconnect();
+            };
+        } else {
+            // If user logs out, disconnect socket
+            socket?.disconnect();
+            setSocket(null);
+        }
+    }, [user]);
+    
+    // Effect for listening to notifications
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on("getNotification", (data: Notification) => {
+            setNotifications((prev) => [data, ...prev]);
+            toast.success(data.message, { icon: '🔔' });
+        });
+        
+        // Cleanup listener
+        return () => {
+            socket.off("getNotification");
+        };
+    }, [socket]);
+
+    const value = { socket, notifications };
+
+    return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
+};
