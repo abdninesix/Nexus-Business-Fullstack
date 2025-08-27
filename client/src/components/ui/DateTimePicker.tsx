@@ -1,8 +1,9 @@
 // src/components/ui/CustomDateTimePicker.tsx
 import React, { useState, useRef, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday, isBefore, startOfMinute } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside'; // Import the hook
+import toast from 'react-hot-toast';
 
 interface DateTimePickerProps {
   value: Date;
@@ -13,7 +14,7 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
   const wrapperRef = useRef<HTMLDivElement>(null);
-  
+
   useClickOutside(wrapperRef, () => setIsOpen(false));
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   const handleDateSelect = (day: Date) => {
+    if (isBefore(day, startOfMinute(new Date()))) return;
     const newDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), value.getHours(), value.getMinutes());
     onChange(newDate);
   };
@@ -42,6 +44,10 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
     const newDate = new Date(value.getTime());
     if (name === 'hours') newDate.setHours(parseInt(timeValue, 10));
     if (name === 'minutes') newDate.setMinutes(parseInt(timeValue, 10));
+    if (isBefore(newDate, new Date())) {
+      toast.error("Cannot select a time in the past.");
+      return;
+    }
     onChange(newDate);
   };
 
@@ -69,19 +75,25 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
             {daysOfWeek.map(day => <div key={day}>{day}</div>)}
           </div>
           <div className="grid grid-cols-7 gap-1 mt-2">
-            {calendarDays.map(day => (
-              <button
-                key={day.toString()}
-                type="button"
-                onClick={() => handleDateSelect(day)}
-                className={`w-full aspect-square text-sm rounded-full transition-colors 
-                  ${!isSameMonth(day, currentMonth) ? 'text-gray-400' : 'text-gray-800'}
-                  ${isToday(day) && !isSameDay(day, value) ? 'border border-primary-500' : ''}
-                  ${isSameDay(day, value) ? 'bg-primary-600 text-white' : 'hover:bg-gray-100'}`}
-              >
-                {format(day, 'd')}
-              </button>
-            ))}
+            {calendarDays.map(day => {
+              const isPast = isBefore(day, startOfMinute(new Date())) && !isSameDay(day, new Date());
+              return (
+                <button
+                  key={day.toString()}
+                  type="button"
+                  onClick={() => handleDateSelect(day)}
+                  disabled={isPast}
+                  className={`w-full aspect-square text-sm rounded-full transition-colors 
+                    ${!isSameMonth(day, currentMonth) ? 'text-gray-400' : 'text-gray-800'}
+                    ${isToday(day) && !isSameDay(day, value) ? 'border border-primary-500' : ''}
+                    ${isSameDay(day, value) ? 'bg-primary-600 text-white' : ''}
+                    ${isPast ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100'}
+                  `}
+                >
+                  {format(day, 'd')}
+                </button>
+              );
+            })}
           </div>
           {/* Time Picker */}
           <div className="flex items-center justify-center space-x-2 pt-3 mt-3 border-t">

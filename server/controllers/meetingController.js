@@ -20,6 +20,22 @@ export const createMeeting = async (req, res) => {
     const { title, start, end, participantIds, location } = req.body;
     const organizerId = req.user._id;
 
+    // --- NEW VALIDATION LOGIC ---
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const now = new Date();
+
+    // 1. Check if the start time is in the past
+    if (startTime < now) {
+        return res.status(400).json({ message: "Cannot schedule a meeting in the past." });
+    }
+    
+    // 2. Check if the end time is before the start time
+    if (endTime <= startTime) {
+        return res.status(400).json({ message: "Meeting end time must be after the start time." });
+    }
+    // --- END OF VALIDATION ---
+
     const allParticipantIds = [...new Set([...participantIds, organizerId])]; // Ensure organizer is included
 
     // --- CLASH DETECTION LOGIC ---
@@ -41,8 +57,8 @@ export const createMeeting = async (req, res) => {
 
     const newMeeting = await Meeting.create({
       title,
-      start: new Date(start),
-      end: new Date(end),
+      start: startTime,
+      end: endTime,
       participants: allParticipantIds,
       organizer: organizerId,
       location,
