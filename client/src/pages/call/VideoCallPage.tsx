@@ -175,7 +175,7 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col items-center justify-center p-4 text-white relative">
+        <div className="h-full flex flex-col items-center justify-center p-4 text-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full">
                 {/* Local Video */}
                 <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
@@ -189,7 +189,7 @@ export const VideoCallPage: React.FC = () => {
             </div>
 
             {/* Controls */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 p-3">
+            <div className="flex items-center gap-4 p-3">
                 <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full size-14">{isMuted ? <MicOff /> : <Mic />}</Button>
                 <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full size-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
                 <Button onClick={handleHangUp} variant="error" className="rounded-full size-14"><PhoneOff /></Button>
