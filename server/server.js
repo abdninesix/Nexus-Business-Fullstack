@@ -22,7 +22,7 @@ const httpServer = createServer(app); // Wrap the Express app
 const io = new Server(httpServer, {
   cors: {
     // origin: "http://localhost:5173",
-    origin: "https://nexus-by-abdullah.vercel.app/",
+    origin: "https://nexus-by-abdullah.vercel.app",
     methods: ["GET", "POST"],
   },
 });
