@@ -1,5 +1,5 @@
 // src/pages/notifications/NotificationsPage.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Bell, MessageCircle, UserPlus, DollarSign, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -12,7 +12,11 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchAllUsers } from '../../api/user'; // We need this to get user avatars
 
 export const NotificationsPage: React.FC = () => {
-  const { notifications } = useSocket();
+  const { notifications, clearNotifications } = useSocket();
+
+  useEffect(() => {
+    clearNotifications();
+  }, []);
 
   // Fetch all users to easily look up avatars by sender name.
   // This will be cached by Tanstack Query, so it's efficient.

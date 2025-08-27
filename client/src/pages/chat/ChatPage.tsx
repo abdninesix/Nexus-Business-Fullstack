@@ -10,15 +10,24 @@ import { Input } from '../../components/ui/Input';
 import { ChatMessage } from '../../components/chat/ChatMessage';
 import { ChatUserList } from '../../components/chat/ChatUserList';
 import { useAuth } from '../../context/AuthContext';
-import { fetchConversations, fetchMessages, sendMessageRequest, Conversation, Message } from '../../api/messages';
+import { fetchConversations, fetchMessages, sendMessageRequest, Conversation, Message, markAsRead } from '../../api/messages';
 import { fetchUserById } from '../../api/user';
 
 export const ChatPage: React.FC = () => {
   const { userId: activeUserId } = useParams<{ userId: string }>();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, fetchAndUpdateUnreadCount } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (activeUserId) {
+      markAsRead(activeUserId).then(() => {
+        // After marking as read, refetch the global count
+        fetchAndUpdateUnreadCount();
+      });
+    }
+  }, [activeUserId]);
 
   // 1. Fetch the list of conversations for the sidebar
   const { data: conversations = [] } = useQuery<Conversation[]>({
@@ -53,7 +62,7 @@ export const ChatPage: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeUserId) return;
@@ -69,7 +78,7 @@ export const ChatPage: React.FC = () => {
       <div className="hidden md:block w-1/3 lg:w-1/4 border-r border-gray-200">
         <ChatUserList conversations={conversations} />
       </div>
-      
+
       {/* Main chat area */}
       <div className="flex-1 flex flex-col">
         {chatPartner ? (
@@ -85,7 +94,7 @@ export const ChatPage: React.FC = () => {
               </div>
               <div className="flex space-x-2">{/* Icons */}</div>
             </div>
-            
+
             {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
               {messages.length > 0 ? (
@@ -107,7 +116,7 @@ export const ChatPage: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Input */}
             <div className="border-t p-4">
               <form onSubmit={handleSendMessage} className="flex space-x-2">
