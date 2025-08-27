@@ -14,14 +14,7 @@ import { Server } from 'socket.io';
 connectDB();
 
 const app = express();
-
-const corsOptions = {
-  // origin: 'http://localhost:5173',
-  origin: 'https://nexus-by-abdullah.vercel.app/',
-  credentials: true, // allow credentials (cookies, headers, etc.)
-};
-app.use(cors(corsOptions));
-
+app.use(cors());
 app.use(express.json());
 
 // --- SOCKET.IO INTEGRATION ---
