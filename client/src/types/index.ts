@@ -128,6 +128,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   // This is for the initial load check, not for mutations
   isInitializing: boolean;
+  unreadMessageCount: number;
+  fetchAndUpdateUnreadCount: () => void;
 }
 
 export interface ProfileState {

@@ -116,3 +116,31 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ message: 'Failed to send message' });
   }
 };
+
+// A function to get the count of unread messages
+export const getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const count = await Message.countDocuments({ receiver: userId, isRead: false });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch unread message count' });
+  }
+};
+
+// We also need a way to mark messages as read. Let's add that now.
+export const markMessagesAsRead = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { senderId } = req.body; // The user whose chat is being opened
+
+        await Message.updateMany(
+            { receiver: userId, sender: senderId, isRead: false },
+            { $set: { isRead: true } }
+        );
+
+        res.status(200).json({ message: 'Messages marked as read' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to mark messages as read' });
+    }
+};

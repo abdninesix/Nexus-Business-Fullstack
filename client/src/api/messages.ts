@@ -41,3 +41,13 @@ export const sendMessageRequest = async (payload: { receiverId: string; content:
   const { data } = await api.post('/messages', payload);
   return data;
 };
+
+export const fetchUnreadCount = async (): Promise<{ count: number }> => {
+  const { data } = await api.get('/messages/unread-count');
+  return data;
+};
+
+export const markAsRead = async (senderId: string): Promise<{ message: string }> => {
+  const { data } = await api.patch('/messages/read', { senderId });
+  return data;
+};

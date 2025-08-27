@@ -4,6 +4,7 @@ import { User, AuthContextType, AuthSuccessData } from '../types';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { logoutUser } from '../api/auth';
+import { fetchUnreadCount } from '../api/messages';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_STORAGE_KEY = 'business_nexus_token';
@@ -12,6 +13,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
   const [isInitializing, setIsInitializing] = useState(true);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   useEffect(() => {
     // This effect should ONLY run once on initial app mount to check for an existing session.
@@ -24,6 +26,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data } = await api.get('/auth/profile');
           setUser(data);
           setToken(storedToken);
+          const { count } = await fetchUnreadCount();
+          setUnreadMessageCount(count);
         } catch (error) {
           localStorage.removeItem('business_nexus_token');
           setToken(null);
@@ -66,6 +70,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUserData);
   };
 
+  const fetchAndUpdateUnreadCount = async () => {
+    try {
+      const { count } = await fetchUnreadCount();
+      setUnreadMessageCount(count);
+    } catch (error) {
+      console.error("Failed to update unread count", error);
+    }
+  };
+
   const value = {
     user,
     token,
@@ -74,6 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     isAuthenticated: !!token,
     isInitializing,
+    unreadMessageCount,
+    fetchAndUpdateUnreadCount,
   };
 
   // Render children only after the initial token check is complete

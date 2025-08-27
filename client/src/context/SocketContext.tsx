@@ -14,6 +14,7 @@ interface Notification {
 interface SocketContextType {
     socket: Socket | null;
     notifications: Notification[];
+    clearNotifications: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -65,7 +66,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
     }, [socket]);
 
-    const value = { socket, notifications };
+    const clearNotifications = () => {
+        setNotifications([]);
+    };
+
+    const value = { socket, notifications, clearNotifications };
 
     return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };
