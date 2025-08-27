@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { CustomDateTimePicker } from '../../components/ui/DateTimePicker';
 import { User } from '../../types';
-import { Clock, Trash2, Users, X } from 'lucide-react';
+import { Clock, Users, X } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
 import { enUS } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
@@ -253,8 +253,6 @@ export const CalendarPage: React.FC = () => {
                                     variant="error"
                                     onClick={handleDeleteMeeting}
                                     isLoading={deleteMeetingMutation.isPending}
-                                    leftIcon={<Trash2 size={16} />}
-                                    className='flex gap-2 items-center'
                                 >
                                     Delete Meeting
                                 </Button>
