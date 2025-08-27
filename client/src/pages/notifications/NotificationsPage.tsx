@@ -41,7 +41,7 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
           <p className="text-gray-600">Stay updated with your network activity</p>
@@ -50,8 +50,9 @@ export const NotificationsPage: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={clearNotifications} // <-- ADD THIS
-          disabled={notifications.length === 0} // <-- Optionally disable if no notifications
+          onClick={clearNotifications}
+          disabled={notifications.length === 0} 
+          className='w-fit'
         >
           Mark all as read
         </Button>

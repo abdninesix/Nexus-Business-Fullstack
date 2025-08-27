@@ -19,7 +19,7 @@ export const EntrepreneurDashboard: React.FC = () => {
   useEffect(() => {
     if (user) {
       // Load collaboration requests
-      const requests = getRequestsForEntrepreneur(user.id);
+      const requests = getRequestsForEntrepreneur(user._id);
       setCollaborationRequests(requests);
     }
   }, [user]);
@@ -160,7 +160,7 @@ export const EntrepreneurDashboard: React.FC = () => {
             <CardBody className="space-y-4">
               {recommendedInvestors.map(investor => (
                 <InvestorCard
-                  key={investor.id}
+                  key={investor._id}
                   investor={investor}
                   showActions={false}
                 />
