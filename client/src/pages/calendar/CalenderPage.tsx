@@ -17,6 +17,7 @@ import { User } from '../../types';
 import { Clock, Trash2, Users, X } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
 import { enUS } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 
 // Setup for react-big-calendar
 const locales = { 'en-US': enUS };
@@ -238,8 +239,8 @@ export const CalendarPage: React.FC = () => {
                         </div>
 
                         {/* Show delete button ONLY if the current user is the organizer */}
-                        {currentUser._id === selectedMeeting.organizer._id && (
-                            <div className="flex justify-end pt-4 border-t">
+                        <div className="flex justify-end gap-4 pt-4 border-t">
+                            {currentUser._id === selectedMeeting.organizer._id && (
                                 <Button
                                     variant="error"
                                     onClick={handleDeleteMeeting}
@@ -248,8 +249,11 @@ export const CalendarPage: React.FC = () => {
                                 >
                                     Delete Meeting
                                 </Button>
-                            </div>
-                        )}
+                            )}
+                            <Link to={`/call/${selectedMeeting._id}`}>
+                                <Button>Join Meeting</Button>
+                            </Link>
+                        </div>
                     </div>
                 )}
             </Modal>

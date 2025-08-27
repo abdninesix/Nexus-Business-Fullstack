@@ -1,4 +1,6 @@
 import Meeting from '../models/Meeting.js';
+import User from '../models/User.js';
+import { io, getUserSocketId } from '../server.js';
 
 // Get all meetings for the current user
 export const getMeetings = async (req, res) => {
@@ -46,6 +48,28 @@ export const createMeeting = async (req, res) => {
       location,
     });
 
+    // --- EMIT NOTIFICATION TO ALL PARTICIPANTS ---
+    const organizer = await User.findById(organizerId).select('name');
+
+    // We need to notify everyone EXCEPT the person who created the meeting (the organizer)
+    const participantsToNotify = allParticipantIds.filter(id => id !== organizerId.toString());
+
+    participantsToNotify.forEach(participantId => {
+      const participantSocketId = getUserSocketId(participantId);
+      if (participantSocketId) {
+        console.log(`Sending meeting notification to participant: ${participantId}`);
+        io.to(participantSocketId).emit("getNotification", {
+          senderName: organizer.name,
+          type: "newMeeting", // <-- A new notification type
+          message: `${organizer.name} has scheduled a new meeting with you: "${title}"`,
+          createdAt: new Date(),
+        });
+      } else {
+        console.log(`Participant ${participantId} is offline. No meeting notification sent.`);
+      }
+    });
+    // --- END OF NOTIFICATION ---
+
     res.status(201).json(newMeeting);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create meeting' });
@@ -67,5 +91,15 @@ export const deleteMeeting = async (req, res) => {
     res.status(200).json({ message: 'Meeting deleted successfully.' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete meeting' });
+  }
+};
+
+export const getMeetingById = async (req, res) => {
+  try {
+    const meeting = await Meeting.findById(req.params.id).populate('participants', 'name avatarUrl');
+    if (!meeting) return res.status(404).json({ message: 'Meeting not found' });
+    res.status(200).json(meeting);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch meeting' });
   }
 };

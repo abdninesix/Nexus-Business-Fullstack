@@ -1,6 +1,7 @@
 // controllers/messageController.js
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
+import User from '../models/User.js';
 import { getUserSocketId, io } from '../server.js';
 
 // Get all conversations for the logged-in user

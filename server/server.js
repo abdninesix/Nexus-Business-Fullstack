@@ -24,7 +24,6 @@ const io = new Server(httpServer, {
     origin: "http://localhost:5173", // Your frontend URL
     methods: ["GET", "POST"],
   },
-  transports: ['websocket', 'polling'],
 });
 
 // We need a way to track which user is connected to which socket
@@ -50,11 +49,40 @@ const getUserSocketId = (userId) => {
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
+  let currentRoom = null;
+
   // Client identifies itself by sending its userId
   socket.on("addNewUser", (userId) => {
     addUser(userId, socket.id);
     console.log("Online users:", Array.from(onlineUsers.keys()));
   });
+
+  // --- NEW WEBRTC SIGNALING LOGIC ---
+
+  // A user wants to join a specific meeting room
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    currentRoom = roomId;
+    // Notify others in the room that a new user has joined.
+    socket.to(roomId).emit("user-joined");
+  });
+
+  // Broadcast offer to everyone else in the room
+  socket.on("offer", (payload) => {
+    socket.to(payload.roomId).emit("offer", { sdp: payload.sdp });
+  });
+
+  // Broadcast answer to everyone else in the room
+  socket.on("answer", (payload) => {
+    socket.to(payload.roomId).emit("answer", { sdp: payload.sdp });
+  });
+
+  // Broadcast ICE candidate to everyone else in the room
+  socket.on("ice-candidate", (payload) => {
+    socket.to(payload.roomId).emit("ice-candidate", { candidate: payload.candidate });
+  });
+
+  // --- END OF WEBRTC SIGNALING ---
 
   socket.on("disconnect", () => {
     removeUser(socket.id);

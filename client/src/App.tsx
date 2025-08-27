@@ -31,11 +31,12 @@ import { DealsPage } from './pages/deals/DealsPage';
 import { ChatPage } from './pages/chat/ChatPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
-import { CalendarPage } from './pages/calender/CalenderPage';
+import { CalendarPage } from './pages/calendar/CalenderPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SocketProvider } from './context/SocketContext';
+import { VideoCallPage } from './pages/call/VideoCallPage';
 
 function App() {
   return (
@@ -99,6 +100,10 @@ function App() {
 
               <Route path="/calendar" element={<DashboardLayout />}>
                 <Route index element={<CalendarPage />} />
+              </Route>
+
+              <Route path="/call" element={<DashboardLayout />}>
+                <Route path=":meetingId" element={<VideoCallPage />} />
               </Route>
 
               {/* Chat Routes */}

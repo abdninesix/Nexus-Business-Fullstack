@@ -1,22 +1,35 @@
 // src/pages/notifications/NotificationsPage.tsx
 import React from 'react';
-import { Bell, MessageCircle, UserPlus, DollarSign } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns'; // Use for dynamic time formatting
+import { Bell, MessageCircle, UserPlus, DollarSign, Calendar } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 import { Card, CardBody } from '../../components/ui/Card';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useSocket } from '../../context/SocketContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllUsers } from '../../api/user'; // We need this to get user avatars
 
 export const NotificationsPage: React.FC = () => {
-  // 1. Get live notifications from the SocketContext
   const { notifications } = useSocket();
+
+  // Fetch all users to easily look up avatars by sender name.
+  // This will be cached by Tanstack Query, so it's efficient.
+  const { data: users = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: fetchAllUsers,
+  });
+
+  // Create a quick lookup map for user avatars
+  const userAvatarMap = new Map(users.map(user => [user.name, user.avatarUrl]));
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'newMessage': // <-- Match the type sent from the backend
+      case 'newMessage':
         return <MessageCircle size={16} className="text-primary-600" />;
+      case 'newMeeting':
+        return <Calendar size={16} className="text-green-600" />;
       case 'connection':
         return <UserPlus size={16} className="text-secondary-600" />;
       case 'investment':
@@ -41,48 +54,55 @@ export const NotificationsPage: React.FC = () => {
 
       <div className="space-y-4">
         {notifications.length > 0 ? (
-          notifications.map((notification, index) => (
-            <Card
-              key={index} // Use index as key for now, or a unique ID if provided by socket
-              className="transition-colors duration-200 bg-primary-50" // All new notifications are "unread"
-            >
-              <CardBody className="flex items-start p-4">
-                {/* For a generic notification, an icon might be better than an avatar */}
-                <div className="p-3 bg-white rounded-full mr-4 flex-shrink-0">
-                  {getNotificationIcon(notification.type)}
-                </div>
+          notifications.map((notification, index) => {
+            // Find the sender's avatar from our map
+            const senderAvatar = userAvatarMap.get(notification.senderName);
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">
-                      {notification.senderName}
-                    </span>
-                    <Badge variant="primary" size="sm" rounded>New</Badge>
+            return (
+              <Card
+                key={index}
+                // For now, all live notifications are considered "unread"
+                className="transition-colors duration-200 bg-primary-50"
+              >
+                <CardBody className="flex items-start p-4">
+                  <Avatar
+                    // Use the found avatar, or a default/placeholder if not found
+                    src={senderAvatar}
+                    alt={notification.senderName}
+                    size="md"
+                    className="flex-shrink-0 mr-4"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {notification.senderName}
+                      </span>
+                      <Badge variant="primary" size="sm" rounded>New</Badge>
+                    </div>
+
+                    {/* The full message content from the socket notification */}
+                    <p className="text-gray-600 mt-1">
+                      {notification.message}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                      {getNotificationIcon(notification.type)}
+                      {/* Use date-fns for a dynamic "x minutes ago" timestamp */}
+                      <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
+                    </div>
                   </div>
-
-                  {/* The 'content' is now the full message from the socket */}
-                  <p className="text-gray-600 mt-1">
-                    {notification.message}
-                  </p>
-
-                  <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                    <span className="capitalize">{notification.type.replace('newMessage', 'New Message')}</span>
-                    <span>•</span>
-                    {/* Use date-fns for dynamic, accurate time */}
-                    <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          ))
+                </CardBody>
+              </Card>
+            )
+          })
         ) : (
-          // Display an empty state if there are no notifications
           <Card>
             <CardBody className="text-center p-12">
               <Bell size={48} className="mx-auto text-gray-300" />
               <h3 className="mt-4 text-lg font-medium text-gray-900">No new notifications</h3>
               <p className="mt-1 text-sm text-gray-500">
-                We'll let you know when something new happens.
+                You're all caught up! We'll notify you here when something new happens.
               </p>
             </CardBody>
           </Card>
