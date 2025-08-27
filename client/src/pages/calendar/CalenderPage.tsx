@@ -247,13 +247,14 @@ export const CalendarPage: React.FC = () => {
                         </div>
 
                         {/* Show delete button ONLY if the current user is the organizer */}
-                        <div className="flex justify-end gap-4 pt-4 border-t">
+                        <div className="flex justify-between sm:justify-end gap-4 pt-4 border-t">
                             {currentUser._id === selectedMeeting.organizer._id && (
                                 <Button
                                     variant="error"
                                     onClick={handleDeleteMeeting}
                                     isLoading={deleteMeetingMutation.isPending}
                                     leftIcon={<Trash2 size={16} />}
+                                    className='flex gap-2 items-center'
                                 >
                                     Delete Meeting
                                 </Button>
