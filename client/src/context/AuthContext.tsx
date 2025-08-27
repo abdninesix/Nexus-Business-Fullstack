@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     fetchInitialData();
-  }, [user]); // The dependency on `user` is the key.
+  }, [user]);
 
 
   // This function is called by the LoginPage's useMutation
