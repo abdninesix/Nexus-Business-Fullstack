@@ -23,12 +23,16 @@
   @apply bg-primary-600 text-white hover:bg-primary-700;
 }
 
-/* Style the cell for today's date */
-.rbc-today {
-  @apply bg-primary-100;
+/* Style the event blocks */
+.rbc-event {
+  @apply bg-primary-500 border-primary-600 p-1 rounded-none text-xs;
 }
 
 /* Style the day headers (Sun, Mon, etc.) */
 .rbc-header {
     @apply p-2 border-b-2 border-gray-200 text-sm font-medium text-gray-600;
+}
+
+.rbc-date-cell  {
+    @apply flex justify-center rounded-lg
 }
