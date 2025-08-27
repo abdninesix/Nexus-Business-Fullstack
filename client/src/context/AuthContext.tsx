@@ -14,48 +14,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isInitializing, setIsInitializing] = useState(true);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
-  // useEffect #1: Handles initial session verification ONLY.
+  // --- useEffect #1: Session Verification (CRITICAL PATH) ---
+  // This effect's only job is to verify the token and get the user.
   useEffect(() => {
     const verifyUserSession = async () => {
-      const storedToken = localStorage.getItem('business_nexus_token');
+      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+
       if (!storedToken) {
         setIsInitializing(false);
-        return;
+        return; // No token, initialization is done.
       }
+
       try {
+        // NOTE: Using an Axios interceptor is a better practice than setting this header manually.
+        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         const { data } = await api.get('/auth/profile');
+
+        // If the profile is fetched successfully, the user is authenticated.
         setUser(data);
         setToken(storedToken);
+
       } catch (error) {
-        localStorage.removeItem('business_nexus_token');
+        // If this fails, the token is invalid. Log the user out completely.
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
         setToken(null);
         setUser(null);
+        delete api.defaults.headers.common['Authorization'];
       } finally {
+        // This ALWAYS runs, ensuring the app doesn't get stuck on the spinner.
         setIsInitializing(false);
       }
     };
-    verifyUserSession();
-  }, []);
 
-  // useEffect #2: Fetches secondary data AFTER the user is confirmed.
+    verifyUserSession();
+  }, []); // Empty dependency array is correct.
+
+  // --- useEffect #2: Fetch Secondary Data (NON-CRITICAL PATH) ---
+  // This effect runs only AFTER a user has been successfully authenticated.
   useEffect(() => {
-    if (user) { // This is the key: only run if 'user' is not null
-      const fetchInitialData = async () => {
-        try {
-          console.log("AUTH_CONTEXT_LOG: User is available, fetching unread count...");
-          const { count } = await fetchUnreadCount();
-          console.log(`AUTH_CONTEXT_LOG: Received unread count: ${count}`);
-          setUnreadMessageCount(count);
-        } catch (error) {
-          console.error("AUTH_CONTEXT_LOG: Failed to fetch unread count:", error);
-          setUnreadMessageCount(0); // Fail gracefully
-        }
-      };
-      fetchInitialData();
-    } else {
-      setUnreadMessageCount(0); // Ensure count is reset on logout
+    // If there is no user, do nothing.
+    if (!user) {
+      setUnreadMessageCount(0); // Ensure count is zeroed out on logout
+      return;
     }
+
+    const fetchInitialData = async () => {
+      try {
+        const { count } = await fetchUnreadCount();
+        setUnreadMessageCount(count);
+      } catch (error) {
+        console.error("Failed to fetch initial unread message count:", error);
+        // On failure, we don't log the user out. We just fail gracefully.
+        setUnreadMessageCount(0);
+      }
+    };
+
+    fetchInitialData();
   }, [user]);
+
 
   // This function is called by the LoginPage's useMutation
   const login = (data: AuthSuccessData) => {
