@@ -32,7 +32,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         // Only connect if the user is logged in
         if (user) {
-            const newSocket = io("http://localhost:3000"); // Your backend URL
+            // const newSocket = io("http://localhost:3000");
+            const newSocket = io("https://nexus-server-a951.onrender.com/");
             setSocket(newSocket);
 
             // Identify this client to the server
