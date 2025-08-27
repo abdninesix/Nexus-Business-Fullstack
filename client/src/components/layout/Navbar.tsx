@@ -154,7 +154,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 animate-fade-in">
+        <div className="md:hidden absolute w-full z-20 bg-white border-b border-gray-200 animate-fade-in">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {user ? (
               <>

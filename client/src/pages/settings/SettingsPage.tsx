@@ -189,7 +189,7 @@ export const SettingsPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                 <textarea
                   name="bio"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="w-full rounded-md border p-2 shadow-sm  focus:border-primary-500 focus:ring-primary-500"
                   rows={4}
                   value={profile.bio}
                   onChange={handleProfileChange}

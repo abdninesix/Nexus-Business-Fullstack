@@ -155,16 +155,23 @@ export const CalendarPage: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Meeting Calendar</h1>
                     <p className="text-gray-600">Schedule and manage your meetings.</p>
                 </div>
-                <Button onClick={openModal}>Schedule Meeting</Button>
+                <Button className='w-fit' onClick={openModal}>Schedule Meeting</Button>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border h-[calc(100vh-12rem)]">
-                {isLoading ? <p>Loading...</p> : <Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" style={{ height: '100%' }} onSelectEvent={handleSelectEvent} />}
+            <div className="bg-white p-4 rounded-lg shadow-lg h-[calc(100vh-12rem)]">
+                {isLoading ? <p>Loading...</p> :
+                    <Calendar
+                        localizer={localizer}
+                        events={events}
+                        startAccessor="start"
+                        endAccessor="end"
+                        onSelectEvent={handleSelectEvent}
+                    />}
             </div>
 
             <Modal isOpen={isModalOpen} onRequestClose={closeAndResetModal} style={modalStyles}>
