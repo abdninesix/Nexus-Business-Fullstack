@@ -65,6 +65,7 @@ export const VideoCallPage: React.FC = () => {
         pc.ontrack = (event) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
+                setRemoteStream(event.streams[0]);
             }
         };
 
@@ -174,24 +175,24 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 h-full flex flex-col items-center justify-center p-4 text-white relative">
+        <div className="h-full flex flex-col items-center justify-center p-4 text-white relative">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full">
+                {/* Local Video */}
+                <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                </div>
                 {/* Remote Video */}
                 <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
                     <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
                     {!remoteStream && <p className="absolute text-gray-400">Waiting for other user to join...</p>}
                 </div>
-                {/* Local Video */}
-                <div className="bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                </div>
             </div>
 
             {/* Controls */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-gray-800 p-3 rounded-full shadow-lg">
-                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full w-12 h-12">{isMuted ? <MicOff /> : <Mic />}</Button>
-                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full w-12 h-12">{isVideoOff ? <VideoOff /> : <Video />}</Button>
-                <Button onClick={handleHangUp} variant="error" className="rounded-full w-16 h-12"><PhoneOff /></Button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 p-3">
+                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full size-14">{isMuted ? <MicOff /> : <Mic />}</Button>
+                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full size-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
+                <Button onClick={handleHangUp} variant="error" className="rounded-full size-14"><PhoneOff /></Button>
             </div>
         </div>
     );
