@@ -12,7 +12,7 @@ interface SidebarItemProps {
   to: string;
   icon: React.ReactNode;
   text: string;
-  badgeCount?: number;
+  badgeCount?: number | any;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, text, badgeCount }) => {
@@ -31,7 +31,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, text, badgeCount })
           <span className="mr-3">{icon}</span>
           <span className="text-sm font-medium">{text}</span>
         </div>
-        {badgeCount && badgeCount > 0 && (
+        {badgeCount > 0 && (
           <span className="bg-primary-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
             {badgeCount}
           </span>

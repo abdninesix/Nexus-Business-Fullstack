@@ -119,27 +119,14 @@ export const sendMessage = async (req, res) => {
 
 // A function to get the count of unread messages
 export const getUnreadCount = async (req, res) => {
-  // Log that the function has been reached.
-  console.log("LOG: Entered getUnreadCount controller.");
-
   try {
-    // Safety Check: This is the most likely point of failure.
     if (!req.user || !req.user._id) {
-      console.error("ERROR: req.user is not defined in getUnreadCount. Auth middleware failed.");
       return res.status(401).json({ message: "Authentication failed." });
     }
-
     const userId = req.user._id;
-    console.log(`LOG: Finding unread count for userId: ${userId}`);
-
-    // The database query.
     const count = await Message.countDocuments({ receiver: userId, isRead: false });
-
-    console.log(`LOG: Found ${count} unread messages.`);
     res.status(200).json({ count });
-
   } catch (error) {
-    console.error("CRITICAL ERROR in getUnreadCount:", error);
     res.status(500).json({ message: 'Server error while fetching unread count.' });
   }
 };

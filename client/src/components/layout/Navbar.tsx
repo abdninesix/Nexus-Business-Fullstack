@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
+import { useSocket } from '../../context/SocketContext';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, unreadMessageCount } = useAuth();
+  const { notifications } = useSocket();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -34,21 +36,38 @@ export const Navbar: React.FC = () => {
       icon: user?.role === 'entrepreneur' ? <Building2 size={18} /> : <CircleDollarSign size={18} />,
       text: 'Dashboard',
       path: dashboardRoute,
+      badge: 0,
     },
     {
       icon: <MessageCircle size={18} />,
       text: 'Messages',
       path: user ? '/messages' : '/login',
+      badge: unreadMessageCount,
     },
     {
       icon: <Bell size={18} />,
       text: 'Notifications',
       path: user ? '/notifications' : '/login',
+      badge: notifications.length,
     },
     {
       icon: <Calendar size={18} />,
       text: 'Calendar',
       path: user ? '/calendar' : '/login',
+      badge: 0,
+    }
+  ];
+
+  const bottomLinks = [
+    {
+      icon: <Settings size={18} />,
+      text: 'Settings',
+      path: '/settings',
+    },
+    {
+      icon: <HelpCircle size={18} />,
+      text: 'Help & Support',
+      path: '/help',
     }
   ];
 
@@ -118,12 +137,15 @@ export const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-50 focus:outline-none"
+              className="relative inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-50 focus:outline-none"
             >
               {isMenuOpen ? (
                 <X className="block h-6 w-6" />
               ) : (
                 <Menu className="block h-6 w-6" />
+              )}
+              {(unreadMessageCount + notifications.length > 0) && !isMenuOpen && (
+                <div className="absolute bottom-1 left-1 block h-2.5 w-2.5 rounded-full bg-primary-600 ring-2 ring-white" />
               )}
             </button>
           </div>
@@ -157,16 +179,33 @@ export const Navbar: React.FC = () => {
                       className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsMenuOpen(false)}
                     >
+                      <div className="flex items-center">
+                        <span className="mr-3">{link.icon}</span>
+                        {link.text}
+                      </div>
+                      {link.badge > 0 && (
+                        <span className="ml-3 bg-primary-600 text-white text-xs font-semibold w-5 h-5 flex items-center justify-center rounded-full">
+                          {link.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-200 pt-2 space-y-1">
+                  {bottomLinks.map((link, index) => (
+                    <Link
+                      key={index}
+                      to={link.path}
+                      className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
                       <span className="mr-3">{link.icon}</span>
                       {link.text}
                     </Link>
                   ))}
-
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
+                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
                     className="flex w-full items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-md"
                   >
                     <LogOut size={18} className="mr-3" />
