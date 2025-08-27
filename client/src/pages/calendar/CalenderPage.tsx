@@ -170,6 +170,7 @@ export const CalendarPage: React.FC = () => {
                         events={events}
                         startAccessor="start"
                         endAccessor="end"
+                        style={{ height: '100%' }}
                         onSelectEvent={handleSelectEvent}
                     />}
             </div>

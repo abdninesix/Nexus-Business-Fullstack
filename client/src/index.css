@@ -32,7 +32,3 @@
 .rbc-header {
     @apply p-2 border-b-2 border-gray-200 text-sm font-medium text-gray-600;
 }
-
-.rbc-date-cell  {
-    @apply flex justify-center rounded-lg
-}
