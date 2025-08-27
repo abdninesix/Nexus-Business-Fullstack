@@ -120,27 +120,39 @@ export const sendMessage = async (req, res) => {
 // A function to get the count of unread messages
 export const getUnreadCount = async (req, res) => {
   try {
+    // --- THIS IS THE FIX ---
+    // 1. Add a guard clause to ensure req.user exists.
+    if (!req.user || !req.user._id) {
+      console.error("CRITICAL ERROR in getUnreadCount: req.user is not defined. The 'protect' middleware might have failed or is missing.");
+      // Send a 401 Unauthorized error, which is more accurate than a 500.
+      return res.status(401).json({ message: "Not authenticated." });
+    }
+    // -------------------------
+
     const userId = req.user._id;
     const count = await Message.countDocuments({ receiver: userId, isRead: false });
     res.status(200).json({ count });
+
   } catch (error) {
+    console.error("Error in getUnreadCount controller:", error);
+    // 2. Fix the error message to be specific.
     res.status(500).json({ message: 'Failed to fetch unread message count' });
   }
 };
 
 // We also need a way to mark messages as read. Let's add that now.
 export const markMessagesAsRead = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { senderId } = req.body; // The user whose chat is being opened
+  try {
+    const userId = req.user._id;
+    const { senderId } = req.body; // The user whose chat is being opened
 
-        await Message.updateMany(
-            { receiver: userId, sender: senderId, isRead: false },
-            { $set: { isRead: true } }
-        );
+    await Message.updateMany(
+      { receiver: userId, sender: senderId, isRead: false },
+      { $set: { isRead: true } }
+    );
 
-        res.status(200).json({ message: 'Messages marked as read' });
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to mark messages as read' });
-    }
+    res.status(200).json({ message: 'Messages marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to mark messages as read' });
+  }
 };

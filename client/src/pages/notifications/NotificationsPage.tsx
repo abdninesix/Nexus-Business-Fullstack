@@ -1,5 +1,5 @@
 // src/pages/notifications/NotificationsPage.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Bell, MessageCircle, UserPlus, DollarSign, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -13,10 +13,6 @@ import { fetchAllUsers } from '../../api/user'; // We need this to get user avat
 
 export const NotificationsPage: React.FC = () => {
   const { notifications, clearNotifications } = useSocket();
-
-  useEffect(() => {
-    clearNotifications();
-  }, []);
 
   // Fetch all users to easily look up avatars by sender name.
   // This will be cached by Tanstack Query, so it's efficient.
@@ -51,7 +47,12 @@ export const NotificationsPage: React.FC = () => {
           <p className="text-gray-600">Stay updated with your network activity</p>
         </div>
 
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearNotifications} // <-- ADD THIS
+          disabled={notifications.length === 0} // <-- Optionally disable if no notifications
+        >
           Mark all as read
         </Button>
       </div>
