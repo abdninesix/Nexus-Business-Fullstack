@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, AuthContextType, AuthSuccessData } from '../types';
 import api from '../api/axios';
@@ -15,34 +14,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isInitializing, setIsInitializing] = useState(true);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
+  // --- useEffect #1: Session Verification (CRITICAL PATH) ---
+  // This effect's only job is to verify the token and get the user.
   useEffect(() => {
-    // This effect should ONLY run once on initial app mount to check for an existing session.
-    const verifyToken = async () => {
-      const storedToken = localStorage.getItem('business_nexus_token');
+    const verifyUserSession = async () => {
+      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
 
-      if (storedToken) {
-        try {
-          api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          const { data } = await api.get('/auth/profile');
-          setUser(data);
-          setToken(storedToken);
-          const { count } = await fetchUnreadCount();
-          setUnreadMessageCount(count);
-        } catch (error) {
-          localStorage.removeItem('business_nexus_token');
-          setToken(null);
-          setUser(null);
-          delete api.defaults.headers.common['Authorization'];
-        }
+      if (!storedToken) {
+        setIsInitializing(false);
+        return; // No token, initialization is done.
       }
-      setIsInitializing(false);
+
+      try {
+        // NOTE: Using an Axios interceptor is a better practice than setting this header manually.
+        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        const { data } = await api.get('/auth/profile');
+
+        // If the profile is fetched successfully, the user is authenticated.
+        setUser(data);
+        setToken(storedToken);
+
+      } catch (error) {
+        // If this fails, the token is invalid. Log the user out completely.
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        setToken(null);
+        setUser(null);
+        delete api.defaults.headers.common['Authorization'];
+      } finally {
+        // This ALWAYS runs, ensuring the app doesn't get stuck on the spinner.
+        setIsInitializing(false);
+      }
     };
 
-    verifyToken();
-  }, []);
+    verifyUserSession();
+  }, []); // Empty dependency array is correct.
 
-  // This function is called by useMutation's onSuccess callback
+  // --- useEffect #2: Fetch Secondary Data (NON-CRITICAL PATH) ---
+  // This effect runs only AFTER a user has been successfully authenticated.
+  useEffect(() => {
+    // If there is no user, do nothing.
+    if (!user) {
+      setUnreadMessageCount(0); // Ensure count is zeroed out on logout
+      return;
+    }
+
+    const fetchInitialData = async () => {
+      try {
+        const { count } = await fetchUnreadCount();
+        setUnreadMessageCount(count);
+      } catch (error) {
+        console.error("Failed to fetch initial unread message count:", error);
+        // On failure, we don't log the user out. We just fail gracefully.
+        setUnreadMessageCount(0);
+      }
+    };
+
+    fetchInitialData();
+  }, [user]); // The dependency on `user` is the key.
+
+
+  // This function is called by the LoginPage's useMutation
   const login = (data: AuthSuccessData) => {
+    // This updates the state, which in turn will trigger useEffect #2
     setUser(data.user);
     setToken(data.token);
     localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
@@ -50,18 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    // Call the API to update the backend first
     try {
       await logoutUser();
     } catch (error) {
       console.error("Failed to update status on backend", error);
-      // We still proceed with frontend logout even if the API fails,
-      // to ensure the user is logged out on their end.
     } finally {
-      // Clear all local state
       setUser(null);
       setToken(null);
-      localStorage.removeItem('business_nexus_token');
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      delete api.defaults.headers.common['Authorization']; // Clean up header
       toast.success('Logged out successfully');
     }
   };
@@ -70,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUserData);
   };
 
+  // This function is for manual refreshes of the count (e.g., after marking messages as read)
   const fetchAndUpdateUnreadCount = async () => {
     try {
       const { count } = await fetchUnreadCount();
@@ -91,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchAndUpdateUnreadCount,
   };
 
-  // Render children only after the initial token check is complete
   return <AuthContext.Provider value={value}>{!isInitializing && children}</AuthContext.Provider>;
 };
 
