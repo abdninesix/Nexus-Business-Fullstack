@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { MessageCircle, Users, Calendar, Building2, MapPin, UserCircle, FileText, DollarSign, Send } from 'lucide-react';
 
@@ -9,8 +9,9 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { fetchUserById } from '../../api/users'; // <-- Import API function
+import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
+import { fetchRequestStatus, createCollaborationRequest } from '../../api/collaborations';
 
 // A loading skeleton that mimics the page layout
 const ProfileSkeleton = () => (
@@ -25,6 +26,7 @@ export const EntrepreneurProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: entrepreneur, isLoading, isError } = useQuery<User>({
     queryKey: ['user', id], // Query key is unique to this user's ID
@@ -37,12 +39,35 @@ export const EntrepreneurProfile: React.FC = () => {
   const isCurrentUser = currentUser?._id === entrepreneur?._id;
   const isInvestor = currentUser?.role === 'investor';
 
-  // TODO: Replace with a real API call to check for collaboration requests
-  const hasRequestedCollaboration = false;
+  // 1. Query to check if a request has already been sent
+  const { data: collaborationStatus } = useQuery({
+    queryKey: ['collaborationStatus', id],
+    queryFn: () => fetchRequestStatus(id!),
+    enabled: isInvestor && !isCurrentUser && !!id, // Only run for investors viewing this profile
+  });
 
-  // TODO: Replace with a real useMutation hook for collaboration requests
+  // 2. Derive the button state from the query result
+  const hasRequestedCollaboration = collaborationStatus?.status === 'pending' || collaborationStatus?.status === 'accepted';
+
+  // 3. Mutation to send a new collaboration request
+  const createRequestMutation = useMutation({
+    mutationFn: createCollaborationRequest,
+    onSuccess: () => {
+      toast.success("Collaboration request sent successfully!");
+      // Refetch the status to update the button state
+      queryClient.invalidateQueries({ queryKey: ['collaborationStatus', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to send request.");
+    }
+  });
+
   const handleSendRequest = () => {
-    toast.success("Collaboration request sent!");
+    if (!id) return;
+    createRequestMutation.mutate({
+      entrepreneurId: id,
+      message: `I'm interested in learning more about ${profile?.startupName} and would like to explore investment opportunities.`
+    });
   };
 
   // --- RENDER STATES ---
@@ -51,7 +76,7 @@ export const EntrepreneurProfile: React.FC = () => {
     return <ProfileSkeleton />;
   }
 
-  if (isError || !entrepreneur || entrepreneur.role !== 'entrepreneur' || !profile) {
+  if (isError || !entrepreneur || !profile) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900">Entrepreneur Not Found</h2>
@@ -88,25 +113,31 @@ export const EntrepreneurProfile: React.FC = () => {
           </div>
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-2 justify-center sm:justify-end">
             {!isCurrentUser && (
-              <>
-                <Button
-                  variant="outline"
-                  leftIcon={<MessageCircle size={18} />}
-                  onClick={() => navigate(`/chat/${entrepreneur._id}`)} // Navigate to the chat page with the user's ID
-                >
-                  Message
-                </Button>
-
+              <div className='flex flex-col justify-between gap-4'>
                 {isInvestor && (
                   <Button
                     leftIcon={<Send size={18} />}
-                    disabled={hasRequestedCollaboration}
+                    // Update button state based on query and mutation
+                    disabled={hasRequestedCollaboration || createRequestMutation.isPending}
+                    isLoading={createRequestMutation.isPending}
                     onClick={handleSendRequest}
+                    className='w-fit'
                   >
-                    {hasRequestedCollaboration ? 'Request Sent' : 'Request Collaboration'}
+                    {collaborationStatus?.status === 'pending' && 'Request Sent'}
+                    {collaborationStatus?.status === 'accepted' && 'Connected'}
+                    {collaborationStatus?.status === 'rejected' && 'Request Another'}
+                    {collaborationStatus?.status === 'none' && 'Request Collaboration'}
                   </Button>
                 )}
-              </>
+                <Button
+                  variant="outline"
+                  leftIcon={<MessageCircle size={18} />}
+                  onClick={() => navigate(`/chat/${entrepreneur._id}`)}
+                  className='w-fit'
+                >
+                  Message
+                </Button>
+              </div>
             )}
 
             {isCurrentUser && (
@@ -114,6 +145,7 @@ export const EntrepreneurProfile: React.FC = () => {
                 variant="outline"
                 leftIcon={<UserCircle size={18} />}
                 onClick={() => navigate('/settings')}
+                className='w-fit'
               >
                 Edit Profile
               </Button>
@@ -164,7 +196,12 @@ export const EntrepreneurProfile: React.FC = () => {
             </CardBody>
           </Card>
           <Card>
-            <CardHeader><h2 className="text-lg font-medium text-gray-900">Team</h2></CardHeader>
+            <CardHeader>
+              <h2 className="text-lg font-medium text-gray-900">Team</h2>
+              {profile && typeof profile.teamSize === 'number' && (
+                <span className="text-sm text-gray-500">{profile.teamSize} members</span>
+              )}
+            </CardHeader>
             <CardBody>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center p-3 border border-gray-200 rounded-md">
@@ -180,9 +217,9 @@ export const EntrepreneurProfile: React.FC = () => {
                   </div>
                 </div>
 
-                {entrepreneur.entrepreneurProfile?.teamSize > 3 && (
+                {profile && typeof profile.teamSize === 'number' && profile.teamSize > 3 && (
                   <div className="flex items-center justify-center p-3 border border-dashed border-gray-200 rounded-md">
-                    <p className="text-sm text-gray-500">+ {entrepreneur.entrepreneurProfile?.teamSize - 3} more team members</p>
+                    <p className="text-sm text-gray-500">+ {profile.teamSize - 3} more team members</p>
                   </div>
                 )}
               </div>
@@ -277,22 +314,14 @@ export const EntrepreneurProfile: React.FC = () => {
                   <p className="text-sm text-gray-500">
                     Request access to detailed documents and financials by sending a collaboration request.
                   </p>
-
-                  {!hasRequestedCollaboration ? (
-                    <Button
-                      className="mt-3 w-full"
-                      onClick={handleSendRequest}
-                    >
-                      Request Collaboration
-                    </Button>
-                  ) : (
-                    <Button
-                      className="mt-3 w-full"
-                      disabled
-                    >
-                      Request Sent
-                    </Button>
-                  )}
+                  <Button
+                    className="mt-3 w-full"
+                    onClick={handleSendRequest}
+                    disabled={hasRequestedCollaboration || createRequestMutation.isPending}
+                    isLoading={createRequestMutation.isPending}
+                  >
+                    {collaborationStatus?.status === 'pending' ? 'Request Sent' : 'Request Collaboration'}
+                  </Button>
                 </div>
               )}
             </CardBody>

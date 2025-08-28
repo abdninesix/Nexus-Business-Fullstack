@@ -37,8 +37,7 @@ export const InvestorCard: React.FC<InvestorCardProps> = ({
   }
 
   return (
-    <Card 
-      hoverable 
+    <Card
       className="transition-all duration-300 h-full flex flex-col" // Added flex to ensure footer sticks to bottom
       onClick={handleViewProfile}
     >

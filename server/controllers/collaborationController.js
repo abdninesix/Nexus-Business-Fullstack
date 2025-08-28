@@ -24,7 +24,7 @@ export const createRequest = async (req, res) => {
 export const getReceivedRequests = async (req, res) => {
   try {
     const requests = await Collaboration.find({ entrepreneurId: req.user._id })
-      .populate('investorId', 'name avatarUrl investorProfile');
+      .populate('investorId', 'name avatarUrl isOnline investorProfile');
     res.status(200).json(requests);
   } catch (error) { res.status(500).json({ message: 'Failed to fetch requests' }); }
 };
@@ -44,4 +44,23 @@ export const updateRequestStatus = async (req, res) => {
     // TODO: Emit a 'requestUpdated' notification to the investor
     res.status(200).json(request);
   } catch (error) { res.status(500).json({ message: 'Failed to update request' }); }
+};
+
+export const getRequestStatus = async (req, res) => {
+  try {
+    const { entrepreneurId } = req.params;
+    const investorId = req.user._id;
+
+    const request = await Collaboration.findOne({ investorId, entrepreneurId });
+
+    if (request) {
+      // If a request exists, return its status
+      res.status(200).json({ status: request.status });
+    } else {
+      // If no request exists, return a clear 'none' status
+      res.status(200).json({ status: 'none' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch request status' });
+  }
 };

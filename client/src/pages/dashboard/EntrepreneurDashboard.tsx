@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { fetchInvestors } from '../../api/users';
+import { fetchMeetings } from '../../api/meetings';
 import { fetchReceivedRequests, updateRequestStatus } from '../../api/collaborations';
 import { CollaborationRequestCard } from '../../components/collaboration/CollaborationRequestCard';
 import { InvestorCard } from '../../components/investor/InvestorCard';
@@ -26,6 +27,11 @@ export const EntrepreneurDashboard: React.FC = () => {
     select: data => data.slice(0, 3), // Select first 3 for the dashboard
   });
 
+  const { data: meetings = [] } = useQuery({
+    queryKey: ['meetings'],
+    queryFn: fetchMeetings,
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: updateRequestStatus,
     onSuccess: () => {
@@ -40,6 +46,10 @@ export const EntrepreneurDashboard: React.FC = () => {
   if (!user) return null;
 
   const pendingRequests = collaborationRequests.filter(req => req.status === 'pending');
+
+  const upcomingMeetingsCount = meetings.filter(meeting =>
+    new Date(meeting.start) > new Date()
+  ).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -98,7 +108,7 @@ export const EntrepreneurDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Upcoming Meetings</p>
-                <h3 className="text-xl font-semibold text-accent-900">2</h3>
+                <h3 className="text-xl font-semibold text-accent-900">{upcomingMeetingsCount}</h3>
               </div>
             </div>
           </CardBody>

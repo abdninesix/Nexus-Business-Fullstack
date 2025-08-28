@@ -12,6 +12,10 @@ export interface CollaborationRequest {
   updatedAt: string; // ISO date string
 }
 
+interface RequestStatus {
+  status: 'pending' | 'accepted' | 'rejected' | 'none';
+}
+
 export const fetchReceivedRequests = async (): Promise<CollaborationRequest[]> => {
   const { data } = await api.get('/collaborations/received');
   return data;
@@ -26,4 +30,9 @@ export const updateRequestStatus = async (payload: { id: string; status: 'accept
 export const createCollaborationRequest = async (payload: { entrepreneurId: string; message: string }): Promise<CollaborationRequest> => {
     const { data } = await api.post('/collaborations', payload);
     return data;
+};
+
+export const fetchRequestStatus = async (entrepreneurId: string): Promise<RequestStatus> => {
+  const { data } = await api.get(`/collaborations/status/${entrepreneurId}`);
+  return data;
 };

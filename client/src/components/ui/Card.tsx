@@ -52,7 +52,7 @@ export const CardBody: React.FC<CardBodyProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`px-6 py-4 ${className}`}>
+    <div className={`p-4 ${className}`}>
       {children}
     </div>
   );

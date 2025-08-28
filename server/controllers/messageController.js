@@ -105,6 +105,9 @@ export const sendMessage = async (req, res) => {
         type: "newMessage",
         message: `You have a new message from ${sender.name}`,
         createdAt: new Date(),
+        relatedData: {
+          chatId: senderId,
+        }
       });
     }
 

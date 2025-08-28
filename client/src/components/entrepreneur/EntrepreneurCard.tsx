@@ -38,7 +38,6 @@ export const EntrepreneurCard: React.FC<EntrepreneurCardProps> = ({
 
   return (
     <Card
-      hoverable
       className="transition-all duration-300 h-full flex flex-col" // Added flex classes for consistency
       onClick={handleViewProfile}
     >

@@ -55,7 +55,7 @@ export const CollaborationRequestCard: React.FC<CollaborationRequestCardProps> =
         return null;
     }
   };
-
+  
   return (
     <Card className="transition-all duration-300">
       <CardBody className="flex flex-col">
