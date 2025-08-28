@@ -37,6 +37,7 @@ import { ProfilePage } from './pages/profile/ProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SocketProvider } from './context/SocketContext';
 import { VideoCallPage } from './pages/call/VideoCallPage';
+import { PublicRoute } from './components/auth/PublicRoute';
 
 function App() {
   return (
@@ -45,10 +46,12 @@ function App() {
         <Router>
           <Routes>
             {/* Authentication Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            </Route>
 
             <Route element={<ProtectedRoute />}>
               {/* Dashboard Routes */}

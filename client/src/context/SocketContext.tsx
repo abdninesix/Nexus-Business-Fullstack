@@ -27,7 +27,7 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user , fetchAndUpdateUnreadCount } = useAuth();
+    const { user, fetchAndUpdateUnreadCount } = useAuth();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -51,20 +51,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setSocket(null);
         }
     }, [user]);
-    
+
     // Effect for listening to notifications
     useEffect(() => {
         if (!socket) return;
 
         socket.on("getNotification", (data: Notification) => {
             setNotifications((prev) => [data, ...prev]);
-            toast.success(data.message, { icon: <Bell/> });
-
-             if (data.type === 'newMessage') {
+            toast.success(data.message, { icon: <Bell /> });
+            if (data.type === 'newMessage') {
                 fetchAndUpdateUnreadCount();
             }
         });
-        
+
         // Cleanup listener
         return () => {
             socket.off("getNotification");
