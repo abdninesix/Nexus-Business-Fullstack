@@ -260,8 +260,12 @@ export const SettingsPage: React.FC = () => {
                     <label className="block text-sm font-medium">Investment Interests</label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {profile.investmentInterests?.map((stage, index) => (
-                        <Badge key={index} onRemove={() => handleRemoveItem('investmentStage', index)}>{stage}</Badge>
+                        <Badge key={index} onRemove={() => handleRemoveItem('investmentInterests', index)}>{stage}</Badge>
                       ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Input placeholder="Add an interest (e.g., AgTech)" value={newInterest} onChange={e => setNewInterest(e.target.value)} />
+                      <Button type="button" onClick={() => handleAddItem('investmentInterests', newInterest, setNewInterest)}>Add</Button>
                     </div>
                   </div>
                   {/* Portfolio Companies (Array) */}
@@ -269,8 +273,12 @@ export const SettingsPage: React.FC = () => {
                     <label className="block text-sm font-medium">Portfolio Companies</label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {profile.portfolioCompanies?.map((stage, index) => (
-                        <Badge key={index} onRemove={() => handleRemoveItem('investmentStage', index)}>{stage}</Badge>
+                        <Badge key={index} onRemove={() => handleRemoveItem('portfolioCompanies', index)}>{stage}</Badge>
                       ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Input placeholder="Add a company (e.g., BioGenics)" value={newCompany} onChange={e => setNewCompany(e.target.value)} />
+                      <Button type="button" onClick={() => handleAddItem('portfolioCompanies', newCompany, setNewCompany)}>Add</Button>
                     </div>
                   </div>
                 </div>
