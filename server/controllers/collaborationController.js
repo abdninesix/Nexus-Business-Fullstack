@@ -1,6 +1,4 @@
-// controllers/collaborationController.js
 import Collaboration from '../models/Collaboration.js';
-import User from '../models/User.js';
 
 // Create a new request (Investor action)
 export const createRequest = async (req, res) => {
