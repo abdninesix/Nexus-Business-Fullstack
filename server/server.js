@@ -7,6 +7,7 @@ import documentRoutes from './routes/documentRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import userRoutes from './routes/userRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
+import collaborationRoutes from './routes/collaborationRoutes.js';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -101,6 +102,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/collaborations', collaborationRoutes);
 
 app.get('/', (req, res) => {
   res.send('Nexus API is running...');

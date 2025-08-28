@@ -9,7 +9,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useSocket } from '../../context/SocketContext';
 import { useQuery } from '@tanstack/react-query';
-import { fetchAllUsers } from '../../api/user'; // We need this to get user avatars
+import { fetchAllUsers } from '../../api/users'; // We need this to get user avatars
 
 export const NotificationsPage: React.FC = () => {
   const { notifications, clearNotifications } = useSocket();

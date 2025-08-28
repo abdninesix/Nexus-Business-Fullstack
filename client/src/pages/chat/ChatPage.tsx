@@ -11,7 +11,7 @@ import { ChatMessage } from '../../components/chat/ChatMessage';
 import { ChatUserList } from '../../components/chat/ChatUserList';
 import { useAuth } from '../../context/AuthContext';
 import { fetchConversations, fetchMessages, sendMessageRequest, Conversation, Message, markAsRead } from '../../api/messages';
-import { fetchUserById } from '../../api/user';
+import { fetchUserById } from '../../api/users';
 
 export const ChatPage: React.FC = () => {
   const { userId: activeUserId } = useParams<{ userId: string }>();

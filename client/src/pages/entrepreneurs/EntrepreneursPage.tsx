@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, MapPin } from 'lucide-react';
 
-import { fetchEntrepreneurs } from '../../api/user';
+import { fetchEntrepreneurs } from '../../api/users';
 import { Input } from '../../components/ui/Input';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard';

@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { fetchUserById } from '../../api/user'; // <-- Import API function
+import { fetchUserById } from '../../api/users'; // <-- Import API function
 import { User } from '../../types';
 
 // A loading skeleton that mimics the page layout

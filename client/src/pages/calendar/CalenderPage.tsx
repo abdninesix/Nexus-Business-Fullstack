@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import Modal from 'react-modal';
 
 import { fetchMeetings, createMeeting, deleteMeeting, Meeting, NewMeetingData } from '../../api/meetings';
-import { fetchAllUsers } from '../../api/user';
+import { fetchAllUsers } from '../../api/users';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
