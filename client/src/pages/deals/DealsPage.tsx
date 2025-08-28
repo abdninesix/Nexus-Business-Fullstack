@@ -81,13 +81,13 @@ export const DealsPage: React.FC = () => {
   
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Investment Deals</h1>
           <p className="text-gray-600">Track and manage your investment pipeline</p>
         </div>
         
-        <Button>
+        <Button className='w-fit'>
           Add Deal
         </Button>
       </div>

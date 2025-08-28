@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -31,7 +31,7 @@ export const Navbar: React.FC = () => {
     ? `/profile/${user.role}/${user._id}`
     : '/login';
 
-  const navLinks = [
+  const navLinksDesktop = [
     {
       icon: user?.role === 'entrepreneur' ? <Building2 size={18} /> : <CircleDollarSign size={18} />,
       text: 'Dashboard',
@@ -49,6 +49,39 @@ export const Navbar: React.FC = () => {
       text: 'Notifications',
       path: user ? '/notifications' : '/login',
       badge: notifications.length,
+    },
+    {
+      icon: <Calendar size={18} />,
+      text: 'Calendar',
+      path: user ? '/calendar' : '/login',
+      badge: 0,
+    }
+  ];
+
+  const navLinksMobile = [
+    {
+      icon: user?.role === 'entrepreneur' ? <Building2 size={18} /> : <CircleDollarSign size={18} />,
+      text: 'Dashboard',
+      path: dashboardRoute,
+      badge: 0,
+    },
+    {
+      icon: <MessageCircle size={18} />,
+      text: 'Messages',
+      path: user ? '/messages' : '/login',
+      badge: unreadMessageCount,
+    },
+    {
+      icon: <Bell size={18} />,
+      text: 'Notifications',
+      path: user ? '/notifications' : '/login',
+      badge: notifications.length,
+    },
+    {
+      icon: <FileText size={18} />,
+      text: 'Documents',
+      path: user ? '/documents' : '/login',
+      badge: 0,
     },
     {
       icon: <Calendar size={18} />,
@@ -92,7 +125,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex md:items-center md:ml-6">
             {user ? (
               <div className="flex items-center space-x-4">
-                {navLinks.map((link, index) => (
+                {/* {navLinksDesktop.map((link, index) => (
                   <Link
                     key={index}
                     to={link.path}
@@ -101,7 +134,7 @@ export const Navbar: React.FC = () => {
                     <span className="mr-2">{link.icon}</span>
                     {link.text}
                   </Link>
-                ))}
+                ))} */}
 
                 <Button
                   variant="ghost"
@@ -172,7 +205,7 @@ export const Navbar: React.FC = () => {
                 </Link>
 
                 <div className="border-t border-gray-200 pt-2">
-                  {navLinks.map((link, index) => (
+                  {navLinksMobile.map((link, index) => (
                     <Link
                       key={index}
                       to={link.path}
