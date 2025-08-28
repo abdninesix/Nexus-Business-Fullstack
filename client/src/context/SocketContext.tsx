@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
+import { Bell } from 'lucide-react';
 
 interface Notification {
     senderName: string;
@@ -26,7 +27,7 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user , fetchAndUpdateUnreadCount } = useAuth();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -57,7 +58,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         socket.on("getNotification", (data: Notification) => {
             setNotifications((prev) => [data, ...prev]);
-            toast.success(data.message, { icon: '🔔' });
+            toast.success(data.message, { icon: <Bell/> });
+
+             if (data.type === 'newMessage') {
+                fetchAndUpdateUnreadCount();
+            }
         });
         
         // Cleanup listener
