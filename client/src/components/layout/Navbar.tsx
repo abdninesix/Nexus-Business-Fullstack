@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle, FileText } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -187,7 +187,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden absolute w-full z-20 bg-white border-b border-gray-200 animate-fade-in">
+        <div className="md:hidden absolute w-full z-20 bg-white border-b border-gray-200">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {user ? (
               <>

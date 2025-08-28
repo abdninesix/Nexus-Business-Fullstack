@@ -43,7 +43,7 @@ function App() {
   return (
     <AuthProvider>
       <SocketProvider>
-        <Toaster position="top-right"/>
+        <Toaster/>
         <Router>
           <SocketHandler />
           <Routes>

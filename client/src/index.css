@@ -41,3 +41,10 @@
 .rbc-date-cell  {
     @apply flex justify-center rounded-lg
 }
+
+.animate-enter {
+  @apply animate-toast-enter;
+}
+.animate-leave {
+  @apply animate-toast-leave;
+}
