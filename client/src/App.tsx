@@ -35,15 +35,27 @@ import { CalendarPage } from './pages/calendar/CalenderPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { SocketProvider } from './context/SocketContext';
+import { SocketHandler, SocketProvider } from './context/SocketContext';
 import { VideoCallPage } from './pages/call/VideoCallPage';
 import { PublicRoute } from './components/auth/PublicRoute';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <AuthProvider>
       <SocketProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 5000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+          }}
+        />
         <Router>
+          <SocketHandler />
           <Routes>
             {/* Authentication Routes */}
             <Route element={<PublicRoute />}>

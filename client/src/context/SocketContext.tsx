@@ -19,7 +19,9 @@ interface Notification {
 
 interface SocketContextType {
     socket: Socket | null;
+    setSocket: (socket: Socket | null) => void; // Expose setters
     notifications: Notification[];
+    setNotifications: (notifications: React.SetStateAction<Notification[]>) => void; // Expose setters
     clearNotifications: () => void;
 }
 
@@ -32,101 +34,95 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, fetchAndUpdateUnreadCount } = useAuth();
-    const navigate = useNavigate();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-
-    useEffect(() => {
-        // Only connect if the user is logged in
-        if (user) {
-            // const newSocket = io("http://localhost:3000");
-            const newSocket = io("https://nexus-server-a951.onrender.com");
-            setSocket(newSocket);
-
-            // Identify this client to the server
-            newSocket.emit("addNewUser", user._id);
-
-            // Cleanup on dismount or user change
-            return () => {
-                newSocket.disconnect();
-            };
-        } else {
-            // If user logs out, disconnect socket
-            socket?.disconnect();
-            setSocket(null);
-        }
-    }, [user]);
-
-    // Effect for listening to notifications
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on("getNotification", (data: Notification) => {
-            setNotifications((prev) => [data, ...prev]);
-
-            let icon = <Bell />;
-            let path = '/notifications';
-
-            if (data.type === 'newMessage') {
-                icon = <MessageCircle />;
-                // We'll need the sender's ID to navigate to the chat.
-                // This needs to be added to the backend emit.
-                path = data.relatedData?.chatId ? `/chat/${data.relatedData.chatId}` : '/messages';
-                fetchAndUpdateUnreadCount();
-            } else if (data.type === 'newMeeting') {
-                icon = <Calendar />;
-                path = '/calendar';
-            }
-
-            toast.custom((t) => (
-                <div
-                    className={`${t.visible ? 'animate-enter' : 'animate-leave'
-                        } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-                    onClick={() => {
-                        navigate(path);
-                        toast.dismiss(t.id); // Dismiss the toast on click
-                    }}
-                >
-                    <div className="flex-1 w-0 p-4">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0 pt-0.5 text-primary-600">
-                                {icon}
-                            </div>
-                            <div className="ml-3 flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                    {data.senderName}
-                                </p>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    {data.message}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex border-l border-gray-200">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation(); // Prevent navigation
-                                toast.dismiss(t.id);
-                            }}
-                            className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-primary-600 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            ), { duration: 6000 }); // Keep the longer duration
-        });
-
-        // Cleanup listener
-        return () => { socket.off("getNotification"); };
-    }, [socket, fetchAndUpdateUnreadCount, navigate]);
 
     const clearNotifications = () => {
         setNotifications([]);
     };
 
-    const value = { socket, notifications, clearNotifications };
+    const value = { socket, setSocket, notifications, setNotifications, clearNotifications };
 
     return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };
+
+// This is a "headless" component. It renders nothing, but contains all the logic.
+const SocketHandler: React.FC = () => {
+    const { user, fetchAndUpdateUnreadCount } = useAuth();
+    // It's safe to use these hooks here because this component will be inside the router
+    const { setSocket, setNotifications } = useSocket();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            // const newSocket = io("http://localhost:3000");
+            const newSocket = io("https://nexus-server-a951.onrender.com");
+            setSocket(newSocket);
+            newSocket.emit("addNewUser", user._id);
+
+            // The notification listener logic is moved here
+            newSocket.on("getNotification", (data: Notification) => {
+                setNotifications((prev) => [data, ...prev]);
+
+                let icon = <Bell />;
+                let path = '/notifications';
+
+                if (data.type === 'newMessage') {
+                    icon = <MessageCircle />;
+                    path = data.relatedData?.chatId ? `/chat/${data.relatedData.chatId}` : '/messages';
+                    fetchAndUpdateUnreadCount();
+                } else if (data.type === 'newMeeting') {
+                    icon = <Calendar />;
+                    path = '/calendar';
+                }
+
+                toast.custom((t) => (
+                    <div
+                        className={`${t.visible ? 'animate-enter' : 'animate-leave'
+                            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+                        onClick={() => {
+                            navigate(path);
+                            toast.dismiss(t.id); // Dismiss the toast on click
+                        }}
+                    >
+                        <div className="flex-1 w-0 p-4">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0 pt-0.5 text-primary-600">
+                                    {icon}
+                                </div>
+                                <div className="ml-3 flex-1">
+                                    <p className="text-sm font-medium text-gray-900">
+                                        {data.senderName}
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {data.message}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex border-l border-gray-200">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent navigation
+                                    toast.dismiss(t.id);
+                                }}
+                                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-primary-600 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                ), { duration: 6000 });
+            });
+
+            return () => {
+                newSocket.disconnect();
+                setSocket(null);
+            };
+        }
+    }, [user, setSocket, setNotifications, fetchAndUpdateUnreadCount, navigate]);
+
+    return null; // This component does not render any UI
+};
+
+export { SocketHandler };
