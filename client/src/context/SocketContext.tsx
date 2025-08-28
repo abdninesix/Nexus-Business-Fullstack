@@ -79,18 +79,18 @@ const SocketHandler: React.FC = () => {
                 toast.custom((t) => (
                     <div
                         className={`${t.visible ? 'animate-enter' : 'animate-leave'
-                            } max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden cursor-pointer`}
+                            } max-w-sm w-full  bg-gray-900 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden cursor-pointer`}
                         onClick={() => {
                             navigate(path);
                             toast.dismiss(t.id);
                         }}
                     >
                         {/* Icon Section with Colored Background */}
-                        <div className="w-12 h-full flex items-center justify-center bg-primary-600">
-                            {React.cloneElement(icon, { size: 24, className: "text-white" })}
+                        <div className="w-12 h-full flex items-center justify-center text-primary-600">
+                            {React.cloneElement(icon, { size: 24 })}
                         </div>
                         {/* Main Content */}
-                        <div className="flex-1 w-0 p-3 bg-gray-900">
+                        <div className="flex-1 w-0 p-3">
                             <div className="flex items-start">
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">
@@ -109,7 +109,7 @@ const SocketHandler: React.FC = () => {
                                     e.stopPropagation(); // Prevent navigation when only closing
                                     toast.dismiss(t.id);
                                 }}
-                                className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="p-2 rounded-full text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
                             >
                                 <X size={16} />
                             </button>
