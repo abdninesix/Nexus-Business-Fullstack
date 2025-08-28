@@ -86,17 +86,17 @@ const SocketHandler: React.FC = () => {
                         }}
                     >
                         {/* Icon Section with Colored Background */}
-                        <div className="w-12 h-16 flex items-center justify-center bg-primary-600">
+                        <div className="w-12 h-full flex items-center justify-center bg-primary-600">
                             {React.cloneElement(icon, { size: 24, className: "text-white" })}
                         </div>
                         {/* Main Content */}
-                        <div className="flex-1 w-0 p-3">
+                        <div className="flex-1 w-0 p-3 bg-gray-900">
                             <div className="flex items-start">
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-gray-900">
+                                    <p className="text-sm font-bold text-white">
                                         {data.senderName}
                                     </p>
-                                    <p className="mt-1 text-sm text-gray-600">
+                                    <p className="mt-1 text-sm text-gray-300">
                                         {data.message}
                                     </p>
                                 </div>
