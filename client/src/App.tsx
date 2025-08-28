@@ -44,16 +44,7 @@ function App() {
   return (
     <AuthProvider>
       <SocketProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 5000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
-        />
+        <Toaster position="top-right"/>
         <Router>
           <SocketHandler />
           <Routes>
