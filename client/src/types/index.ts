@@ -136,14 +136,19 @@ export interface ProfileState {
   name: string;
   email: string;
   bio: string;
-  // Common fields end
+  location?: string;
   // Entrepreneur fields
   startupName?: string;
-  industry?: string;
-  location?: string;
+  pitchSummary?: string;
   fundingNeeded?: string;
+  industry?: string;
+  foundedYear?: number | null;
+  teamSize?: number;
   // Investor fields
-  investmentInterests?: string; // Stored as a comma-separated string for the input
+  investmentInterests?: string[];
+  investmentStage?: string[];
+  portfolioCompanies?: string[];
+  totalInvestments?: number;
   minimumInvestment?: string;
   maximumInvestment?: string;
 }

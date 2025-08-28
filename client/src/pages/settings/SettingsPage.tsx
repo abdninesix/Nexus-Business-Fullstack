@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { User, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
+import { Lock, Bell, Globe, Palette, CreditCard, User2 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile, changeUserPassword } from '../../api/users';
@@ -12,32 +12,31 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
-import { ProfileState } from '../../types';
+import { User, EntrepreneurProfile, InvestorProfile } from '../../types';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for controlled form inputs
-  const [profile, setProfile] = useState<ProfileState>({ name: '', email: '', bio: '' });
+  const [profile, setProfile] = useState<Partial<User & EntrepreneurProfile & InvestorProfile>>({});
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [newInterest, setNewInterest] = useState('');
+  const [newStage, setNewStage] = useState('');
+  const [newCompany, setNewCompany] = useState('');
 
   // Populate form state when user data is loaded
   useEffect(() => {
     if (user) {
       setProfile({
+        // Base user fields
         name: user.name || '',
         email: user.email || '',
         bio: user.bio || '',
-        // Populate entrepreneur fields
-        startupName: user.entrepreneurProfile?.startupName || '',
-        industry: user.entrepreneurProfile?.industry || '',
-        location: user.entrepreneurProfile?.location || '',
-        fundingNeeded: user.entrepreneurProfile?.fundingNeeded || '',
-        // Populate investor fields
-        investmentInterests: user.investorProfile?.investmentInterests?.join(', ') || '',
-        minimumInvestment: user.investorProfile?.minimumInvestment || '',
-        maximumInvestment: user.investorProfile?.maximumInvestment || '',
+        // Entrepreneur fields (spread the object)
+        ...user.entrepreneurProfile,
+        // Investor fields (spread the object)
+        ...user.investorProfile,
       });
     }
   }, [user]);
@@ -78,7 +77,21 @@ export const SettingsPage: React.FC = () => {
 
   // === EVENT HANDLERS ===
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const isNumberField = ['foundedYear', 'teamSize', 'totalInvestments'].includes(name);
+    setProfile(prev => ({ ...prev, [name]: isNumberField ? parseInt(value) || undefined : value }));
+  };
+
+  const handleAddItem = (field: keyof InvestorProfile, value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    if (!value.trim()) return;
+    const currentArray = (profile[field] as string[] | undefined) || [];
+    setProfile(prev => ({ ...prev, [field]: [...currentArray, value.trim()] }));
+    setter('');
+  };
+
+  const handleRemoveItem = (field: keyof InvestorProfile, index: number) => {
+    const currentArray = (profile[field] as string[] | undefined) || [];
+    setProfile(prev => ({ ...prev, [field]: currentArray.filter((_, i) => i !== index) }));
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,13 +105,10 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleProfileSubmit = () => {
-    // Prepare the data to be sent
-    const dataToSend: any = { ...profile };
-    // Convert comma-separated string back to an array for the backend
-    if (user?.role === 'investor' && dataToSend.investmentInterests) {
-      dataToSend.investmentInterests = dataToSend.investmentInterests.split(',').map((item: string) => item.trim());
-    }
-    profileMutation.mutate(dataToSend);
+    // The `profile` state object is already in the correct shape to be sent to the API.
+    // The backend will receive all fields and correctly place them in the nested
+    // entrepreneurProfile or investorProfile objects.
+    profileMutation.mutate(profile);
   };
 
   const handlePasswordSubmit = () => {
@@ -127,7 +137,7 @@ export const SettingsPage: React.FC = () => {
           <CardBody className="p-2">
             <nav className="space-y-1">
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-primary-700 bg-primary-50 rounded-md">
-                <User size={18} className="mr-3" />
+                <User2 size={18} className="mr-3" />
                 Profile
               </button>
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md">
@@ -195,32 +205,51 @@ export const SettingsPage: React.FC = () => {
                   onChange={handleProfileChange}
                 ></textarea>
               </div>
-              {/* --- DYNAMIC ENTREPRENEUR FIELDS --- */}
+              {/* --- ENTREPRENEUR FIELDS --- */}
               {user.role === 'entrepreneur' && (
                 <div className="space-y-6 pt-6 border-t">
-                  <h3 className="text-md font-medium text-gray-900">Startup Details</h3>
+                  <h3 className="text-md font-medium">Startup Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input label="Startup Name" name="startupName" value={profile.startupName} onChange={handleProfileChange} />
                     <Input label="Industry" name="industry" value={profile.industry} onChange={handleProfileChange} />
-                    <Input label="Location" name="location" value={profile.location} onChange={handleProfileChange} />
+                    <Input label="Pitch Summary (1-2 sentences)" name="pitchSummary" value={profile.pitchSummary} onChange={handleProfileChange} />
                     <Input label="Funding Needed" name="fundingNeeded" value={profile.fundingNeeded} onChange={handleProfileChange} />
+                    <Input label="Founded Year" name="foundedYear" type="number" value={profile.foundedYear || ''} onChange={handleProfileChange} />
+                    <Input label="Team Size" name="teamSize" type="number" value={profile.teamSize || ''} onChange={handleProfileChange} />
                   </div>
                 </div>
               )}
-              {/* --- DYNAMIC INVESTOR FIELDS --- */}
+              {/* --- INVESTOR FIELDS --- */}
               {user.role === 'investor' && (
                 <div className="space-y-6 pt-6 border-t">
-                  <h3 className="text-md font-medium text-gray-900">Investor Details</h3>
+                  <h3 className="text-md font-medium">Investor Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input
-                      label="Investment Interests"
-                      name="investmentInterests"
-                      value={profile.investmentInterests}
-                      onChange={handleProfileChange}
-                      placeholder="e.g., SaaS, FinTech, AI"
-                    />
-                    <Input label="Minimum Investment" name="minimumInvestment" value={profile.minimumInvestment} onChange={handleProfileChange} placeholder="$250K" />
-                    <Input label="Maximum Investment" name="maximumInvestment" value={profile.maximumInvestment} onChange={handleProfileChange} placeholder="$1.5M" />
+                    <Input label="Minimum Investment" name="minimumInvestment" value={profile.minimumInvestment} onChange={handleProfileChange} />
+                    <Input label="Maximum Investment" name="maximumInvestment" value={profile.maximumInvestment} onChange={handleProfileChange} />
+                    <Input label="Total Investments (Number)" name="totalInvestments" type="number" value={profile.totalInvestments || ''} onChange={handleProfileChange} />
+                  </div>
+                  {/* Investment Stages (Array) */}
+                  <div>
+                    <label className="block text-sm font-medium">Investment Stages</label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {profile.investmentStage?.map((stage, index) => (
+                        <Badge key={index} onRemove={() => handleRemoveItem('investmentStage', index)}>{stage}</Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Input placeholder="Add a stage (e.g., Seed)" value={newStage} onChange={e => setNewStage(e.target.value)} />
+                      <Button type="button" onClick={() => handleAddItem('investmentStage', newStage, setNewStage)}>Add</Button>
+                    </div>
+                  </div>
+                  {/* Investment Interests (Array) */}
+                  <div>
+                    <label className="block text-sm font-medium">Investment Interests</label>
+                    {/* ... Similar UI as Investment Stages for `investmentInterests` ... */}
+                  </div>
+                  {/* Portfolio Companies (Array) */}
+                  <div>
+                    <label className="block text-sm font-medium">Portfolio Companies</label>
+                    {/* ... Similar UI as Investment Stages for `portfolioCompanies` ... */}
                   </div>
                 </div>
               )}

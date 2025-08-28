@@ -92,27 +92,34 @@ export const getProfile = (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Destructure common fields and role-specific fields from the request body
-    const { name, bio, avatarUrl, ...profileFields } = req.body;
+    // Separate the incoming data into common fields and role-specific fields
+    const {
+      name, email, bio,
+      startupName, pitchSummary, fundingNeeded, industry, location, foundedYear, teamSize,
+      investmentInterests, investmentStage, portfolioCompanies, totalInvestments, minimumInvestment, maximumInvestment
+    } = req.body;
 
     // Update common fields
     if (name) user.name = name;
+    if (email) user.email = email;
     if (bio) user.bio = bio;
-    if (avatarUrl) user.avatarUrl = avatarUrl;
 
-    // Update role-specific fields within the nested profile object
+    // Conditionally update nested profile objects
     if (user.role === 'entrepreneur') {
-      Object.assign(user.entrepreneurProfile, profileFields);
-    } else if (user.role === 'investor') {
-      Object.assign(user.investorProfile, profileFields);
+      const entrepreneurData = { startupName, pitchSummary, fundingNeeded, industry, location, foundedYear, teamSize };
+      // Clean up undefined properties so they don't overwrite existing data
+      Object.keys(entrepreneurData).forEach(key => entrepreneurData[key] === undefined && delete entrepreneurData[key]);
+      Object.assign(user.entrepreneurProfile, entrepreneurData);
+    }
+    else if (user.role === 'investor') {
+      const investorData = { investmentInterests, investmentStage, portfolioCompanies, totalInvestments, minimumInvestment, maximumInvestment };
+      Object.keys(investorData).forEach(key => investorData[key] === undefined && delete investorData[key]);
+      Object.assign(user.investorProfile, investorData);
     }
 
     const updatedUser = await user.save();
-
     res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: 'Error updating profile', error: error.message });
