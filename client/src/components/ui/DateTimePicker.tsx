@@ -42,14 +42,40 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
   const handleTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value: timeValue } = e.target;
     const newDate = new Date(value.getTime());
-    if (name === 'hours') newDate.setHours(parseInt(timeValue, 10));
-    if (name === 'minutes') newDate.setMinutes(parseInt(timeValue, 10));
+    let currentHours = newDate.getHours();
+
+    if (name === 'hours') {
+      const newHours = parseInt(timeValue, 10);
+      // If AM/PM is PM and hour is not 12, add 12. If AM and hour is 12 (midnight), set to 0.
+      const isPM = currentHours >= 12;
+      if (isPM && newHours < 12) {
+        newDate.setHours(newHours + 12);
+      } else if (!isPM && newHours === 12) { // Special case for 12 AM (midnight)
+        newDate.setHours(0);
+      } else {
+        newDate.setHours(newHours);
+      }
+    }
+    if (name === 'minutes') {
+      newDate.setMinutes(parseInt(timeValue, 10));
+    }
+    if (name === 'ampm') {
+      const ampm = timeValue;
+      if (ampm === 'PM' && currentHours < 12) {
+        newDate.setHours(currentHours + 12);
+      } else if (ampm === 'AM' && currentHours >= 12) {
+        newDate.setHours(currentHours - 12);
+      }
+    }
     if (isBefore(newDate, new Date())) {
       toast.error("Cannot select a time in the past.");
       return;
     }
     onChange(newDate);
   };
+
+  // Get current hour in 12-hour format
+  const current12Hour = value.getHours() % 12 || 12;
 
   return (
     <div className="relative w-full" ref={wrapperRef}>
@@ -97,12 +123,20 @@ export const CustomDateTimePicker: React.FC<DateTimePickerProps> = ({ value, onC
           </div>
           {/* Time Picker */}
           <div className="flex items-center justify-center space-x-2 pt-3 mt-3 border-t">
-            <select name="hours" value={value.getHours()} onChange={handleTimeChange} className="px-2 py-1 border rounded-md bg-transparent text-sm">
-              {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, '0')}</option>)}
+            <select name="hours" value={current12Hour} onChange={handleTimeChange} className="px-2 py-1 border rounded-md bg-transparent text-sm">
+              {/* Generate hours from 1 to 12 */}
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(hour => (
+                <option key={hour} value={hour}>{String(hour).padStart(2, '0')}</option>
+              ))}
             </select>
             <span>:</span>
             <select name="minutes" value={value.getMinutes()} onChange={handleTimeChange} className="px-2 py-1 border rounded-md bg-transparent text-sm">
               {Array.from({ length: 4 }, (_, i) => <option key={i * 15} value={i * 15}>{String(i * 15).padStart(2, '0')}</option>)}
+            </select>
+            {/* AM/PM Selector */}
+            <select name="ampm" value={value.getHours() >= 12 ? 'PM' : 'AM'} onChange={handleTimeChange} className="px-2 py-1 border rounded-md bg-transparent text-sm">
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
             </select>
           </div>
         </div>

@@ -23,10 +23,12 @@ export const createMeeting = async (req, res) => {
     // --- NEW VALIDATION LOGIC ---
     const startTime = new Date(start);
     const endTime = new Date(end);
+    const toleranceInMinutes = 2;
     const now = new Date();
+    const tolerantNow = new Date(now.getTime() - (toleranceInMinutes * 60 * 1000));
 
     // 1. Check if the start time is in the past
-    if (startTime < now) {
+    if (startTime < tolerantNow) {
         return res.status(400).json({ message: "Cannot schedule a meeting in the past." });
     }
     
