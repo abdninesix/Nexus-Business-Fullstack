@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import React from 'react';
 
 export type BadgeVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'gray';
@@ -10,6 +11,7 @@ interface BadgeProps {
   rounded?: boolean;
   className?: string;
   onClick?: (event: React.MouseEvent<HTMLSpanElement>) => void;
+  onRemove?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -19,6 +21,7 @@ export const Badge: React.FC<BadgeProps> = ({
   rounded = false,
   className = '',
   onClick,
+  onRemove,
 }) => {
   const variantClasses = {
     primary: 'bg-primary-100 text-primary-800',
@@ -41,9 +44,21 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={`inline-flex items-center font-medium ${roundedClass} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      onClick={onClick}
+      onClick={!onRemove ? onClick : undefined}
+      style={{ cursor: onClick && !onRemove ? 'pointer' : 'default' }}
     >
       {children}
+      {onRemove && (
+        <button
+          type="button"
+          aria-label="Remove item"
+          className="ml-1.5 flex-shrink-0 rounded-full text-inherit opacity-70 hover:opacity-100 focus:outline-none"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent any parent onClick from firing
+            onRemove(e);
+          }}
+        > <X size={size === 'sm' ? 12 : 14} /></button>
+      )}
     </span>
   );
 };

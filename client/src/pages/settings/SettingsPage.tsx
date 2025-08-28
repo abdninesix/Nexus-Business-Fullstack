@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Lock, Bell, Globe, Palette, CreditCard, User2 } from 'lucide-react';
+import { User, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile, changeUserPassword } from '../../api/users';
@@ -12,31 +12,44 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
-import { User, EntrepreneurProfile, InvestorProfile } from '../../types';
+import { ProfileState } from '../../types';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for controlled form inputs
-  const [profile, setProfile] = useState<Partial<User & EntrepreneurProfile & InvestorProfile>>({});
-  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [profile, setProfile] = useState<ProfileState>({
+    name: '', email: '', bio: '',
+    investmentInterests: [], investmentStage: [], portfolioCompanies: []
+  });
   const [newInterest, setNewInterest] = useState('');
   const [newStage, setNewStage] = useState('');
   const [newCompany, setNewCompany] = useState('');
+  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
   // Populate form state when user data is loaded
   useEffect(() => {
     if (user) {
       setProfile({
-        // Base user fields
         name: user.name || '',
         email: user.email || '',
         bio: user.bio || '',
-        // Entrepreneur fields (spread the object)
-        ...user.entrepreneurProfile,
-        // Investor fields (spread the object)
-        ...user.investorProfile,
+        location: user.entrepreneurProfile?.location || '',
+        // Entrepreneur fields
+        startupName: user.entrepreneurProfile?.startupName || '',
+        pitchSummary: user.entrepreneurProfile?.pitchSummary || '',
+        fundingNeeded: user.entrepreneurProfile?.fundingNeeded || '',
+        industry: user.entrepreneurProfile?.industry || '',
+        foundedYear: user.entrepreneurProfile?.foundedYear || null,
+        teamSize: user.entrepreneurProfile?.teamSize || 0,
+        // Investor fields
+        investmentInterests: user.investorProfile?.investmentInterests || [],
+        investmentStage: user.investorProfile?.investmentStage || [],
+        portfolioCompanies: user.investorProfile?.portfolioCompanies || [],
+        totalInvestments: user.investorProfile?.totalInvestments || 0,
+        minimumInvestment: user.investorProfile?.minimumInvestment || '',
+        maximumInvestment: user.investorProfile?.maximumInvestment || '',
       });
     }
   }, [user]);
@@ -78,20 +91,9 @@ export const SettingsPage: React.FC = () => {
   // === EVENT HANDLERS ===
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    // For number fields, convert the value
     const isNumberField = ['foundedYear', 'teamSize', 'totalInvestments'].includes(name);
-    setProfile(prev => ({ ...prev, [name]: isNumberField ? parseInt(value) || undefined : value }));
-  };
-
-  const handleAddItem = (field: keyof InvestorProfile, value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
-    if (!value.trim()) return;
-    const currentArray = (profile[field] as string[] | undefined) || [];
-    setProfile(prev => ({ ...prev, [field]: [...currentArray, value.trim()] }));
-    setter('');
-  };
-
-  const handleRemoveItem = (field: keyof InvestorProfile, index: number) => {
-    const currentArray = (profile[field] as string[] | undefined) || [];
-    setProfile(prev => ({ ...prev, [field]: currentArray.filter((_, i) => i !== index) }));
+    setProfile(prev => ({ ...prev, [name]: isNumberField ? parseInt(value) || 0 : value }));
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,10 +106,22 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  // Generic handler to add an item to an array field
+  const handleAddItem = (field: keyof ProfileState, value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    if (!value.trim()) return; // Don't add empty items
+    const currentArray = (profile[field] as string[]) || [];
+    setProfile(prev => ({ ...prev, [field]: [...currentArray, value.trim()] }));
+    setter(''); // Clear the input field
+  };
+
+  // Generic handler to remove an item from an array field
+  const handleRemoveItem = (field: keyof ProfileState, index: number) => {
+    const currentArray = (profile[field] as string[]) || [];
+    setProfile(prev => ({ ...prev, [field]: currentArray.filter((_, i) => i !== index) }));
+  };
+
   const handleProfileSubmit = () => {
-    // The `profile` state object is already in the correct shape to be sent to the API.
-    // The backend will receive all fields and correctly place them in the nested
-    // entrepreneurProfile or investorProfile objects.
+    // The profile state is already in the correct format for the API call
     profileMutation.mutate(profile);
   };
 
@@ -137,7 +151,7 @@ export const SettingsPage: React.FC = () => {
           <CardBody className="p-2">
             <nav className="space-y-1">
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-primary-700 bg-primary-50 rounded-md">
-                <User2 size={18} className="mr-3" />
+                <User size={18} className="mr-3" />
                 Profile
               </button>
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md">
@@ -244,12 +258,20 @@ export const SettingsPage: React.FC = () => {
                   {/* Investment Interests (Array) */}
                   <div>
                     <label className="block text-sm font-medium">Investment Interests</label>
-                    {/* ... Similar UI as Investment Stages for `investmentInterests` ... */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {profile.investmentInterests?.map((stage, index) => (
+                        <Badge key={index} onRemove={() => handleRemoveItem('investmentStage', index)}>{stage}</Badge>
+                      ))}
+                    </div>
                   </div>
                   {/* Portfolio Companies (Array) */}
                   <div>
                     <label className="block text-sm font-medium">Portfolio Companies</label>
-                    {/* ... Similar UI as Investment Stages for `portfolioCompanies` ... */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {profile.portfolioCompanies?.map((stage, index) => (
+                        <Badge key={index} onRemove={() => handleRemoveItem('investmentStage', index)}>{stage}</Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
