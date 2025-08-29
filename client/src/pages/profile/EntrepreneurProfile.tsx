@@ -95,7 +95,7 @@ export const EntrepreneurProfile: React.FC = () => {
       {/* Profile header */}
       <Card>
         <CardBody className="sm:flex sm:items-start sm:justify-between p-6">
-          <div className="sm:flex sm:space-x-6">
+          <div className="sm:flex items-start sm:space-x-6">
             <Avatar src={entrepreneur.avatarUrl} alt={entrepreneur.name} size="xl" status={entrepreneur.isOnline ? 'online' : 'offline'} className="mx-auto sm:mx-0" />
             <div className="mt-4 sm:mt-0 text-center sm:text-left">
               <h1 className="text-2xl font-bold text-gray-900">{entrepreneur.name}</h1>
