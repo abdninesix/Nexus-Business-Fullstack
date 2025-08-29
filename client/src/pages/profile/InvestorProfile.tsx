@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { dataTagErrorSymbol, useQuery } from '@tanstack/react-query';
 import { MessageCircle, Building2, MapPin, UserCircle, BarChart3, Briefcase } from 'lucide-react';
 
 import { Avatar } from '../../components/ui/Avatar';
@@ -68,7 +68,7 @@ export const InvestorProfile: React.FC = () => {
               className="mx-auto sm:mx-0"
             />
 
-            <div className="mt-4 sm:mt-0 text-center sm:text-left">
+            <div className="mt-4 sm:mt-0">
               <h1 className="text-2xl font-bold text-gray-900">{investor.name}</h1>
               <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />
@@ -76,11 +76,7 @@ export const InvestorProfile: React.FC = () => {
               </p>
 
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
-                <Badge variant="primary">
-                  <MapPin size={14} className="mr-1" />
-                  {/* Location data would need to be added to investorProfile if desired */}
-                  San Francisco, CA
-                </Badge>
+                <Badge variant="primary"><MapPin size={14} className="mr-1" />{profile.location}</Badge>
                 {profile.investmentStage?.map((stage, index) => (
                   <Badge key={index} variant="secondary" size="sm">{stage}</Badge>
                 ))}
