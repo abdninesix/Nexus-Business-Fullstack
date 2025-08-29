@@ -68,7 +68,7 @@ export const InvestorProfile: React.FC = () => {
               className="mx-auto sm:mx-0"
             />
 
-            <div className="mt-4 sm:mt-0">
+            <div className="mt-4 sm:mt-0 text-left">
               <h1 className="text-2xl font-bold text-gray-900">{investor.name}</h1>
               <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />

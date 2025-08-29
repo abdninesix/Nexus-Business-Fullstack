@@ -97,7 +97,7 @@ export const EntrepreneurProfile: React.FC = () => {
         <CardBody className="sm:flex sm:items-start sm:justify-between p-6">
           <div className="sm:flex items-start sm:space-x-6">
             <Avatar src={entrepreneur.avatarUrl} alt={entrepreneur.name} size="xl" status={entrepreneur.isOnline ? 'online' : 'offline'} className="mx-auto sm:mx-0" />
-            <div className="mt-4 sm:mt-0">
+            <div className="mt-4 sm:mt-0 text-left">
               <h1 className="text-2xl font-bold text-gray-900">{entrepreneur.name}</h1>
               <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />
