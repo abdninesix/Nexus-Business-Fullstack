@@ -48,17 +48,44 @@ export const getRequestStatus = async (req, res) => {
   try {
     const { entrepreneurId } = req.params;
     const investorId = req.user._id;
-
     const request = await Collaboration.findOne({ investorId, entrepreneurId });
 
     if (request) {
-      // If a request exists, return its status
-      res.status(200).json({ status: request.status });
+      // If a request exists, return its status and id
+      res.status(200).json({ status: request.status, requestId: request._id });
     } else {
       // If no request exists, return a clear 'none' status
       res.status(200).json({ status: 'none' });
     }
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch request status' });
+  }
+};
+
+// function to delete a collaboration request
+export const deleteRequest = async (req, res) => {
+  try {
+    const { id } = req.params; // The ID of the collaboration document
+    const userId = req.user._id;
+
+    const request = await Collaboration.findById(id);
+
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found.' });
+    }
+
+    // Security Check: Ensure the person deleting is part of the collaboration
+    const isInvestor = request.investorId.toString() === userId.toString();
+    const isEntrepreneur = request.entrepreneurId.toString() === userId.toString();
+
+    if (!isInvestor && !isEntrepreneur) {
+      return res.status(403).json({ message: 'You are not authorized to delete this request.' });
+    }
+
+    await request.deleteOne(); // Use deleteOne() on the instance
+
+    res.status(200).json({ message: 'Collaboration removed successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete request' });
   }
 };

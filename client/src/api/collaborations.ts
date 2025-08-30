@@ -4,7 +4,7 @@ import api from './axios';
 
 export interface CollaborationRequest {
   _id: string;
-  investorId: User; 
+  investorId: User;
   entrepreneurId: string; // This might just be an ID if not populated
   message: string;
   status: 'pending' | 'accepted' | 'rejected';
@@ -14,6 +14,7 @@ export interface CollaborationRequest {
 
 interface RequestStatus {
   status: 'pending' | 'accepted' | 'rejected' | 'none';
+  requestId?: string;
 }
 
 export const fetchReceivedRequests = async (): Promise<CollaborationRequest[]> => {
@@ -28,11 +29,16 @@ export const updateRequestStatus = async (payload: { id: string; status: 'accept
 };
 
 export const createCollaborationRequest = async (payload: { entrepreneurId: string; message: string }): Promise<CollaborationRequest> => {
-    const { data } = await api.post('/collaborations', payload);
-    return data;
+  const { data } = await api.post('/collaborations', payload);
+  return data;
 };
 
 export const fetchRequestStatus = async (entrepreneurId: string): Promise<RequestStatus> => {
   const { data } = await api.get(`/collaborations/status/${entrepreneurId}`);
+  return data;
+};
+
+export const deleteCollaborationRequest = async (id: string): Promise<{ message: string }> => {
+  const { data } = await api.delete(`/collaborations/${id}`);
   return data;
 };

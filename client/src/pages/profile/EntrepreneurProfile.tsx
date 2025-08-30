@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { MessageCircle, Users, Calendar, Building2, MapPin, UserCircle, FileText, DollarSign, Send } from 'lucide-react';
 
@@ -11,7 +11,7 @@ import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
-import { fetchRequestStatus, createCollaborationRequest } from '../../api/collaborations';
+import { fetchRequestStatus, createCollaborationRequest, deleteCollaborationRequest } from '../../api/collaborations';
 
 // A loading skeleton that mimics the page layout
 const ProfileSkeleton = () => (
@@ -26,7 +26,6 @@ export const EntrepreneurProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data: entrepreneur, isLoading, isError } = useQuery<User>({
     queryKey: ['user', id], // Query key is unique to this user's ID
@@ -40,41 +39,79 @@ export const EntrepreneurProfile: React.FC = () => {
   const isInvestor = currentUser?.role === 'investor';
 
   // 1. Query to check if a request has already been sent
-  const { data: collaborationStatus } = useQuery({
+  const { data: collaborationInfo, refetch: refetchStatus } = useQuery({
     queryKey: ['collaborationStatus', id],
     queryFn: () => fetchRequestStatus(id!),
     enabled: isInvestor && !isCurrentUser && !!id, // Only run for investors viewing this profile
   });
 
-  // 2. Derive the button state from the query result
-  const hasRequestedCollaboration = collaborationStatus?.status === 'pending' || collaborationStatus?.status === 'accepted';
-
-  // 3. Mutation to send a new collaboration request
+  // 2. Mutation to send a new collaboration request
   const createRequestMutation = useMutation({
     mutationFn: createCollaborationRequest,
     onSuccess: () => {
       toast.success("Collaboration request sent successfully!");
-      // Refetch the status to update the button state
-      queryClient.invalidateQueries({ queryKey: ['collaborationStatus', id] });
+      refetchStatus(); // Refetch status after sendin
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to send request.");
     }
   });
 
-  const handleSendRequest = () => {
-    if (!id) return;
-    createRequestMutation.mutate({
-      entrepreneurId: id,
-      message: `I'm interested in learning more about ${profile?.startupName} and would like to explore investment opportunities.`
-    });
-  };
+  // 3. Mutation to delete a collaboration request
+  const deleteRequestMutation = useMutation({
+    mutationFn: deleteCollaborationRequest,
+    onSuccess: () => {
+      toast.success("Connection removed.");
+      refetchStatus(); // Refetch status after deleting
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || "Failed to remove connection."),
+  });
 
-  // --- RENDER STATES ---
+  const handleCollaborationAction = () => {
+    if (!id || !collaborationInfo) return;
+
+    // Decide which action to take based on the current status
+    switch (collaborationInfo.status) {
+      case 'none':
+      case 'rejected':
+        createRequestMutation.mutate({
+          entrepreneurId: id,
+          message: `I'm interested in learning more about ${profile?.startupName}...`
+        });
+        break;
+      case 'accepted':
+        if (collaborationInfo.requestId) {
+          if (window.confirm("Are you sure you want to remove this connection?")) {
+            deleteRequestMutation.mutate(collaborationInfo.requestId);
+          }
+        }
+        break;
+      case 'pending':
+        // Optional: Implement a "withdraw request" feature here if desired
+        toast.success("Your request is still pending.");
+        break;
+    }
+  };
 
   if (isLoading) {
     return <ProfileSkeleton />;
   }
+
+  const getButtonProps = () => {
+    switch (collaborationInfo?.status) {
+      case 'pending':
+        return { text: 'Request Sent', disabled: true, variant: 'outline' as const };
+      case 'accepted':
+        return { text: 'Remove Connection', disabled: false, variant: 'error' as const };
+      case 'rejected':
+        return { text: 'Request Again', disabled: false, variant: 'primary' as const };
+      case 'none':
+      default:
+        return { text: 'Request Collaboration', disabled: false, variant: 'primary' as const };
+    }
+  };
+  const buttonProps = getButtonProps();
+  const isActionLoading = createRequestMutation.isPending || deleteRequestMutation.isPending;
 
   if (isError || !entrepreneur || !profile) {
     return (
@@ -114,19 +151,16 @@ export const EntrepreneurProfile: React.FC = () => {
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-2 justify-center sm:justify-end">
             {!isCurrentUser && (
               <div className='flex flex-col justify-between gap-4'>
-                {isInvestor && (
+                {!isCurrentUser && isInvestor && (
                   <Button
                     leftIcon={<Send size={18} />}
-                    // Update button state based on query and mutation
-                    disabled={hasRequestedCollaboration || createRequestMutation.isPending}
-                    isLoading={createRequestMutation.isPending}
-                    onClick={handleSendRequest}
+                    disabled={buttonProps.disabled || isActionLoading}
+                    isLoading={isActionLoading}
+                    onClick={handleCollaborationAction}
+                    variant={buttonProps.variant}
                     className='w-fit'
                   >
-                    {collaborationStatus?.status === 'pending' && 'Request Sent'}
-                    {collaborationStatus?.status === 'accepted' && 'Connected'}
-                    {collaborationStatus?.status === 'rejected' && 'Request Another'}
-                    {collaborationStatus?.status === 'none' && 'Request Collaboration'}
+                    {buttonProps.text}
                   </Button>
                 )}
                 <Button
@@ -315,12 +349,14 @@ export const EntrepreneurProfile: React.FC = () => {
                     Request access to detailed documents and financials by sending a collaboration request.
                   </p>
                   <Button
-                    className="mt-3 w-full"
-                    onClick={handleSendRequest}
-                    disabled={hasRequestedCollaboration || createRequestMutation.isPending}
-                    isLoading={createRequestMutation.isPending}
+                    leftIcon={<Send size={18} />}
+                    disabled={buttonProps.disabled || isActionLoading}
+                    isLoading={isActionLoading}
+                    onClick={handleCollaborationAction}
+                    variant={buttonProps.variant}
+                    className='w-fit'
                   >
-                    {collaborationStatus?.status === 'pending' ? 'Request Sent' : 'Request Collaboration'}
+                    {buttonProps.text}
                   </Button>
                 </div>
               )}
