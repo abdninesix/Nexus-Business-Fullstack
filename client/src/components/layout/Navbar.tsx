@@ -24,12 +24,21 @@ export const Navbar: React.FC = () => {
   // User dashboard route based on role
   const dashboardRoute = user?.role === 'entrepreneur'
     ? '/dashboard/entrepreneur'
-    : '/dashboard/investor';
+    : user?.role === 'investor'
+      ? '/dashboard/investor'
+      : '/login';
 
   // User profile route based on role and ID
   const profileRoute = user
     ? `/profile/${user.role}/${user._id}`
     : '/login';
+
+  // User document/deals route based on role and ID
+  const docDealRoute = user?.role === 'entrepreneur'
+    ? '/documents'
+    : user?.role === 'investor'
+      ? '/deals'
+      : '/login';
 
   const navLinksDesktop = [
     {
@@ -79,8 +88,8 @@ export const Navbar: React.FC = () => {
     },
     {
       icon: <FileText size={18} />,
-      text: 'Documents',
-      path: user ? '/documents' : '/login',
+      text: user?.role === 'entrepreneur' ? 'Documents' : 'Deals',
+      path: docDealRoute,
       badge: 0,
     },
     {
