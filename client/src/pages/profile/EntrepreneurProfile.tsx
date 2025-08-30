@@ -136,13 +136,13 @@ export const EntrepreneurProfile: React.FC = () => {
             <Avatar src={entrepreneur.avatarUrl} alt={entrepreneur.name} size="xl" status={entrepreneur.isOnline ? 'online' : 'offline'} className="mx-auto sm:mx-0" />
             <div className="mt-4 sm:mt-0 text-left">
               <h1 className="text-2xl font-bold text-gray-900">{entrepreneur.name}</h1>
-              <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
+              {profile.startupName && <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />
                 Founder at {profile.startupName}
-              </p>
+              </p>}
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
-                <Badge variant="primary">{profile.industry}</Badge>
-                <Badge variant="gray"><MapPin size={14} className="mr-1" />{entrepreneur.location}</Badge>
+               {profile.industry && <Badge variant="primary">{profile.industry}</Badge>}
+                {entrepreneur.location && <Badge variant="gray"><MapPin size={14} className="mr-1" />{entrepreneur.location}</Badge>}
                 <Badge variant="accent"><Calendar size={14} className="mr-1" />Founded {profile.foundedYear}</Badge>
                 <Badge variant="secondary"><Users size={14} className="mr-1" />{profile.teamSize} team members</Badge>
               </div>
