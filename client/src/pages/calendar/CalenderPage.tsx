@@ -18,6 +18,7 @@ import { Clock, Users, X } from 'lucide-react';
 import { Avatar } from '../../components/ui/Avatar';
 import { enUS } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { useDebounce } from '../../hooks/useDebouce';
 
 // Setup for react-big-calendar
 const locales = { 'en-US': enUS };
@@ -44,7 +45,6 @@ export const CalendarPage: React.FC = () => {
     const { user: currentUser } = useAuth();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
     // Set initial end time to be 1 hour after start time
@@ -54,6 +54,7 @@ export const CalendarPage: React.FC = () => {
     const [newEvent, setNewEvent] = useState({ title: '', start: initialStartTime, end: initialEndTime });
     const [selectedParticipants, setSelectedParticipants] = useState<User[]>([]);
     const [userSearch, setUserSearch] = useState('');
+    const debouncedUserSearch = useDebounce(userSearch, 300);
 
     const { data: meetings = [], isLoading } = useQuery<Meeting[]>({
         queryKey: ['meetings'],
@@ -99,9 +100,9 @@ export const CalendarPage: React.FC = () => {
 
     const filteredUsers = useMemo(() =>
         allUsers.filter(user =>
-            user.name.toLowerCase().includes(userSearch.toLowerCase()) &&
+            user.name.toLowerCase().includes(debouncedUserSearch.toLowerCase()) &&
             !selectedParticipants.some(p => p._id === user._id) // Don't show already selected users
-        ), [userSearch, selectedParticipants]
+        ), [debouncedUserSearch, selectedParticipants]
     );
 
     const handleSelectEvent = (event: { resource: Meeting }) => {
