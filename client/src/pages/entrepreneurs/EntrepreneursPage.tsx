@@ -22,13 +22,15 @@ export const EntrepreneursPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedFundingRange, setSelectedFundingRange] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   const { data: entrepreneurs = [], isLoading, isError } = useQuery<User[]>({
     queryKey: ['entrepreneurs'],
     queryFn: fetchEntrepreneurs,
   });
 
-  const allIndustries = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.entrepreneurProfile?.industry).filter(Boolean))), [entrepreneurs]);
+  const allLocations = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.location).filter(Boolean as any))), [entrepreneurs]);
+  const allIndustries = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.entrepreneurProfile?.industry).filter(Boolean as any))), [entrepreneurs]);
   const fundingRanges = ['< $500K', '$500K - $1M', '$1M - $5M', '> $5M'];
 
   const filteredEntrepreneurs = useMemo(() => {
@@ -59,9 +61,11 @@ export const EntrepreneursPage: React.FC = () => {
         }
       });
 
-      return matchesSearch && matchesIndustry && matchesFunding;
+      const matchesLocation = selectedLocations.length === 0 || (entrepreneur.location && selectedLocations.includes(entrepreneur.location));
+
+      return matchesSearch && matchesIndustry && matchesFunding && matchesLocation;
     });
-  }, [entrepreneurs, searchQuery, selectedIndustries, selectedFundingRange]);
+  }, [entrepreneurs, searchQuery, selectedIndustries, selectedFundingRange, selectedLocations]);
 
   const toggleIndustry = (industry: string | any) => {
     setSelectedIndustries(prev => prev.includes(industry) ? prev.filter(i => i !== industry) : [...prev, industry]);
@@ -69,6 +73,14 @@ export const EntrepreneursPage: React.FC = () => {
 
   const toggleFundingRange = (range: string) => {
     setSelectedFundingRange(prev => prev.includes(range) ? prev.filter(r => r !== range) : [...prev, range]);
+  };
+
+  const toggleLocation = (location: string) => {
+    setSelectedLocations(prev =>
+      prev.includes(location)
+        ? prev.filter(l => l !== location)
+        : [...prev, location]
+    );
   };
 
   return (
@@ -103,15 +115,32 @@ export const EntrepreneursPage: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Funding Range</h3>
                 <div className="flex flex-wrap gap-2">
                   {fundingRanges.map(range => (
-                    <button key={range} onClick={() => toggleFundingRange(range)} className="text-lg font-semibold text-gray-900">{range}</button>
+                    <Badge
+                      key={range}
+                      variant={selectedFundingRange.includes(range) ? 'primary' : 'gray'}
+                      className="cursor-pointer"
+                      onClick={() => toggleFundingRange(range)}
+                    >
+                      <MapPin size={12} className="mr-1" />
+                      {range}
+                    </Badge>
                   ))}
                 </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Location</h3>
                 <div className="flex flex-wrap gap-2">
-                  <MapPin size={16} className="mr-2" />
-                  San Francisco, CA
+                  {allLocations.slice(0, 5).map(location => (
+                    <Badge
+                      key={location}
+                      variant={selectedLocations.includes(location) ? 'primary' : 'gray'}
+                      className="cursor-pointer"
+                      onClick={() => toggleLocation(location)}
+                    >
+                      <MapPin size={12} className="mr-1" />
+                      {location}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </CardBody>
