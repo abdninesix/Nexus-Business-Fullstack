@@ -99,7 +99,7 @@ export const InvestorsPage: React.FC = () => {
                       key={interest}
                       variant={selectedInterests.includes(interest) ? 'primary' : 'gray'}
                       className="cursor-pointer"
-                      // onClick={() => toggleInterest(interest)}
+                      onClick={() => toggleInterest(interest)}
                     >
                       {interest}
                     </Badge>
