@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { User, Mail, Lock, CircleDollarSign, Building2, AlertCircle } from 'lucide-react';
@@ -18,14 +18,15 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('entrepreneur');
 
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
       toast.success('Account created successfully!');
       login(data); // Update the global state
-      navigate('/dashboard');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     },
     // onError is handled by the `error` state from the hook
   });
@@ -66,7 +67,7 @@ export const RegisterPage: React.FC = () => {
           {error && (
             <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-start">
               <AlertCircle size={18} className="mr-2 mt-0.5" />
-              <span>{error.message|| 'An unexpected error occurred'}</span>
+              <span>{error.message || 'An unexpected error occurred'}</span>
             </div>
           )}
 
