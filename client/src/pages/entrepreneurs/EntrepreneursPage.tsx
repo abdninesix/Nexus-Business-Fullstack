@@ -87,7 +87,7 @@ export const EntrepreneursPage: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Industry</h3>
                 <div className="space-y-2">
                   {allIndustries.map(industry => (
-                    <button key={industry} onClick={() => toggleIndustry(industry)} className={`...`}>{industry}</button>
+                    <button key={industry} onClick={() => toggleIndustry(industry)} className="text-lg font-semibold text-gray-900">{industry}</button>
                   ))}
                 </div>
               </div>
@@ -95,7 +95,7 @@ export const EntrepreneursPage: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Funding Range</h3>
                 <div className="space-y-2">
                   {fundingRanges.map(range => (
-                    <button key={range} onClick={() => toggleFundingRange(range)} className={`...`}>{range}</button>
+                    <button key={range} onClick={() => toggleFundingRange(range)} className="text-lg font-semibold text-gray-900">{range}</button>
                   ))}
                 </div>
               </div>

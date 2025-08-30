@@ -101,6 +101,7 @@ export const InvestorProfile: React.FC = () => {
                 variant="outline"
                 leftIcon={<UserCircle size={18} />}
                 onClick={() => navigate('/settings')}
+                className='w-fit'
               >
                 Edit Profile
               </Button>
