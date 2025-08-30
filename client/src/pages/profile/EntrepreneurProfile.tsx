@@ -133,15 +133,22 @@ export const EntrepreneurProfile: React.FC = () => {
       <Card>
         <CardBody className="sm:flex sm:items-start sm:justify-between p-6">
           <div className="sm:flex items-start sm:space-x-6">
-            <Avatar src={entrepreneur.avatarUrl} alt={entrepreneur.name} size="xl" status={entrepreneur.isOnline ? 'online' : 'offline'} className="mx-auto sm:mx-0" />
-            <div className="mt-4 sm:mt-0 text-left">
+            <Avatar
+              src={entrepreneur.avatarUrl}
+              alt={entrepreneur.name}
+              size="xl"
+              status={entrepreneur.isOnline ? 'online' : 'offline'}
+              className="mx-auto sm:mx-0"
+            />
+
+            <div className="mt-4 sm:mt-0 text-center sm:text-left">
               <h1 className="text-2xl font-bold text-gray-900">{entrepreneur.name}</h1>
               {profile.startupName && <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />
                 Founder at {profile.startupName}
               </p>}
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
-               {profile.industry && <Badge variant="primary">{profile.industry}</Badge>}
+                {profile.industry && <Badge variant="primary">{profile.industry}</Badge>}
                 {entrepreneur.location && <Badge variant="gray"><MapPin size={14} className="mr-1" />{entrepreneur.location}</Badge>}
                 <Badge variant="accent"><Calendar size={14} className="mr-1" />Founded {profile.foundedYear}</Badge>
                 <Badge variant="secondary"><Users size={14} className="mr-1" />{profile.teamSize} team members</Badge>

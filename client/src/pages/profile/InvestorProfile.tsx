@@ -59,7 +59,7 @@ export const InvestorProfile: React.FC = () => {
       {/* Profile header */}
       <Card>
         <CardBody className="sm:flex sm:items-start sm:justify-between p-6">
-          <div className="sm:flex sm:space-x-6">
+          <div className="sm:flex items-start sm:space-x-6">
             <Avatar
               src={investor.avatarUrl}
               alt={investor.name}
@@ -68,7 +68,7 @@ export const InvestorProfile: React.FC = () => {
               className="mx-auto sm:mx-0"
             />
 
-            <div className="mt-4 sm:mt-0 text-left">
+            <div className="mt-4 sm:mt-0 text-center sm:text-left">
               <h1 className="text-2xl font-bold text-gray-900">{investor.name}</h1>
               <p className="text-gray-600 flex items-center justify-center sm:justify-start mt-1">
                 <Building2 size={16} className="mr-1" />
@@ -76,7 +76,7 @@ export const InvestorProfile: React.FC = () => {
               </p>
 
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
-                <Badge variant="primary"><MapPin size={14} className="mr-1" />{investor.location}</Badge>
+                {investor.location && <Badge variant="primary"><MapPin size={14} className="mr-1" />{investor.location}</Badge>}
                 {profile.investmentStage?.map((stage, index) => (
                   <Badge key={index} variant="secondary" size="sm">{stage}</Badge>
                 ))}
