@@ -85,7 +85,7 @@ export const EntrepreneursPage: React.FC = () => {
             <CardBody className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Industry</h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {allIndustries.map(industry => (
                     <button key={industry} onClick={() => toggleIndustry(industry)} className="text-lg font-semibold text-gray-900">{industry}</button>
                   ))}
@@ -93,7 +93,7 @@ export const EntrepreneursPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Funding Range</h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {fundingRanges.map(range => (
                     <button key={range} onClick={() => toggleFundingRange(range)} className="text-lg font-semibold text-gray-900">{range}</button>
                   ))}
@@ -101,7 +101,7 @@ export const EntrepreneursPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Location</h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {/* ... Static location buttons ... */}
                 </div>
               </div>
