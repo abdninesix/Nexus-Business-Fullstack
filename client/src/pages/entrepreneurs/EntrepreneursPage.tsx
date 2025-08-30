@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard';
 import { User } from '../../types';
+import { Badge } from '../../components/ui/Badge';
 
 // Skeleton loader to show while fetching data
 const EntrepreneurCardSkeleton = () => (
@@ -87,7 +88,14 @@ export const EntrepreneursPage: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Industry</h3>
                 <div className="flex flex-wrap gap-2">
                   {allIndustries.map(industry => (
-                    <button key={industry} onClick={() => toggleIndustry(industry)} className="text-lg font-semibold text-gray-900">{industry}</button>
+                    <Badge
+                      key={industry}
+                      variant={selectedIndustries.includes(industry) ? 'primary' : 'gray'}
+                      className="cursor-pointer"
+                      onClick={() => toggleIndustry(industry)}
+                    >
+                      {industry}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -102,7 +110,8 @@ export const EntrepreneursPage: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Location</h3>
                 <div className="flex flex-wrap gap-2">
-                  {/* ... Static location buttons ... */}
+                  <MapPin size={16} className="mr-2" />
+                  San Francisco, CA
                 </div>
               </div>
             </CardBody>
