@@ -20,8 +20,8 @@ export const uploadProfilePicture = async (req, res) => {
     }
 
     // 1. Upload to ImageKit
-    const fileExtension = path.extname(file.originalname);
-    const safeFileName = `dp_${req.user._id}_${Date.now()}${fileExtension}`;
+    // const fileExtension = path.extname(file.originalname);
+    const safeFileName = `dp_${req.user._id}_${Date.now()}`;
 
     const response = await imagekit.upload({
       file: file.buffer,
