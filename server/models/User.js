@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
   avatarUrl: { type: String, default: '' },
   avatarFileId: { type: String, default: '' },
   bio: { type: String, default: '' },
-  isOnline: { type: Boolean, default: false },
+  isOnline: { type: Boolean, default: true },
   location: { type: String, default: '' },
   
   // Embed the role-specific schemas

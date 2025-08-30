@@ -23,7 +23,6 @@ export const register = async (req, res) => {
       role,
     });
 
-    user.isOnline = true;
     await newUser.save();
 
     res.status(201).json({
