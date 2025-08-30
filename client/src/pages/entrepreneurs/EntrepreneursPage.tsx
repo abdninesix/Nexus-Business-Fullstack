@@ -121,7 +121,6 @@ export const EntrepreneursPage: React.FC = () => {
                       className="cursor-pointer"
                       onClick={() => toggleFundingRange(range)}
                     >
-                      <MapPin size={12} className="mr-1" />
                       {range}
                     </Badge>
                   ))}
@@ -130,7 +129,7 @@ export const EntrepreneursPage: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Location</h3>
                 <div className="flex flex-wrap gap-2">
-                  {allLocations.slice(0, 5).map(location => (
+                  {allLocations.map(location => (
                     <Badge
                       key={location}
                       variant={selectedLocations.includes(location) ? 'primary' : 'gray'}
