@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { dataTagErrorSymbol, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { MessageCircle, Building2, MapPin, UserCircle, BarChart3, Briefcase } from 'lucide-react';
 
 import { Avatar } from '../../components/ui/Avatar';
@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { fetchUserById } from '../../api/users'; // <-- Import API function
+import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
 
 // A loading skeleton that mimics the page layout
@@ -76,7 +76,7 @@ export const InvestorProfile: React.FC = () => {
               </p>
 
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
-                <Badge variant="primary"><MapPin size={14} className="mr-1" />{profile.location}</Badge>
+                <Badge variant="primary"><MapPin size={14} className="mr-1" />{investor.location}</Badge>
                 {profile.investmentStage?.map((stage, index) => (
                   <Badge key={index} variant="secondary" size="sm">{stage}</Badge>
                 ))}

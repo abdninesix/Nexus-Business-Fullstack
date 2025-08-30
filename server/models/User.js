@@ -7,7 +7,6 @@ const entrepreneurSchema = new mongoose.Schema({
   pitchSummary: { type: String, default: '' },
   fundingNeeded: { type: String, default: '' },
   industry: { type: String, default: '' },
-  location: { type: String, default: '' },
   foundedYear: { type: Number, default: null },
   teamSize: { type: Number, default: 0 },
 }, { _id: false });
@@ -31,6 +30,7 @@ const userSchema = new mongoose.Schema({
   avatarFileId: { type: String, default: '' },
   bio: { type: String, default: '' },
   isOnline: { type: Boolean, default: false },
+  location: { type: String, default: '' },
   
   // Embed the role-specific schemas
   entrepreneurProfile: {

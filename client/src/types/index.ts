@@ -26,6 +26,7 @@ export interface User {
   role: UserRole;
   avatarUrl?: string;
   bio?: string;
+  location: string;
   isOnline?: boolean;
   createdAt: string;
   entrepreneurProfile?: EntrepreneurProfile;
@@ -38,7 +39,6 @@ export interface Entrepreneur extends User {
   pitchSummary: string;
   fundingNeeded: string;
   industry: string;
-  location: string;
   foundedYear: number;
   teamSize: number;
 }

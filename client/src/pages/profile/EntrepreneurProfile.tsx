@@ -142,7 +142,7 @@ export const EntrepreneurProfile: React.FC = () => {
               </p>
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-3">
                 <Badge variant="primary">{profile.industry}</Badge>
-                <Badge variant="gray"><MapPin size={14} className="mr-1" />{profile.location}</Badge>
+                <Badge variant="gray"><MapPin size={14} className="mr-1" />{entrepreneur.location}</Badge>
                 <Badge variant="accent"><Calendar size={14} className="mr-1" />Founded {profile.foundedYear}</Badge>
                 <Badge variant="secondary"><Users size={14} className="mr-1" />{profile.teamSize} team members</Badge>
               </div>

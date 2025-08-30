@@ -35,7 +35,7 @@ export const SettingsPage: React.FC = () => {
         name: user.name || '',
         email: user.email || '',
         bio: user.bio || '',
-        location: user.entrepreneurProfile?.location || '',
+        location: user.location || '',
         // Entrepreneur fields
         startupName: user.entrepreneurProfile?.startupName || '',
         pitchSummary: user.entrepreneurProfile?.pitchSummary || '',
