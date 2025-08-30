@@ -101,7 +101,7 @@ export const CalendarPage: React.FC = () => {
         allUsers.filter(user =>
             user.name.toLowerCase().includes(userSearch.toLowerCase()) &&
             !selectedParticipants.some(p => p._id === user._id) // Don't show already selected users
-        ), [allUsers, userSearch, selectedParticipants]
+        ), [userSearch, selectedParticipants]
     );
 
     const handleSelectEvent = (event: { resource: Meeting }) => {
