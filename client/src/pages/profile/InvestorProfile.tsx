@@ -87,8 +87,10 @@ export const InvestorProfile: React.FC = () => {
           <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row gap-2 justify-center sm:justify-end">
             {!isCurrentUser && (
               <Button
+                variant="outline"
                 leftIcon={<MessageCircle size={18} />}
-                onClick={() => navigate(`/chat/${investor._id}`)} // Navigate to the chat page
+                onClick={() => navigate(`/chat/${investor._id}`)}
+                className='w-fit'
               >
                 Message
               </Button>
