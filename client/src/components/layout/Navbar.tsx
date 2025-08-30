@@ -200,7 +200,7 @@ export const Navbar: React.FC = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {user ? (
               <>
-                <Link to={profileRoute} className="flex items-center space-x-3 px-3 py-2">
+                <Link to={profileRoute} onClick={() => setIsMenuOpen(false)} className="flex items-center space-x-3 px-3 py-2">
                   <Avatar
                     src={user.avatarUrl}
                     alt={user.name}
