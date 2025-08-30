@@ -29,8 +29,12 @@ export const EntrepreneursPage: React.FC = () => {
     queryFn: fetchEntrepreneurs,
   });
 
+  function isDefined<T>(value: T | undefined | null): value is T {
+    return value !== undefined && value !== null;
+}
+
   const allLocations = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.location).filter(Boolean as any))), [entrepreneurs]);
-  const allIndustries = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.entrepreneurProfile?.industry).filter(Boolean as any))), [entrepreneurs]);
+  const allIndustries = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.entrepreneurProfile?.industry).filter(isDefined))), [entrepreneurs]);
   const fundingRanges = ['$500K and more', '$500K - $1M', '$1M - $5M', 'less than $5M'];
 
   const filteredEntrepreneurs = useMemo(() => {
