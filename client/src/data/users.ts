@@ -91,7 +91,7 @@ export const investors: Investor[] = [
   {
     id: 'i2',
     name: 'Jennifer Lee',
-    email: 'jennifer@impactvc.org',
+    email: ' ',
     role: 'investor',
     avatarUrl: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg',
     bio: 'Impact investor focused on climate tech, sustainable agriculture, and clean energy.',
