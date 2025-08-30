@@ -17,7 +17,7 @@ export const getEntrepreneurs = async (req, res) => {
     // We find all users with the role 'entrepreneur' and select only the fields needed for the cards
     // This is more efficient than sending the entire user object
     const entrepreneurs = await User.find({ role: 'entrepreneur' }).select(
-      'name email role avatarUrl location bio isOnline entrepreneurProfile'
+      'name email role avatarUrl bio isOnline location entrepreneurProfile'
     );
     res.status(200).json(entrepreneurs);
   } catch (error) {
@@ -30,7 +30,7 @@ export const getInvestors = async (req, res) => {
   try {
     // Find all users with the role 'investor'
     const investors = await User.find({ role: 'investor' }).select(
-      'name email role avatarUrl location isOnline bio investorProfile'
+      'name email role avatarUrl isOnline location bio investorProfile'
     );
     res.status(200).json(investors);
   } catch (error) {
