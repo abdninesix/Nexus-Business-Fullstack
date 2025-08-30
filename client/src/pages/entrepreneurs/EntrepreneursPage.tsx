@@ -1,5 +1,5 @@
 // src/pages/EntrepreneursPage.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, MapPin } from 'lucide-react';
 
@@ -29,9 +29,18 @@ export const EntrepreneursPage: React.FC = () => {
     queryFn: fetchEntrepreneurs,
   });
 
+  useEffect(() => {
+    if (entrepreneurs.length > 0) {
+      console.log("RAW ENTREPRENEUR DATA:", entrepreneurs);
+      // Also log just the locations to see what you're getting
+      const locationsFromApi = entrepreneurs.map(e => e.location);
+      console.log("LOCATIONS FROM API:", locationsFromApi);
+    }
+  }, [entrepreneurs]);
+
   const allLocations = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.location).filter(Boolean as any))), [entrepreneurs]);
   const allIndustries = useMemo(() => Array.from(new Set(entrepreneurs.map(e => e.entrepreneurProfile?.industry).filter(Boolean as any))), [entrepreneurs]);
-  const fundingRanges = ['< $500K', '$500K - $1M', '$1M - $5M', '> $5M'];
+  const fundingRanges = ['$500K and more', '$500K - $1M', '$1M - $5M', 'less than $5M'];
 
   const filteredEntrepreneurs = useMemo(() => {
     if (!entrepreneurs) return [];
