@@ -20,12 +20,15 @@ export const uploadProfilePicture = async (req, res) => {
     }
 
     // 1. Upload to ImageKit
+    const fileExtension = path.extname(file.originalname);
+    const safeFileName = `dp_${req.user._id}_${Date.now()}${fileExtension}`;
+
     const response = await imagekit.upload({
       file: file.buffer,
-      fileName: `dp_${req.user._id}_${Date.now()}`,
+      fileName: safeFileName,
       folder: '/nexus/dp',
-      useUniqueFileName: false, // Set to false to overwrite existing profile picture
-      overwrite: true,
+      useUniqueFileName: false,
+      overwrite: false,
     });
 
     // 2. Directly update the User model
