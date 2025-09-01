@@ -101,7 +101,9 @@ export const CallLobby: React.FC = () => {
                 <Button onClick={handleJoinCall}>
                     <Phone className="mr-2" /> Join Meeting
                 </Button>
-                <Link to="/calendar">Back to Calendar</Link>
+                <Link to="/calendar">
+                    <Button onClick={handleJoinCall}>Go back</Button>
+                </Link>
             </div>
         </div>
     );
