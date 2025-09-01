@@ -65,8 +65,8 @@ export const VideoCallPage: React.FC = () => {
         const pc = setupPeerConnection(targetSocketId);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription });
-    }, [socket, setupPeerConnection]);
+        socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription, name: currentUser?.name });
+    }, [socket, setupPeerConnection, currentUser]);
 
     const createAnswer = useCallback(async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
         const pc = setupPeerConnection(offer.socketId);
@@ -112,12 +112,15 @@ export const VideoCallPage: React.FC = () => {
         };
 
         // --- (handleOffer, handleAnswer, handleIceCandidate are now defined outside but called here) ---
-        const handleOffer = async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
-            console.log('Received offer, creating answer...');
+        const handleOffer = async (offer: { socketId: string; sdp: RTCSessionDescriptionInit; name: string; }) => {
+            console.log(`Received offer from ${offer.name}, creating answer...`);
+            setConnectionStatus('Receiving call...');
+            setRemoteUser({ socketId: offer.socketId, name: offer.name });
             createAnswer(offer);
         };
         const handleAnswer = async (answer: { sdp: RTCSessionDescriptionInit }) => {
             console.log('Received answer...');
+            setConnectionStatus('Connected');
             await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer.sdp));
         };
         const handleIceCandidate = async (event: { candidate: RTCIceCandidateInit }) => {
@@ -182,7 +185,7 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 h-full w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
+        <div className="bg-gray-900 rounded-lg h-full w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
 
             {/* --- RESPONSIVE VIDEO CONTAINER --- */}
             <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2">
@@ -190,13 +193,9 @@ export const VideoCallPage: React.FC = () => {
                 <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
                     <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
-                        <p className="text-sm">{remoteUser?.name || 'Remote User'}</p>
+                        <p className="text-sm">{remoteUser?.name}</p>
+                        <p className="text-xs">{connectionStatus}</p>
                     </div>
-                    {!remoteUser && (
-                        <div className="absolute text-center">
-                            <p className="text-lg sm:text-xl">{connectionStatus}</p>
-                        </div>
-                    )}
                 </div>
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}

@@ -83,6 +83,7 @@ io.on("connection", (socket) => {
     io.to(payload.target).emit("offer", {
       socketId: socket.id,
       sdp: payload.sdp,
+      name: payload.name
     });
   });
 

@@ -95,14 +95,14 @@ export const CallLobby: React.FC = () => {
 
     return (
         <div className="bg-gray-900 rounded-lg h-full flex flex-col items-center justify-center p-4 text-white">
-            <h1 className="text-3xl font-bold mb-4">Ready to join?</h1>
+            {hasPermissions && <h1 className="text-3xl font-bold mb-4">Ready to join your meeting?</h1>}
             <div className="w-full max-w-2xl bg-black rounded-lg overflow-hidden relative aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 {!hasPermissions && (
                     <div className="absolute inset-0 bg-gray-800 bg-opacity-80 flex flex-col items-center justify-center p-4 text-center">
                         <Camera size={48} className="mb-4 text-gray-400" />
-                        <p className="mb-4">Please enable your camera and microphone to continue.</p>
-                        <Button onClick={handleEnableMedia}>Enable Camera & Mic</Button>
+                        <p className="mb-4">Camera and microphone permissions are required.</p>
+                        <Button onClick={handleEnableMedia}>Grant permission</Button>
                     </div>
                 )}
                 {hasPermissions && !isCamOn && <div className="absolute inset-0 bg-gray-800 flex items-center justify-center"><p>Camera is off</p></div>}
