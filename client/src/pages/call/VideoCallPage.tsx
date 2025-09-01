@@ -180,23 +180,34 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 h-full flex flex-col items-center justify-center p-4 text-white relative">
-            {/* Dynamic Layout: Picture-in-Picture */}
-            <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
-                <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                <div className="absolute top-4 left-4 bg-black bg-opacity-50 p-2 rounded-lg">
-                    <p>{remoteUser?.name || 'Remote User'}</p>
+        <div className="bg-gray-900 h-full w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
+
+            {/* --- RESPONSIVE VIDEO CONTAINER --- */}
+            <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2">
+                {/* Remote Video (Main View) */}
+                <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
+                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                    <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
+                        <p className="text-sm">{remoteUser?.name || 'Remote User'}</p>
+                    </div>
+                    {!remoteUser && (
+                        <div className="absolute text-center">
+                            <p className="text-lg sm:text-xl">{connectionStatus}</p>
+                        </div>
+                    )}
                 </div>
-                {!remoteUser && <div className="absolute text-center"><p className="text-xl">{connectionStatus}</p></div>}
+
+                {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
+                <div className="md:absolute md:bottom-24 md:right-4 md:w-48 md:border-2 md:border-gray-700 w-full h-1/3 md:h-auto flex-shrink-0 bg-black rounded-lg overflow-hidden object-cover z-10">
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                </div>
             </div>
 
-            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-20 right-4 w-48 h-auto bg-black rounded-lg border-2 border-gray-700 object-cover" />
-
             {/* Controls */}
-            <div className="flex items-center gap-4 p-3">
-                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full size-14">{isMuted ? <MicOff /> : <Mic />}</Button>
-                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full size-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
-                <Button onClick={handleHangUp} variant="error" className="rounded-full size-14"><PhoneOff /></Button>
+            <div className="flex-shrink-0 flex items-center gap-4 p-3 mt-2">
+                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full w-12 h-12 sm:w-14 sm:h-14">{isMuted ? <MicOff /> : <Mic />}</Button>
+                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full w-12 h-12 sm:w-14 sm:h-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
+                <Button onClick={handleHangUp} variant="error" className="rounded-full w-16 h-12 sm:w-20 sm:h-14"><PhoneOff /></Button>
             </div>
         </div>
     );

@@ -80,17 +80,26 @@ io.on("connection", (socket) => {
 
   // Broadcast offer to everyone else in the room
   socket.on("offer", (payload) => {
-    socket.to(payload.roomId).emit("offer", { sdp: payload.sdp });
+    io.to(payload.target).emit("offer", {
+      socketId: socket.id,
+      sdp: payload.sdp,
+    });
   });
 
   // Broadcast answer to everyone else in the room
   socket.on("answer", (payload) => {
-    socket.to(payload.roomId).emit("answer", { sdp: payload.sdp });
+    io.to(payload.target).emit("answer", {
+      socketId: socket.id,
+      sdp: payload.sdp,
+    });
   });
 
   // Broadcast ICE candidate to everyone else in the room
   socket.on("ice-candidate", (payload) => {
-    socket.to(payload.roomId).emit("ice-candidate", { candidate: payload.candidate });
+    io.to(payload.target).emit("ice-candidate", {
+      socketId: socket.id, // who it's from
+      candidate: payload.candidate,
+    });
   });
 
   socket.on("disconnect", () => {

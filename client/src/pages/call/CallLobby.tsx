@@ -76,7 +76,7 @@ export const CallLobby: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 h-full flex flex-col items-center justify-center p-4 text-white">
+        <div className="bg-gray-900 rounded h-full flex flex-col items-center justify-center p-4 text-white">
             <h1 className="text-3xl font-bold mb-4">Ready to join?</h1>
             <div className="w-full max-w-2xl bg-black rounded-lg overflow-hidden relative aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
