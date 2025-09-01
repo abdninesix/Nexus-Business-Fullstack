@@ -1,7 +1,7 @@
 // src/pages/call/CallLobby.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Mic, Video, Phone, MicOff, VideoOff } from 'lucide-react';
+import { Mic, Video, Phone, MicOff, VideoOff, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export const CallLobby: React.FC = () => {
@@ -102,7 +102,7 @@ export const CallLobby: React.FC = () => {
                     <Phone className="mr-2" /> Join Meeting
                 </Button>
                 <Link to="/calendar">
-                    <Button onClick={handleJoinCall}>Go back</Button>
+                    <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
                 </Link>
             </div>
         </div>

@@ -205,9 +205,9 @@ export const VideoCallPage: React.FC = () => {
 
             {/* Controls */}
             <div className="flex-shrink-0 flex items-center gap-4 p-3 mt-2">
-                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full w-12 h-12 sm:w-14 sm:h-14">{isMuted ? <MicOff /> : <Mic />}</Button>
-                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full w-12 h-12 sm:w-14 sm:h-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
-                <Button onClick={handleHangUp} variant="error" className="rounded-full w-16 h-12 sm:w-20 sm:h-14"><PhoneOff /></Button>
+                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full size-12 sm:size-14">{isMuted ? <MicOff /> : <Mic />}</Button>
+                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full size-12 sm:size-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
+                <Button onClick={handleHangUp} variant="error" className="rounded-full size-12 sm:w-20 sm:size-14"><PhoneOff /></Button>
             </div>
         </div>
     );
