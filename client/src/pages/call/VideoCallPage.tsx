@@ -138,8 +138,6 @@ export const VideoCallPage: React.FC = () => {
             setConnectionStatus('The other user has left the call.');
             setRemoteUser(null);
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            peerConnectionRef.current?.close();
-            peerConnectionRef.current = null;
         };
 
         socket.on('user-joined', handleUserJoined);
@@ -220,8 +218,8 @@ export const VideoCallPage: React.FC = () => {
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
                 <div className={`
-                    bg-black rounded-lg overflow-hidden relative flex items-center justify-center flex-shrink-0
-                    ${remoteAspectRatio === 'portrait' ? 'w-full md:w-1/3 h-1/2 md:h-full' : 'md:absolute md:bottom-24 md:right-4 md:w-48 md:h-auto md:border-2 md:border-gray-700 w-full h-1/3 z-10'}
+                    bg-black rounded-lg overflow-hidden relative flex items-center justify-center flex-shrink-0 z-10
+                    ${remoteAspectRatio === 'portrait' ? 'w-full md:w-1/3 h-1/2 md:h-full' : 'md:absolute md:bottom-24 md:right-4 md:w-48 md:h-auto md:border-2 md:border-gray-700 w-full h-1/3'}
                 `}>
                     <video ref={localVideoRef} autoPlay playsInline muted onLoadedMetadata={(e) => handleVideoMetadata(e, 'local')} className="w-full h-full object-cover" />
                 </div>
