@@ -62,11 +62,11 @@ io.on("connection", (socket) => {
   // --- NEW WEBRTC SIGNALING LOGIC ---
 
   // A user wants to join a specific meeting room
-  socket.on("join-room", (roomId) => {
+  socket.on("join-room", (roomId, name) => {
     socket.join(roomId);
     currentRoom = roomId;
     // Notify others in the room that a new user has joined.
-    socket.to(roomId).emit("user-joined");
+    socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
   });
 
   // Broadcast offer to everyone else in the room
@@ -84,10 +84,11 @@ io.on("connection", (socket) => {
     socket.to(payload.roomId).emit("ice-candidate", { candidate: payload.candidate });
   });
 
-  // --- END OF WEBRTC SIGNALING ---
-
   socket.on("disconnect", () => {
     removeUser(socket.id);
+    if (socket.roomId) {
+      socket.to(socket.roomId).emit("user-left");
+    }
     console.log(`A user disconnected: ${socket.id}`);
     console.log("Online users:", Array.from(onlineUsers.keys()));
   });

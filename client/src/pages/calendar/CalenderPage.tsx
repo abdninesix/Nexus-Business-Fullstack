@@ -258,7 +258,7 @@ export const CalendarPage: React.FC = () => {
                                     Delete Meeting
                                 </Button>
                             )}
-                            <Link to={`/call/${selectedMeeting._id}`}>
+                            <Link to={`/lobby/${selectedMeeting._id}`}>
                                 <Button>Join Meeting</Button>
                             </Link>
                         </div>

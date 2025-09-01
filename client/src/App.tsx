@@ -38,12 +38,13 @@ import { SocketHandler, SocketProvider } from './context/SocketContext';
 import { VideoCallPage } from './pages/call/VideoCallPage';
 import { PublicRoute } from './components/auth/PublicRoute';
 import { Toaster } from 'react-hot-toast';
+import { CallLobby } from './pages/call/CallLobby';
 
 function App() {
   return (
     <AuthProvider>
       <SocketProvider>
-        <Toaster/>
+        <Toaster />
         <Router>
           <SocketHandler />
           <Routes>
@@ -105,6 +106,10 @@ function App() {
 
               <Route path="/calendar" element={<DashboardLayout />}>
                 <Route index element={<CalendarPage />} />
+              </Route>
+
+              <Route path="/lobby" element={<DashboardLayout />}>
+                <Route path=":meetingId" element={<CallLobby />} />
               </Route>
 
               <Route path="/call" element={<DashboardLayout />}>
