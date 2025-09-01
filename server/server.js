@@ -51,7 +51,7 @@ const getUserSocketId = (userId) => {
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 
-  let currentRoom = null;
+  let currentRoomId = null;
 
   // Client identifies itself by sending its userId
   socket.on("addNewUser", (userId) => {
@@ -62,9 +62,9 @@ io.on("connection", (socket) => {
   // --- NEW WEBRTC SIGNALING LOGIC ---
 
   // A user wants to join a specific meeting room
-  socket.on("join-room", (roomId, name) => {
+  socket.on("join-room", ({ roomId, name }) => {
     socket.join(roomId);
-    currentRoom = roomId;
+    currentRoomId = roomId;
     // Notify others in the room that a new user has joined.
     socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
   });
@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
     console.log(`Socket ${socket.id} intentionally left room ${roomId}`);
     // Notify the other user(s) in the room that this user has left.
     socket.to(roomId).emit("user-left", { socketId: socket.id });
-    currentRoom = null; // Clear the stored room ID
+    currentRoomId = null; // Clear the stored room ID
   });
 
   // Broadcast offer to everyone else in the room

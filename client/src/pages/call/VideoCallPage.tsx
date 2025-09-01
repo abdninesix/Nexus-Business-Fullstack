@@ -1,5 +1,5 @@
 // src/pages/call/VideoCallPage.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
@@ -32,7 +32,51 @@ export const VideoCallPage: React.FC = () => {
     const [isVideoOff, setIsVideoOff] = useState(location.state?.isCamOn === false);
 
     // --- THIS IS THE CORE CLEANUP FUNCTION ---
-    const cleanup = () => {
+
+    const setupPeerConnection = useCallback((targetSocketId: string) => {
+        if (peerConnectionRef.current) peerConnectionRef.current.close(); // Close existing before creating new
+
+        const pc = new RTCPeerConnection(servers);
+
+        pc.onicecandidate = (event) => {
+            if (event.candidate && socket) {
+                socket.emit('ice-candidate', { target: targetSocketId, candidate: event.candidate });
+            }
+        };
+
+        pc.ontrack = (event) => {
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = event.streams[0];
+                setConnectionStatus('Connected'); // Update status on successful track add
+            }
+        };
+
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => {
+                pc.addTrack(track, localStreamRef.current!);
+            });
+        }
+
+        peerConnectionRef.current = pc;
+        return pc;
+    }, [socket]);
+
+    const createOffer = useCallback(async (targetSocketId: string) => {
+        const pc = setupPeerConnection(targetSocketId);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription });
+    }, [socket, setupPeerConnection]);
+
+    const createAnswer = useCallback(async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
+        const pc = setupPeerConnection(offer.socketId);
+        await pc.setRemoteDescription(new RTCSessionDescription(offer.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket?.emit('answer', { target: offer.socketId, sdp: pc.localDescription });
+    }, [socket, setupPeerConnection]);
+
+    const cleanup = useCallback(() => {
         console.log('Running cleanup...');
         // Stop all media tracks
         if (localStreamRef.current) {
@@ -51,53 +95,10 @@ export const VideoCallPage: React.FC = () => {
         if (socket && meetingId) {
             socket.emit('leave-room', meetingId);
         }
-    };
+    }, [socket, meetingId]);
 
     useEffect(() => {
         if (!socket || !meetingId) return;
-
-        const setupPeerConnection = (targetSocketId: string) => {
-            if (peerConnectionRef.current) peerConnectionRef.current.close(); // Close existing before creating new
-
-            const pc = new RTCPeerConnection(servers);
-
-            pc.onicecandidate = (event) => {
-                if (event.candidate && socket) {
-                    socket.emit('ice-candidate', { target: targetSocketId, candidate: event.candidate });
-                }
-            };
-
-            pc.ontrack = (event) => {
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = event.streams[0];
-                    setConnectionStatus('Connected'); // Update status on successful track add
-                }
-            };
-
-            if (localStreamRef.current) {
-                localStreamRef.current.getTracks().forEach(track => {
-                    pc.addTrack(track, localStreamRef.current!);
-                });
-            }
-
-            peerConnectionRef.current = pc;
-            return pc;
-        };
-
-        const createOffer = async (targetSocketId: string) => {
-            const pc = setupPeerConnection(targetSocketId);
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription });
-        };
-
-        const createAnswer = async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
-            const pc = setupPeerConnection(offer.socketId);
-            await pc.setRemoteDescription(new RTCSessionDescription(offer.sdp));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            socket?.emit('answer', { target: offer.socketId, sdp: pc.localDescription });
-        };
 
         const { micId, camId, isMicOn = true, isCamOn = true } = location.state || {};
 
@@ -129,7 +130,8 @@ export const VideoCallPage: React.FC = () => {
             setConnectionStatus('The other user has left the call.');
             setRemoteUser(null);
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            cleanup();
+            peerConnectionRef.current?.close();
+            peerConnectionRef.current = null;
         };
 
         socket.on('user-joined', handleUserJoined);
@@ -151,14 +153,14 @@ export const VideoCallPage: React.FC = () => {
         });
 
         return () => {
-            socket.off('user-joined', handleUserJoined);
-            socket.off('user-left', handleUserLeft);
-            socket.off('offer', handleOffer);
-            socket.off('answer', handleAnswer);
-            socket.off('ice-candidate', handleIceCandidate);
+            socket.off('user-joined');
+            socket.off('user-left');
+            socket.off('offer');
+            socket.off('answer');
+            socket.off('ice-candidate');
             cleanup();
         };
-    }, [socket, meetingId, currentUser, location.state]);
+    }, [socket, meetingId, currentUser, location.state, cleanup, createOffer, createAnswer]);
 
     const handleHangUp = () => {
         cleanup();
