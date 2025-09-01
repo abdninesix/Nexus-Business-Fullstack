@@ -94,7 +94,7 @@ export const CallLobby: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[50vh] flex flex-col items-center justify-center p-4 text-white">
+        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] flex flex-col items-center justify-center p-4 text-white">
             {hasPermissions && <h1 className="text-3xl font-bold mb-4">Ready to join your meeting?</h1>}
             <div className="w-full max-w-2xl rounded-lg overflow-hidden relative aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
