@@ -1,6 +1,6 @@
 // src/pages/call/CallLobby.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Mic, Video, Phone, MicOff, VideoOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
@@ -10,7 +10,7 @@ export const CallLobby: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
-    const [cams, setCams] =useState<MediaDeviceInfo[]>([]);
+    const [cams, setCams] = useState<MediaDeviceInfo[]>([]);
     const [selectedMic, setSelectedMic] = useState('');
     const [selectedCam, setSelectedCam] = useState('');
     const [isMicOn, setIsMicOn] = useState(true);
@@ -65,13 +65,13 @@ export const CallLobby: React.FC = () => {
     const handleJoinCall = () => {
         // We pass the device IDs and initial mic/cam state in the URL's state
         // This avoids having to request permissions again on the next page
-        navigate(`/call/${meetingId}`, { 
-            state: { 
+        navigate(`/call/${meetingId}`, {
+            state: {
                 micId: selectedMic,
                 camId: selectedCam,
                 isMicOn,
                 isCamOn
-            } 
+            }
         });
     };
 
@@ -82,7 +82,7 @@ export const CallLobby: React.FC = () => {
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 {!isCamOn && <div className="absolute inset-0 bg-gray-800 flex items-center justify-center"><p>Camera is off</p></div>}
             </div>
-            
+
             <div className="flex items-center gap-4 mt-6">
                 <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
                 <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
@@ -97,9 +97,12 @@ export const CallLobby: React.FC = () => {
                 </select>
             </div>
 
-            <Button onClick={handleJoinCall} className="mt-8 text-lg px-8 py-6">
-                <Phone className="mr-2" /> Join Meeting
-            </Button>
+            <div className='mt-8 text-lg flex content-center gap-4'>
+                <Button onClick={handleJoinCall}>
+                    <Phone className="mr-2" /> Join Meeting
+                </Button>
+                <Link to="/calendar">Back to Calendar</Link>
+            </div>
         </div>
     );
 };

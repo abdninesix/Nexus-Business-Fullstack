@@ -69,6 +69,15 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-joined", { socketId: socket.id, name });
   });
 
+  // A user wants to leave a specific meeting room
+  socket.on("leave-room", (roomId) => {
+    socket.leave(roomId);
+    console.log(`Socket ${socket.id} intentionally left room ${roomId}`);
+    // Notify the other user(s) in the room that this user has left.
+    socket.to(roomId).emit("user-left", { socketId: socket.id });
+    currentRoom = null; // Clear the stored room ID
+  });
+
   // Broadcast offer to everyone else in the room
   socket.on("offer", (payload) => {
     socket.to(payload.roomId).emit("offer", { sdp: payload.sdp });
