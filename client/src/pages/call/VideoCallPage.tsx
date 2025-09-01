@@ -206,7 +206,7 @@ export const VideoCallPage: React.FC = () => {
         <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
 
             {/* --- RESPONSIVE VIDEO CONTAINER --- */}
-            <div className={`relative w-full flex-1 flex gap-2 overflow-hidden ${mainContainerClass}`}>
+            <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2 overflow-hidden">
                 {/* Remote Video (Main View) */}
                 <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
                     <video ref={remoteVideoRef} autoPlay playsInline onLoadedMetadata={(e) => handleVideoMetadata(e, 'remote')} className="w-full h-full object-contain" />
@@ -217,11 +217,8 @@ export const VideoCallPage: React.FC = () => {
                 </div>
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
-                <div className={`
-                    bg-black rounded-lg overflow-hidden relative flex items-center justify-center flex-shrink-0 z-10
-                    ${remoteAspectRatio === 'portrait' ? 'w-full md:w-1/3 h-1/2 md:h-full' : 'md:absolute md:bottom-24 md:right-4 md:w-48 md:h-auto md:border-2 md:border-gray-700 w-full h-1/3'}
-                `}>
-                    <video ref={localVideoRef} autoPlay playsInline muted onLoadedMetadata={(e) => handleVideoMetadata(e, 'local')} className="w-full h-full object-cover" />
+                <div className="bg-black rounded-lg overflow-hidden flex-shrink-0 w-full h-1/3 md:w-1/4 md:h-full">
+                    <video ref={localVideoRef} autoPlay playsInline muted onLoadedMetadata={(e) => handleVideoMetadata(e, 'local')} className="w-full h-full object-contain" />
                 </div>
             </div>
 
