@@ -1,5 +1,6 @@
 import Document from '../models/Document.js';
 import imageKit from '../config/imagekit.js';
+import Collaboration from '../models/Collaboration.js';
 
 // Upload a new document
 export const uploadDocument = async (req, res) => {
