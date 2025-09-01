@@ -14,8 +14,6 @@ const servers = {
     ],
 };
 
-type AspectRatio = 'landscape' | 'portrait' | 'square' | 'unknown';
-
 export const VideoCallPage: React.FC = () => {
     const { meetingId } = useParams<{ meetingId: string }>();
     const { socket } = useSocket();
@@ -32,9 +30,6 @@ export const VideoCallPage: React.FC = () => {
     const [connectionStatus, setConnectionStatus] = useState('Waiting for another user to join...');
     const [isMuted, setIsMuted] = useState(location.state?.isMicOn === false);
     const [isVideoOff, setIsVideoOff] = useState(location.state?.isCamOn === false);
-
-    const [localAspectRatio, setLocalAspectRatio] = useState<AspectRatio>('unknown');
-    const [remoteAspectRatio, setRemoteAspectRatio] = useState<AspectRatio>('unknown');
 
     // --- THIS IS THE CORE CLEANUP FUNCTION ---
 
@@ -187,21 +182,6 @@ export const VideoCallPage: React.FC = () => {
         }
     };
 
-    const handleVideoMetadata = (event: React.SyntheticEvent<HTMLVideoElement, Event>, streamType: 'local' | 'remote') => {
-        const video = event.currentTarget;
-        const { videoWidth, videoHeight } = video;
-
-        if (videoWidth > videoHeight) {
-            streamType === 'local' ? setLocalAspectRatio('landscape') : setRemoteAspectRatio('landscape');
-        } else if (videoHeight > videoWidth) {
-            streamType === 'local' ? setLocalAspectRatio('portrait') : setRemoteAspectRatio('portrait');
-        } else {
-            streamType === 'local' ? setLocalAspectRatio('square') : setRemoteAspectRatio('square');
-        }
-    };
-
-    const mainContainerClass = remoteAspectRatio === 'portrait' ? 'flex-col' : 'flex-row';
-
     return (
         <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
 
@@ -209,7 +189,7 @@ export const VideoCallPage: React.FC = () => {
             <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2 overflow-hidden">
                 {/* Remote Video (Main View) */}
                 <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
-                    <video ref={remoteVideoRef} autoPlay playsInline onLoadedMetadata={(e) => handleVideoMetadata(e, 'remote')} className="w-full h-full object-contain" />
+                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain" />
                     <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
                         <p className="text-sm">{remoteUser?.name}</p>
                         <p className="text-xs">{connectionStatus}</p>
@@ -218,7 +198,7 @@ export const VideoCallPage: React.FC = () => {
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
                 <div className="bg-black rounded-lg overflow-hidden flex-shrink-0 w-full h-1/3 md:w-1/4 md:h-full">
-                    <video ref={localVideoRef} autoPlay playsInline muted onLoadedMetadata={(e) => handleVideoMetadata(e, 'local')} className="w-full h-full object-contain" />
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
                 </div>
             </div>
 
