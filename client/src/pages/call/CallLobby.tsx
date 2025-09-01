@@ -99,7 +99,7 @@ export const CallLobby: React.FC = () => {
             <div className="w-full max-w-2xl bg-black rounded-lg overflow-hidden relative aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 {!hasPermissions && (
-                    <div className="absolute inset-0 bg-gray-800 bg-opacity-80 flex flex-col items-center justify-center p-4 text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
                         <Camera size={48} className="mb-4 text-gray-400" />
                         <p className="mb-4">Camera and microphone permissions are required.</p>
                         <Button onClick={handleEnableMedia}>Grant permission</Button>
@@ -110,11 +110,6 @@ export const CallLobby: React.FC = () => {
 
             {hasPermissions && (
                 <>
-                    <div className="flex items-center gap-4 mt-6">
-                        <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
-                        <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
-                    </div>
-
                     <div className="mt-6 flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
                         <select value={selectedMic} onChange={e => setSelectedMic(e.target.value)} className="bg-gray-800 border-gray-700 rounded-md p-2 w-full">
                             {mics.map(mic => <option key={mic.deviceId} value={mic.deviceId}>{mic.label}</option>)}
@@ -124,13 +119,18 @@ export const CallLobby: React.FC = () => {
                         </select>
                     </div>
 
-                    <div className='mt-8 text-lg flex content-center gap-4'>
-                        <Button onClick={handleJoinCall}>
-                            <Phone className="mr-2" /> Join Meeting
-                        </Button>
+                    <div className="flex items-center gap-4 mt-6">
+                        <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
+                        <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
+                    </div>
+
+                    <div className='mt-8 text-lg flex items-center justify-center gap-4'>
                         <Link to="/calendar">
                             <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
                         </Link>
+                        <Button onClick={handleJoinCall}>
+                            <Phone className="mr-2" /> Join Meeting
+                        </Button>
                     </div>
                 </>
             )}

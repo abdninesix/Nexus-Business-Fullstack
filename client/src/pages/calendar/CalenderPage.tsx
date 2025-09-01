@@ -224,7 +224,7 @@ export const CalendarPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4">
+                    <div className="flex justify-end gap-4 pt-4 border-t">
                         <Button type="button" variant="outline" onClick={closeAndResetModal}>Cancel</Button>
                         <Button type="submit" isLoading={createMeetingMutation.isPending}>Schedule</Button>
                     </div>
@@ -248,7 +248,7 @@ export const CalendarPage: React.FC = () => {
                         </div>
 
                         {/* Show delete button ONLY if the current user is the organizer */}
-                        <div className="flex justify-between sm:justify-end gap-4 pt-4 border-t">
+                        <div className="flex justify-end gap-4 pt-4 border-t">
                             {currentUser._id === selectedMeeting.organizer._id && (
                                 <Button
                                     variant="error"

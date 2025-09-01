@@ -185,12 +185,12 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded-lg h-full w-full flex flex-col content-center p-2 sm:p-4 text-white relative">
+        <div className="bg-gray-900 rounded-lg h-full w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
 
             {/* --- RESPONSIVE VIDEO CONTAINER --- */}
             <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2">
                 {/* Remote Video (Main View) */}
-                <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex content-center">
+                <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
                     <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
                         <p className="text-sm">{remoteUser?.name}</p>
