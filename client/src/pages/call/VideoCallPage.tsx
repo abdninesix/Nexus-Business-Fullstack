@@ -53,51 +53,51 @@ export const VideoCallPage: React.FC = () => {
         }
     };
 
-    const setupPeerConnection = (targetSocketId: string) => {
-        if (peerConnectionRef.current) peerConnectionRef.current.close(); // Close existing before creating new
-
-        const pc = new RTCPeerConnection(servers);
-
-        pc.onicecandidate = (event) => {
-            if (event.candidate && socket) {
-                socket.emit('ice-candidate', { target: targetSocketId, candidate: event.candidate });
-            }
-        };
-
-        pc.ontrack = (event) => {
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-                setConnectionStatus('Connected'); // Update status on successful track add
-            }
-        };
-
-        if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach(track => {
-                pc.addTrack(track, localStreamRef.current!);
-            });
-        }
-
-        peerConnectionRef.current = pc;
-        return pc;
-    };
-
-    const createOffer = async (targetSocketId: string) => {
-        const pc = setupPeerConnection(targetSocketId);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription });
-    };
-
-    const createAnswer = async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
-        const pc = setupPeerConnection(offer.socketId);
-        await pc.setRemoteDescription(new RTCSessionDescription(offer.sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket?.emit('answer', { target: offer.socketId, sdp: pc.localDescription });
-    };
-
     useEffect(() => {
         if (!socket || !meetingId) return;
+
+        const setupPeerConnection = (targetSocketId: string) => {
+            if (peerConnectionRef.current) peerConnectionRef.current.close(); // Close existing before creating new
+
+            const pc = new RTCPeerConnection(servers);
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate && socket) {
+                    socket.emit('ice-candidate', { target: targetSocketId, candidate: event.candidate });
+                }
+            };
+
+            pc.ontrack = (event) => {
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = event.streams[0];
+                    setConnectionStatus('Connected'); // Update status on successful track add
+                }
+            };
+
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach(track => {
+                    pc.addTrack(track, localStreamRef.current!);
+                });
+            }
+
+            peerConnectionRef.current = pc;
+            return pc;
+        };
+
+        const createOffer = async (targetSocketId: string) => {
+            const pc = setupPeerConnection(targetSocketId);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            socket?.emit('offer', { target: targetSocketId, sdp: pc.localDescription });
+        };
+
+        const createAnswer = async (offer: { socketId: string; sdp: RTCSessionDescriptionInit }) => {
+            const pc = setupPeerConnection(offer.socketId);
+            await pc.setRemoteDescription(new RTCSessionDescription(offer.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            socket?.emit('answer', { target: offer.socketId, sdp: pc.localDescription });
+        };
 
         const { micId, camId, isMicOn = true, isCamOn = true } = location.state || {};
 
