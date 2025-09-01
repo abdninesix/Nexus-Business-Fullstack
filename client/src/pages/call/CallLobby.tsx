@@ -1,7 +1,7 @@
 // src/pages/call/CallLobby.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Mic, Video, Phone, MicOff, VideoOff, ArrowLeft } from 'lucide-react';
+import { Mic, Video, Phone, MicOff, VideoOff, ArrowLeft, Camera } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export const CallLobby: React.FC = () => {
@@ -15,6 +15,7 @@ export const CallLobby: React.FC = () => {
     const [selectedCam, setSelectedCam] = useState('');
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCamOn, setIsCamOn] = useState(true);
+    const [hasPermissions, setHasPermissions] = useState(false);
 
     const getDevices = async () => {
         try {
@@ -34,7 +35,24 @@ export const CallLobby: React.FC = () => {
         getDevices();
     }, []);
 
+    // This is the new function triggered by user click
+    const handleEnableMedia = async () => {
+        try {
+            // Requesting a dummy stream just to get permissions
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            setHasPermissions(true);
+            await getDevices(); // Get the full device list now
+            // We'll let the useEffect handle setting the actual stream
+            stream.getTracks().forEach(track => track.stop()); // Stop the dummy stream
+        } catch (err) {
+            console.error("Permission denied or error:", err);
+            // Optionally show an error message to the user
+        }
+    };
+
     useEffect(() => {
+
+        if (!hasPermissions) return;
         const getMedia = async () => {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
@@ -60,7 +78,7 @@ export const CallLobby: React.FC = () => {
         return () => {
             localStream?.getTracks().forEach(track => track.stop());
         }
-    }, [selectedMic, selectedCam, isMicOn, isCamOn]);
+    }, [hasPermissions, selectedMic, selectedCam, isMicOn, isCamOn]);
 
     const handleJoinCall = () => {
         // We pass the device IDs and initial mic/cam state in the URL's state
@@ -76,35 +94,46 @@ export const CallLobby: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded h-full flex flex-col items-center justify-center p-4 text-white">
+        <div className="bg-gray-900 rounded-lg h-full flex flex-col items-center justify-center p-4 text-white">
             <h1 className="text-3xl font-bold mb-4">Ready to join?</h1>
             <div className="w-full max-w-2xl bg-black rounded-lg overflow-hidden relative aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                {!isCamOn && <div className="absolute inset-0 bg-gray-800 flex items-center justify-center"><p>Camera is off</p></div>}
+                {!hasPermissions && (
+                    <div className="absolute inset-0 bg-gray-800 bg-opacity-80 flex flex-col items-center justify-center p-4 text-center">
+                        <Camera size={48} className="mb-4 text-gray-400" />
+                        <p className="mb-4">Please enable your camera and microphone to continue.</p>
+                        <Button onClick={handleEnableMedia}>Enable Camera & Mic</Button>
+                    </div>
+                )}
+                {hasPermissions && !isCamOn && <div className="absolute inset-0 bg-gray-800 flex items-center justify-center"><p>Camera is off</p></div>}
             </div>
 
-            <div className="flex items-center gap-4 mt-6">
-                <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
-                <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
-            </div>
+            {hasPermissions && (
+                <>
+                    <div className="flex items-center gap-4 mt-6">
+                        <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
+                        <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
+                    </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
-                <select value={selectedMic} onChange={e => setSelectedMic(e.target.value)} className="bg-gray-800 border-gray-700 rounded-md p-2 w-full">
-                    {mics.map(mic => <option key={mic.deviceId} value={mic.deviceId}>{mic.label}</option>)}
-                </select>
-                <select value={selectedCam} onChange={e => setSelectedCam(e.target.value)} className="bg-gray-800 border-gray-700 rounded-md p-2 w-full">
-                    {cams.map(cam => <option key={cam.deviceId} value={cam.deviceId}>{cam.label}</option>)}
-                </select>
-            </div>
+                    <div className="mt-6 flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
+                        <select value={selectedMic} onChange={e => setSelectedMic(e.target.value)} className="bg-gray-800 border-gray-700 rounded-md p-2 w-full">
+                            {mics.map(mic => <option key={mic.deviceId} value={mic.deviceId}>{mic.label}</option>)}
+                        </select>
+                        <select value={selectedCam} onChange={e => setSelectedCam(e.target.value)} className="bg-gray-800 border-gray-700 rounded-md p-2 w-full">
+                            {cams.map(cam => <option key={cam.deviceId} value={cam.deviceId}>{cam.label}</option>)}
+                        </select>
+                    </div>
 
-            <div className='mt-8 text-lg flex content-center gap-4'>
-                <Button onClick={handleJoinCall}>
-                    <Phone className="mr-2" /> Join Meeting
-                </Button>
-                <Link to="/calendar">
-                    <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
-                </Link>
-            </div>
+                    <div className='mt-8 text-lg flex content-center gap-4'>
+                        <Button onClick={handleJoinCall}>
+                            <Phone className="mr-2" /> Join Meeting
+                        </Button>
+                        <Link to="/calendar">
+                            <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
+                        </Link>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
