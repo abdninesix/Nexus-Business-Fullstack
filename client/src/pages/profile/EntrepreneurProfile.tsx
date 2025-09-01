@@ -12,6 +12,8 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
 import { fetchRequestStatus, createCollaborationRequest, deleteCollaborationRequest } from '../../api/collaborations';
+import { Document, fetchUserDocuments } from '../../api/documents';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 // A loading skeleton that mimics the page layout
 const ProfileSkeleton = () => (
@@ -65,6 +67,13 @@ export const EntrepreneurProfile: React.FC = () => {
       refetchStatus(); // Refetch status after deleting
     },
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to remove connection."),
+  });
+
+  // 4. Query to fetch user's documents
+  const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<Document[]>({
+    queryKey: ['documents', id],
+    queryFn: () => fetchUserDocuments(id!),
+    enabled: !!id, // Only run if the profile ID exists
   });
 
   const handleCollaborationAction = () => {
@@ -315,45 +324,46 @@ export const EntrepreneurProfile: React.FC = () => {
           <Card>
             <CardHeader><h2 className="text-lg font-medium text-gray-900">Documents</h2></CardHeader>
             <CardBody>
-              <div className="space-y-3">
-                <div className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="p-2 bg-primary-50 rounded-md mr-3">
-                    <FileText size={18} className="text-primary-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">Pitch Deck</h3>
-                    <p className="text-xs text-gray-500">Updated 2 months ago</p>
-                  </div>
-                  <Button variant="outline" size="sm">View</Button>
+              {isLoadingDocuments ? (
+                <p className="text-sm text-gray-500">Loading documents...</p>
+              ) : documents.length > 0 ? (
+                <div className="space-y-3">
+                  {documents.map(doc => (
+                    <a
+                      key={doc._id}
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="p-2 bg-primary-50 rounded-md mr-3">
+                        <FileText size={18} className="text-primary-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
+                        <p className="text-xs text-gray-500">Updated {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}</p>
+                      </div>
+                      <Button variant="outline" size="sm">View</Button>
+                    </a>
+                  ))}
                 </div>
-
-                <div className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="p-2 bg-primary-50 rounded-md mr-3">
-                    <FileText size={18} className="text-primary-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">Business Plan</h3>
-                    <p className="text-xs text-gray-500">Updated 1 month ago</p>
-                  </div>
-                  <Button variant="outline" size="sm">View</Button>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">
+                    {isCurrentUser
+                      ? "You haven't uploaded any documents yet."
+                      : "Connect with this entrepreneur to view their documents."}
+                  </p>
+                  {isCurrentUser && (
+                    <Button size="sm" className="mt-2" onClick={() => navigate('/documents')}>Manage Documents</Button>
+                  )}
                 </div>
+              )}
 
-                <div className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="p-2 bg-primary-50 rounded-md mr-3">
-                    <FileText size={18} className="text-primary-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">Financial Projections</h3>
-                    <p className="text-xs text-gray-500">Updated 2 weeks ago</p>
-                  </div>
-                  <Button variant="outline" size="sm">View</Button>
-                </div>
-              </div>
-
-              {!isCurrentUser && isInvestor && (
+              {!isCurrentUser && isInvestor && collaborationInfo?.status !== 'accepted' && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-500">
-                    Request access to detailed documents and financials by sending a collaboration request.
+                    Request access to documents by sending a collaboration request.
                   </p>
                   <Button
                     leftIcon={<Send size={18} />}

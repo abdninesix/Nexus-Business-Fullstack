@@ -83,3 +83,36 @@ export const addSignature = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Function to get documents for a specific user (publicly, with checks)
+export const getUserDocuments = async (req, res) => {
+  try {
+    const ownerId = req.params.userId; // The ID of the entrepreneur whose documents we want
+    const requesterId = req.user._id;   // The ID of the person making the request (the logged-in user)
+
+    // Case 1: The user is requesting their own documents
+    if (ownerId === requesterId.toString()) {
+      const documents = await Document.find({ uploadedBy: ownerId }).sort({ createdAt: -1 });
+      return res.status(200).json(documents);
+    }
+
+    // Case 2: An investor is requesting an entrepreneur's documents
+    // We must check if they are connected (collaboration status is 'accepted')
+    const connection = await Collaboration.findOne({
+      investorId: requesterId,
+      entrepreneurId: ownerId,
+      status: 'accepted',
+    });
+
+    if (connection) {
+      const documents = await Document.find({ uploadedBy: ownerId }).sort({ createdAt: -1 });
+      return res.status(200).json(documents);
+    }
+
+    // Case 3: The user is not authorized
+    return res.status(200).json([]); // Return an empty array if not authorized, instead of an error
+
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch documents' });
+  }
+};

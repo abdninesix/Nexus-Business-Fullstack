@@ -5,8 +5,6 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 
 export const DashboardLayout: React.FC = () => {
-  // --- REMOVED ALL AUTHENTICATION LOGIC ---
-  // No useAuth(), no isInitializing, no isAuthenticated checks.
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

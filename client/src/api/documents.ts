@@ -39,3 +39,10 @@ export const deleteDocument = async (documentId: string): Promise<{ message: str
   const { data } = await api.delete(`/documents/${documentId}`);
   return data;
 };
+
+
+// 4. Fetch documents for a specific user ID
+export const fetchUserDocuments = async (userId: string): Promise<Document[]> => {
+  const { data } = await api.get(`/documents/user/${userId}`);
+  return data;
+};
