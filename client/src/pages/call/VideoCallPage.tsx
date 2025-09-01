@@ -185,7 +185,7 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 h-screen w-screen flex flex-col content-center p-4 text-white relative overflow-hidden">
+        <div className="bg-gray-900 rounded-lg h-full w-full flex flex-col content-center p-2 sm:p-4 text-white relative">
 
             {/* --- RESPONSIVE VIDEO CONTAINER --- */}
             <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2">
@@ -199,14 +199,7 @@ export const VideoCallPage: React.FC = () => {
                 </div>
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
-                <div className="
-                    order-first md:order-last            
-                    md:absolute md:bottom-24 md:right-4 
-                    md:w-48 md:h-auto md:border-2 md:border-gray-700
-                    w-full h-1/4 flex-shrink-0 
-                    bg-black rounded-lg overflow-hidden 
-                    object-cover z-20 shadow-lg"
-                >
+                <div className="md:absolute md:bottom-24 md:right-4 md:w-48 md:border-2 md:border-gray-700 w-full h-1/3 md:h-auto flex-shrink-0 bg-black rounded-lg overflow-hidden object-cover z-10">
                     <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 </div>
             </div>
