@@ -94,8 +94,8 @@ export const CallLobby: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[70vh] flex flex-col items-center justify-center p-4 text-white">
-            {hasPermissions && <h1 className="text-3xl font-bold mb-4">Ready to join your meeting?</h1>}
+        <div className="bg-gray-900 rounded-lg h-[80vh] md:h-[70vh] flex flex-col items-center justify-center p-4 text-white">
+            {hasPermissions && <h1 className="text-3xl font-semibold mb-4">Ready to join your meeting?</h1>}
             <div className="w-full max-w-2xl rounded-lg overflow-hidden relative aspect-auto">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 {!hasPermissions && (
@@ -119,18 +119,20 @@ export const CallLobby: React.FC = () => {
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-6">
-                        <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
-                        <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
-                    </div>
+                    <div className='mt-6 flex md:flex-row flex-col gap-6 items-center justify-center'>
+                        <div className="flex items-center gap-4">
+                            <Button onClick={() => setIsMicOn(!isMicOn)} variant={isMicOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isMicOn ? <Mic /> : <MicOff />}</Button>
+                            <Button onClick={() => setIsCamOn(!isCamOn)} variant={isCamOn ? 'secondary' : 'error'} className="rounded-full w-14 h-14">{isCamOn ? <Video /> : <VideoOff />}</Button>
+                        </div>
 
-                    <div className='mt-8 text-lg flex items-center justify-center gap-4'>
-                        <Link to="/calendar">
-                            <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
-                        </Link>
-                        <Button onClick={handleJoinCall}>
-                            <Phone className="mr-2" /> Join Meeting
-                        </Button>
+                        <div className='text-lg flex items-center justify-center gap-4'>
+                            <Link to="/calendar">
+                                <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
+                            </Link>
+                            <Button onClick={handleJoinCall}>
+                                <Phone className="mr-2" /> Join Meeting
+                            </Button>
+                        </div>
                     </div>
                 </>
             )}
