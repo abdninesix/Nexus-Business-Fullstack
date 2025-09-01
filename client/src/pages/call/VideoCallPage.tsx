@@ -158,7 +158,7 @@ export const VideoCallPage: React.FC = () => {
             socket.off('ice-candidate', handleIceCandidate);
             cleanup();
         };
-    }, [socket, meetingId, currentUser]);
+    }, [socket, meetingId, currentUser, location.state]);
 
     const handleHangUp = () => {
         cleanup();
