@@ -183,7 +183,7 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] w-full flex flex-col items-center justify-between p-2 sm:p-4 text-white relative">
+        <div className="bg-gray-900 h-screen w-screen flex flex-col items-center justify-between p-2 sm:p-4 text-white relative">
 
             {/* --- Video Container --- */}
             <div className="relative w-full flex-1 flex items-center justify-center bg-black rounded-lg overflow-hidden">
