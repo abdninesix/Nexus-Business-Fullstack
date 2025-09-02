@@ -188,23 +188,12 @@ export const VideoCallPage: React.FC = () => {
             {/* --- Video Container --- */}
             <div className="relative w-full flex-1 flex items-center justify-center bg-black rounded-lg overflow-hidden">
                 {/* Remote Video (Main) */}
-                {isVideoOff ?
-                    (< video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-contain bg-black"
-                    />) :
-                    (<div className="w-full h-full flex items-center justify-center bg-black text-white">
-                        {/* Camera Off Icon */}
-                        <VideoOff className="w-16 h-16 opacity-70" />
-                    </div>)}
-                {isMuted && (
-                    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/50 px-3 py-1 rounded-xl text-sm text-white">
-                        <MicOff className="w-4 h-4" />
-                        <span>Mic Off</span>
-                    </div>
-                )}
+                <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                />
 
                 {/* Remote User Info */}
                 <div className="absolute top-2 left-2 bg-black/50 px-3 py-2 rounded-lg text-sm z-10">
