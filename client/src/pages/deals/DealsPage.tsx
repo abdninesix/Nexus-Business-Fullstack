@@ -67,8 +67,8 @@ export const DealsPage: React.FC = () => {
 
   // Modal States
   const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null); // For view/payment modals
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [isPaymentMode, setIsPaymentMode] = useState(false);
 
   // Form States
   const [newDeal, setNewDeal] = useState<Omit<NewDealData, 'investorId'>>({ entrepreneurId: '', startupName: '', amount: '', equity: '', status: 'Negotiation', stage: 'Seed' });
@@ -93,7 +93,7 @@ export const DealsPage: React.FC = () => {
     onSuccess: () => {
       toast.success("Payment added successfully!");
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      setIsPaymentModalOpen(false);
+      setIsPaymentMode(false);
       setNewPayment({ amount: 0, notes: '' });
     },
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to add payment."),
@@ -109,6 +109,12 @@ export const DealsPage: React.FC = () => {
     if (!selectedDeal) return;
     const paymentData: NewPaymentData = { dealId: selectedDeal._id, ...newPayment };
     addPaymentMutation.mutate(paymentData);
+  };
+
+  const closeViewModal = () => {
+    setSelectedDeal(null);
+    setIsPaymentMode(false); // Reset to view mode
+    setNewPayment({ amount: 0, notes: '' }); // Reset payment form
   };
 
   const filteredDeals = useMemo(() => {
@@ -340,7 +346,7 @@ export const DealsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button onClick={() => setIsPaymentModalOpen(true)} variant="outline" size="sm">
+                      <Button onClick={() => setSelectedDeal(deal)} variant="outline" size="sm">
                         View Details
                       </Button>
                     </td>
@@ -381,35 +387,47 @@ export const DealsPage: React.FC = () => {
       </Modal>
 
       {/* View/Payment Modal */}
-      {selectedDeal && (
-        <Modal isOpen={!!selectedDeal} onRequestClose={() => { setSelectedDeal(null); setIsPaymentModalOpen(false); }} style={modalStyles}>
-          {!isPaymentModalOpen ? (
-            // View Details
-            <div>
-              <h2 className="text-xl font-bold mb-2">{selectedDeal.startupName}</h2>
-              {/* ... Display all deal details here ... */}
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setSelectedDeal(null)}>Close</Button>
-                <Button onClick={() => setIsPaymentModalOpen(true)}>Add Payment</Button>
-              </div>
-            </div>
-          ) : (
-            // Add Payment Form
-            <div>
-              <h2 className="text-xl font-bold mb-4">Add Payment for {selectedDeal.startupName}</h2>
-              <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
-                <Input label="Amount (USD)" type="number" value={newPayment.amount} onChange={e => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) })} required />
-                <Input label="Notes (Optional)" value={newPayment.notes} onChange={e => setNewPayment({ ...newPayment, notes: e.target.value })} />
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsPaymentModalOpen(false)}>Back</Button>
-                  <Button type="submit" isLoading={addPaymentMutation.isPending}>Confirm Payment</Button>
+      <Modal isOpen={!!selectedDeal} onRequestClose={closeViewModal} style={modalStyles}>
+        {selectedDeal && ( // Ensure selectedDeal is not null before rendering
+          <>
+            {!isPaymentMode ? (
+              // --- VIEW DETAILS MODE ---
+              <div className="space-y-4">
+                <div className="pb-2 border-b">
+                  <h2 className="text-xl font-bold">{selectedDeal.startupName}</h2>
+                  <p className="text-sm text-gray-500">Deal with {selectedDeal.entrepreneurId?.name}</p>
                 </div>
-              </form>
-            </div>
-          )}
-        </Modal>
-      )}
-
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div><strong className="block text-gray-500">Amount:</strong> {selectedDeal.amount}</div>
+                  <div><strong className="block text-gray-500">Equity:</strong> {selectedDeal.equity}</div>
+                  <div><strong className="block text-gray-500">Stage:</strong> {selectedDeal.stage}</div>
+                  <div><strong className="block text-gray-500">Status:</strong> <Badge variant={getStatusColor(selectedDeal.status)}>{selectedDeal.status}</Badge></div>
+                </div>
+                {/* We would add a list of payments/transactions here in the future */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={closeViewModal}>Close</Button>
+                  {selectedDeal.status === 'Closed' && (
+                    <Button onClick={() => setIsPaymentMode(true)}>Add Payment</Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              // --- ADD PAYMENT MODE ---
+              <div>
+                <h2 className="text-xl font-bold mb-4">Add Payment for {selectedDeal.startupName}</h2>
+                <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
+                  <Input label="Amount (USD)" type="number" value={newPayment.amount || ''} onChange={e => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) })} required />
+                  <textarea value={newPayment.notes} onChange={e => setNewPayment({ ...newPayment, notes: e.target.value })} placeholder="Notes (optional)..." className="w-full border-gray-300 rounded-md p-2" rows={3}></textarea>
+                  <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={() => setIsPaymentMode(false)}>Back to Details</Button>
+                    <Button type="submit" isLoading={addPaymentMutation.isPending}>Confirm Payment</Button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 };
