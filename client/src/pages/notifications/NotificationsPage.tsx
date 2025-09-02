@@ -7,7 +7,6 @@ import { Card, CardBody } from '../../components/ui/Card';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { useSocket } from '../../context/SocketContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAllUsers } from '../../api/users'; // We need this to get user avatars
 import { fetchNotifications, markAllNotificationsAsRead, Notification } from '../../api/notifications';
@@ -37,16 +36,6 @@ export const NotificationsPage: React.FC = () => {
     markAsReadMutation.mutate();
   };
 
-  // Fetch all users to easily look up avatars by sender name.
-  // This will be cached by Tanstack Query, so it's efficient.
-  const { data: users = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: fetchAllUsers,
-  });
-
-  // Create a quick lookup map for user avatars
-  const userAvatarMap = new Map(users.map(user => [user.name, user.avatarUrl]));
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'newMessage':
@@ -62,6 +51,8 @@ export const NotificationsPage: React.FC = () => {
     }
   };
 
+  const hasUnread = notifications.some(n => !n.isRead);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -75,7 +66,7 @@ export const NotificationsPage: React.FC = () => {
           size="sm"
           onClick={handleMarkAllAsRead}
           isLoading={markAsReadMutation.isPending}
-          disabled={notifications.length === 0}
+          disabled={!hasUnread}
           className='w-fit'
         >
           Mark all as read
@@ -87,14 +78,11 @@ export const NotificationsPage: React.FC = () => {
         {notifications.length > 0 ? (
           notifications.map(notification => (
             <Link to={notification.link || '#'} key={notification._id}>
-              <Card
-                // For now, all live notifications are considered "unread"
-                className="transition-colors duration-200 bg-primary-50"
-              >
+              <Card className={`transition-colors duration-200 ${!notification.isRead ? 'bg-primary-50 hover:bg-primary-100' : 'bg-white hover:bg-gray-50'}`}>
                 <CardBody className="flex items-start p-4">
                   <Avatar
                     // Use the found avatar, or a default/placeholder if not found
-                    src={notification.sender.avatarUrl}
+                    src={notification.sender?.avatarUrl}
                     alt={notification.sender.name}
                     size="md"
                     className="flex-shrink-0 mr-4"
@@ -104,7 +92,7 @@ export const NotificationsPage: React.FC = () => {
                       <span className="font-medium text-gray-900">
                         {notification.sender.name}
                       </span>
-                      <Badge variant="primary" size="sm" rounded>New</Badge>
+                      {!notification.isRead && (<Badge variant="primary" size="sm" rounded>New</Badge>)}
                     </div>
 
                     {/* The full message content from the socket notification */}
