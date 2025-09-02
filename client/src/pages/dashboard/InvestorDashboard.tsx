@@ -10,12 +10,18 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchEntrepreneurs } from '../../api/users';
 import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard';
 import { User } from '../../types';
+import { fetchReceivedRequests } from '../../api/collaborations';
 
 export const InvestorDashboard: React.FC = () => {
   const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+
+  const { data: collaborationRequests = [] } = useQuery({
+    queryKey: ['collaborationRequests'],
+    queryFn: fetchReceivedRequests,
+  });
 
   // Fetch all entrepreneurs to display on the dashboard
   const { data: entrepreneurs = [], isLoading } = useQuery<User[]>({
@@ -65,9 +71,6 @@ export const InvestorDashboard: React.FC = () => {
         : [...prevSelected, industry]
     );
   };
-
-  // Connection stats would require fetching sent collaboration requests (future step)
-  const acceptedConnections = 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -158,7 +161,9 @@ export const InvestorDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Your Connections</p>
-                <h3 className="text-xl font-semibold text-accent-900">{acceptedConnections}</h3>
+                <h3 className="text-xl font-semibold text-accent-900">
+                  {collaborationRequests.filter(req => req.status === 'accepted').length}
+                </h3>
               </div>
             </div>
           </CardBody>
