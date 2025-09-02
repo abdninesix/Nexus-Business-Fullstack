@@ -150,37 +150,41 @@ export const DocumentsPage: React.FC = () => {
               <div className="space-y-2">
                 {isLoading && <p>Loading documents...</p>}
                 {isError && <p className="text-red-500">Failed to load documents.</p>}
-                {documents.length === 0 ? (<p>No documents uploaded</p>) : documents.map(doc => (
-                  <div key={doc._id} className="flex items-center p-4 hover:bg-gray-50 rounded-lg">
-                    <div className="p-2 bg-primary-50 rounded-lg mr-4"><FileText size={24} className="text-primary-600" /></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
-                        {/* <Badge variant="secondary" size="sm">Shared</Badge> */}
-                      </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                        <span>{doc.type}</span>
-                        <span>{formatBytes(doc.size)}</span>
-                        <span>Modified {formatDate(doc.updatedAt)}</span>
-                      </div>
+                {documents.length === 0 ? (<p>No documents uploaded</p>) :
+                  documents.map(doc => (
+                    <div key={doc._id} className="flex items-center p-4 hover:bg-gray-50 rounded-lg">
+                      <div className="p-2 bg-primary-50 rounded-lg mr-4"><FileText size={24} className="text-primary-600" /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
+                          <Badge variant="secondary" size="sm">Shared</Badge>
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                          <span>{doc.type}</span>
+                          <span>{formatBytes(doc.size)}</span>
+                          <span>Modified {formatDate(doc.updatedAt)}</span>
+                        </div>
 
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        {/* <Button variant="ghost" size="sm" className="p-2" aria-label="View" onClick={() => setViewingDoc(doc)}>
+                          <View size={18} />
+                        </Button> */}
+                        <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="View"><View size={18} /></Button>
+                        </a>
+                        <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download"><Download size={18} /></Button>
+                        </a>
+                        <Button variant="ghost" size="sm" className="p-2" aria-label="Share"><Share2 size={18} /></Button>
+                        <Button
+                          variant="ghost" size="sm" className="p-2 text-error-600 hover:text-error-700"
+                          aria-label="Delete" onClick={() => handleDelete(doc._id)}
+                          isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}
+                        ><Trash2 size={18} /></Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      {/* <Button variant="ghost" size="sm" className="p-2" aria-label="View" onClick={() => setViewingDoc(doc)}>
-                        <View size={18} />
-                      </Button> */}
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="p-2" aria-label="Download"><Download size={18} /></Button>
-                      </a>
-                      <Button variant="ghost" size="sm" className="p-2" aria-label="Share"><Share2 size={18} /></Button>
-                      <Button
-                        variant="ghost" size="sm" className="p-2 text-error-600 hover:text-error-700"
-                        aria-label="Delete" onClick={() => handleDelete(doc._id)}
-                        isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}
-                      ><Trash2 size={18} /></Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardBody>
           </Card>
