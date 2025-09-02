@@ -4,13 +4,21 @@ import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Cale
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
-import { useSocket } from '../../context/SocketContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchNotifications } from '../../api/notifications';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, unreadMessageCount } = useAuth();
-  const { notifications } = useSocket();
   const navigate = useNavigate();
+
+  // This is efficient because Tanstack Query will cache the result.
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+    enabled: !!user, // Only fetch if the user is logged in
+    select: (data) => data.filter(n => !n.isRead), // We only care about unread ones
+  });
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -32,13 +40,6 @@ export const Navbar: React.FC = () => {
   const profileRoute = user
     ? `/profile/${user.role}/${user._id}`
     : '/login';
-
-  // User document/deals route based on role and ID
-  const docDealRoute = user?.role === 'entrepreneur'
-    ? '/documents'
-    : user?.role === 'investor'
-      ? '/deals'
-      : '/login';
 
   const navLinksDesktop = [
     {
@@ -88,8 +89,14 @@ export const Navbar: React.FC = () => {
     },
     {
       icon: <FileText size={18} />,
-      text: user?.role === 'entrepreneur' ? 'Documents' : 'Deals',
-      path: docDealRoute,
+      text: 'Documents',
+      path: user ? '/documents' : '/login',
+      badge: 0,
+    },
+    {
+      icon: <FileText size={18} />,
+      text: 'Deals',
+      path: user ? '/deals' : '/login',
       badge: 0,
     },
     {
@@ -134,7 +141,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex md:items-center md:ml-6">
             {user ? (
               <div className="flex items-center space-x-4">
-                {/* {navLinksDesktop.map((link, index) => (
+                {navLinksDesktop.map((link, index) => (
                   <Link
                     key={index}
                     to={link.path}
@@ -143,7 +150,7 @@ export const Navbar: React.FC = () => {
                     <span className="mr-2">{link.icon}</span>
                     {link.text}
                   </Link>
-                ))} */}
+                ))}
 
                 <Button
                   variant="ghost"

@@ -6,13 +6,14 @@ import {
   Bell, FileText, Settings, HelpCircle,
   Calendar
 } from 'lucide-react';
-import { useSocket } from '../../context/SocketContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchNotifications } from '../../api/notifications';
 
 interface SidebarItemProps {
   to: string;
   icon: React.ReactNode;
   text: string;
-  badgeCount?: number | any;
+  badgeCount?: number;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, text, badgeCount }) => {
@@ -31,7 +32,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, text, badgeCount })
           <span className="mr-3">{icon}</span>
           <span className="text-sm font-medium">{text}</span>
         </div>
-        {badgeCount > 0 && (
+        {badgeCount && badgeCount > 0 && (
           <span className="bg-primary-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
             {badgeCount}
           </span>
@@ -42,8 +43,17 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, text, badgeCount })
 };
 
 export const Sidebar: React.FC = () => {
-  const { user, unreadMessageCount } = useAuth(); // <-- Get unread message count
-  const { notifications } = useSocket(); // <-- Get live notifications
+  const { user, unreadMessageCount } = useAuth();
+
+  const { data: unreadNotificationsCount = 0 } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+    enabled: !!user,
+    // Use the `select` option to transform the data into just the count of unread items
+    select: (data) => data.filter(n => !n.isRead).length,
+    // Optional: refetch periodically to keep it fresh
+    refetchInterval: 60000, // Refetch every 60 seconds
+  });
 
   if (!user) return null;
 
@@ -53,8 +63,9 @@ export const Sidebar: React.FC = () => {
     { to: '/profile/entrepreneur/' + user._id, icon: <Building2 size={20} />, text: 'My Startup' },
     { to: '/investors', icon: <CircleDollarSign size={20} />, text: 'Find Investors' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
-    { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: notifications.length },
+    { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
     { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
+    { to: '/deals', icon: <FileText size={20} />, text: 'Deals' },
     { to: '/calendar', icon: <Calendar size={20} />, text: 'Calendar' },
   ];
 
@@ -63,7 +74,8 @@ export const Sidebar: React.FC = () => {
     { to: '/profile/investor/' + user._id, icon: <CircleDollarSign size={20} />, text: 'My Portfolio' },
     { to: '/entrepreneurs', icon: <Users size={20} />, text: 'Find Startups' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
-    { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: notifications.length },
+    { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
+    { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
     { to: '/deals', icon: <FileText size={20} />, text: 'Deals' },
     { to: '/calendar', icon: <Calendar size={20} />, text: 'Calendar' },
   ];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { User, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
+import { User as UserIcon, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile, changeUserPassword } from '../../api/users';
@@ -12,17 +12,19 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
-import { ProfileState } from '../../types';
+import { EntrepreneurProfile, InvestorProfile, User } from '../../types';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for controlled form inputs
-  const [profile, setProfile] = useState<ProfileState>({
-    name: '', email: '', bio: '',
-    investmentInterests: [], investmentStage: [], portfolioCompanies: []
+  const [profile, setProfile] = useState<Partial<User & EntrepreneurProfile & InvestorProfile>>({
+    name: '', email: '', bio: '', location: '',
+    startupName: '', pitchSummary: '', fundingNeeded: '', industry: '', foundedYear: undefined, teamSize: undefined,
+    investmentInterests: [], investmentStage: [], portfolioCompanies: [], totalInvestments: undefined, minimumInvestment: '', maximumInvestment: '',
   });
+
   const [newInterest, setNewInterest] = useState('');
   const [newStage, setNewStage] = useState('');
   const [newCompany, setNewCompany] = useState('');
@@ -36,20 +38,16 @@ export const SettingsPage: React.FC = () => {
         email: user.email || '',
         bio: user.bio || '',
         location: user.location || '',
-        // Entrepreneur fields
-        startupName: user.entrepreneurProfile?.startupName || '',
-        pitchSummary: user.entrepreneurProfile?.pitchSummary || '',
-        fundingNeeded: user.entrepreneurProfile?.fundingNeeded || '',
-        industry: user.entrepreneurProfile?.industry || '',
-        foundedYear: user.entrepreneurProfile?.foundedYear || null,
-        teamSize: user.entrepreneurProfile?.teamSize || 0,
-        // Investor fields
-        investmentInterests: user.investorProfile?.investmentInterests || [],
-        investmentStage: user.investorProfile?.investmentStage || [],
-        portfolioCompanies: user.investorProfile?.portfolioCompanies || [],
-        totalInvestments: user.investorProfile?.totalInvestments || 0,
-        minimumInvestment: user.investorProfile?.minimumInvestment || '',
-        maximumInvestment: user.investorProfile?.maximumInvestment || '',
+        // Spread entrepreneur profile, providing defaults
+        ...{
+          startupName: '', pitchSummary: '', fundingNeeded: '', industry: '', foundedYear: undefined, teamSize: undefined,
+          ...user.entrepreneurProfile,
+        },
+        // Spread investor profile, providing defaults
+        ...{
+          investmentInterests: [], investmentStage: [], portfolioCompanies: [], totalInvestments: undefined, minimumInvestment: '', maximumInvestment: '',
+          ...user.investorProfile,
+        },
       });
     }
   }, [user]);
@@ -107,7 +105,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   // Generic handler to add an item to an array field
-  const handleAddItem = (field: keyof ProfileState, value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
+  const handleAddItem = (field: keyof InvestorProfile, value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
     if (!value.trim()) return; // Don't add empty items
     const currentArray = (profile[field] as string[]) || [];
     setProfile(prev => ({ ...prev, [field]: [...currentArray, value.trim()] }));
@@ -115,7 +113,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   // Generic handler to remove an item from an array field
-  const handleRemoveItem = (field: keyof ProfileState, index: number) => {
+  const handleRemoveItem = (field: keyof InvestorProfile, index: number) => {
     const currentArray = (profile[field] as string[]) || [];
     setProfile(prev => ({ ...prev, [field]: currentArray.filter((_, i) => i !== index) }));
   };
@@ -151,7 +149,7 @@ export const SettingsPage: React.FC = () => {
           <CardBody className="p-2">
             <nav className="space-y-1">
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-primary-700 bg-primary-50 rounded-md">
-                <User size={18} className="mr-3" />
+                <UserIcon size={18} className="mr-3" />
                 Profile
               </button>
               <button className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md">
@@ -259,8 +257,8 @@ export const SettingsPage: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium">Investment Interests</label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {profile.investmentInterests?.map((stage, index) => (
-                        <Badge key={index} onRemove={() => handleRemoveItem('investmentInterests', index)}>{stage}</Badge>
+                      {profile.investmentInterests?.map((interest, index) => (
+                        <Badge key={index} onRemove={() => handleRemoveItem('investmentInterests', index)}>{interest}</Badge>
                       ))}
                     </div>
                     <div className="flex gap-2 mt-2">

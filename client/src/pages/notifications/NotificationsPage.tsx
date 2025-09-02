@@ -8,7 +8,6 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchAllUsers } from '../../api/users'; // We need this to get user avatars
 import { fetchNotifications, markAllNotificationsAsRead, Notification } from '../../api/notifications';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -106,7 +105,7 @@ export const NotificationsPage: React.FC = () => {
                       <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                     </div>
                   </div>
-                  {!notification.isRead && <div className="w-3 h-3 bg-primary-500 rounded-full ml-auto" />}
+                  {!notification.isRead && <div className="w-3 h-3 bg-primary-500 rounded-full ml-auto self-center flex-shrink-0" />}
                 </CardBody>
               </Card>
             </Link>
