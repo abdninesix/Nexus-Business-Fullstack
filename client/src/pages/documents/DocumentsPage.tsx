@@ -154,46 +154,47 @@ export const DocumentsPage: React.FC = () => {
                   documents.map(doc => (
                     <div
                       key={doc._id}
-                      className="flex items-start sm:items-center p-4 hover:bg-gray-50 rounded-lg"
+                      className="flex flex-col sm:flex-row p-4 hover:bg-gray-50 rounded-lg"
                     >
-                      {/* Icon */}
-                      <div className="p-2 bg-primary-50 rounded-lg mr-4">
-                        <FileText size={24} className="text-primary-600" />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
-                          <Badge variant="secondary" size="sm">Shared</Badge>
+                      {/* Icon + Content */}
+                      <div className="flex flex-1">
+                        <div className="p-2 bg-primary-50 rounded-lg mr-4">
+                          <FileText size={24} className="text-primary-600" />
                         </div>
 
-                        <div className="flex flex-wrap gap-2 sm:gap-4 mt-1 text-sm text-gray-500">
-                          <span>{doc.type}</span>
-                          <span>{formatBytes(doc.size)}</span>
-                          <span>Modified {formatDate(doc.updatedAt)}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
+                            <Badge variant="secondary" size="sm">Shared</Badge>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 sm:gap-4 mt-1 text-sm text-gray-500">
+                            <span>{doc.type}</span>
+                            <span>{formatBytes(doc.size)}</span>
+                            <span>Modified {formatDate(doc.updatedAt)}</span>
+                          </div>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 ml-4">
+                      <div className="flex gap-2 mt-3 sm:mt-0 sm:ml-4">
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="View">
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="View">
                             <View size={18} />
                           </Button>
                         </a>
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="Download">
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download">
                             <Download size={18} />
                           </Button>
                         </a>
-                        <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="Share">
+                        <Button variant="ghost" size="sm" className="p-2" aria-label="Share">
                           <Share2 size={18} />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-2 w-full sm:w-auto text-error-600 hover:text-error-700"
+                          className="p-2 text-error-600 hover:text-error-700"
                           aria-label="Delete"
                           onClick={() => handleDelete(doc._id)}
                           isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}
