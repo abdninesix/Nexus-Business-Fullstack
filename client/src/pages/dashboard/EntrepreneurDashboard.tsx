@@ -19,6 +19,7 @@ export const EntrepreneurDashboard: React.FC = () => {
   const { data: collaborationRequests = [] } = useQuery({
     queryKey: ['collaborationRequests'],
     queryFn: fetchReceivedRequests,
+    enabled: !!user,
   });
 
   const { data: recommendedInvestors = [] } = useQuery<User[]>({

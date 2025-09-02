@@ -27,6 +27,17 @@ export const getReceivedRequests = async (req, res) => {
   } catch (error) { res.status(500).json({ message: 'Failed to fetch requests' }); }
 };
 
+// Get requests SENT BY the logged-in user (Investor view)
+export const getSentRequests = async (req, res) => {
+  try {
+    // Find all requests where the investorId matches the current user
+    const requests = await Collaboration.find({ investorId: req.user._id });
+    res.status(200).json(requests);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch sent requests' });
+  }
+};
+
 // Update a request status (Entrepreneur action)
 export const updateRequestStatus = async (req, res) => {
   try {

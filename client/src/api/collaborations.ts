@@ -22,6 +22,11 @@ export const fetchReceivedRequests = async (): Promise<CollaborationRequest[]> =
   return data;
 };
 
+export const fetchSentRequests = async (): Promise<CollaborationRequest[]> => {
+  const { data } = await api.get('/collaborations/sent');
+  return data;
+};
+
 export const updateRequestStatus = async (payload: { id: string; status: 'accepted' | 'rejected' }): Promise<CollaborationRequest> => {
   const { id, status } = payload;
   const { data } = await api.patch(`/collaborations/${id}`, { status });

@@ -10,10 +10,10 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchEntrepreneurs } from '../../api/users';
 import { EntrepreneurCard } from '../../components/entrepreneur/EntrepreneurCard';
 import { User } from '../../types';
+import { fetchSentRequests } from '../../api/collaborations';
 
 export const InvestorDashboard: React.FC = () => {
   const { user } = useAuth();
-
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
@@ -21,6 +21,13 @@ export const InvestorDashboard: React.FC = () => {
   const { data: entrepreneurs = [], isLoading } = useQuery<User[]>({
     queryKey: ['entrepreneurs'],
     queryFn: fetchEntrepreneurs,
+  });
+
+  const { data: sentRequests = [] } = useQuery({
+    queryKey: ['sentRequests'],
+    queryFn: fetchSentRequests,
+    // This query should only run if the user is an investor
+    enabled: user?.role === 'investor',
   });
 
   if (!user) return null;
@@ -158,7 +165,9 @@ export const InvestorDashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-accent-700">Your Connections</p>
-                <h3 className="text-xl font-semibold text-accent-900">{acceptedConnections}</h3>
+                <h3 className="text-xl font-semibold text-accent-900">
+                  {sentRequests.filter(req => req.status === 'accepted').length}
+                </h3>
               </div>
             </div>
           </CardBody>
