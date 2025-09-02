@@ -179,12 +179,12 @@ export const DocumentsPage: React.FC = () => {
                       {/* Actions */}
                       <div className="flex justify-end gap-2 mt-3 sm:mt-0 sm:ml-4">
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="View">
+                          <Button variant="ghost" size="sm" className="h-full p-2" aria-label="View">
                             <View size={18} />
                           </Button>
                         </a>
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download">
+                          <Button variant="ghost" size="sm" className="h-full p-2" aria-label="Download">
                             <Download size={18} />
                           </Button>
                         </a>

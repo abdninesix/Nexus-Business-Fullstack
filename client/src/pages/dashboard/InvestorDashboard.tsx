@@ -73,9 +73,6 @@ export const InvestorDashboard: React.FC = () => {
     );
   };
 
-  // Connection stats would require fetching sent collaboration requests (future step)
-  const acceptedConnections = 0;
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
