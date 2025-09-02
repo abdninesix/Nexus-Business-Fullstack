@@ -4,7 +4,6 @@ import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import meetingRoutes from './routes/meetingRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
-import transactionRoutes from './routes/transactionRoutes.js';
 import userRoutes from './routes/userRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
 import collaborationRoutes from './routes/collaborationRoutes.js';
@@ -122,7 +121,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/documents', documentRoutes);
-app.use('/api/transactions', transactionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/collaborations', collaborationRoutes);
