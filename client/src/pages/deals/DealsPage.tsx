@@ -340,7 +340,7 @@ export const DealsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button variant="outline" size="sm">
+                      <Button onClick={() => setIsPaymentModalOpen(true)} variant="outline" size="sm">
                         View Details
                       </Button>
                     </td>
