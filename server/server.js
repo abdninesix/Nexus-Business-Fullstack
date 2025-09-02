@@ -123,6 +123,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/collaborations', collaborationRoutes);
+app.use('/api/deals', dealRoutes);
 
 app.get('/', (req, res) => {
   res.send('Nexus API is running...');

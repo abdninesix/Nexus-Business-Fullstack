@@ -1,11 +1,12 @@
+// models/Transaction.js
 import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  type: { type: String, enum: ['deposit', 'withdraw', 'transfer'], required: true },
+  dealId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deal', required: true },
+  investorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
-  description: String,
+  date: { type: Date, default: Date.now },
+  notes: { type: String },
 }, { timestamps: true });
 
 export default mongoose.model('Transaction', transactionSchema);

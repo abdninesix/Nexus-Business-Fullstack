@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { Search, Filter, DollarSign, TrendingUp, Users, Calendar } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Search, Filter, DollarSign, TrendingUp, Users, Calendar, PlusCircle } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import Modal from 'react-modal';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData } from '../../api/deals';
+import toast from 'react-hot-toast';
+import { format } from 'date-fns/format';
 
-const deals = [
+Modal.setAppElement('#root');
+
+const modalStyles = {
+  overlay: { zIndex: 50, backgroundColor: 'rgba(0, 0, 0, 0.75)' },
+  content: { top: '50%', left: '50%', right: 'auto', bottom: 'auto', marginRight: '-50%', transform: 'translate(-50%, -50%)', width: '90%', maxWidth: '500px' },
+};
+
+const dealsMock = [
   {
     id: 1,
     startup: {
@@ -49,19 +61,90 @@ const deals = [
 ];
 
 export const DealsPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  
+
+  // Modal States
+  const [isAddDealModalOpen, setIsAddDealModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null); // For view/payment modals
+
+  // Form States
+  const [newDeal, setNewDeal] = useState<Omit<NewDealData, 'investorId'>>({ entrepreneurId: '', startupName: '', amount: '', equity: '', status: 'Negotiation', stage: 'Seed' });
+  const [newPayment, setNewPayment] = useState({ amount: 0, notes: '' });
+
+  // --- DATA FETCHING & MUTATIONS ---
+  const { data: deals = [], isLoading } = useQuery<Deal[]>({ queryKey: ['deals'], queryFn: fetchDeals });
+
+  const createDealMutation = useMutation({
+    mutationFn: createDeal,
+    onSuccess: () => {
+      toast.success("Deal added successfully!");
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      setIsAddDealModalOpen(false);
+      setNewDeal({ entrepreneurId: '', startupName: '', amount: '', equity: '', status: 'Negotiation', stage: 'Seed' });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to add deal."),
+  });
+
+  const addPaymentMutation = useMutation({
+    mutationFn: addPayment,
+    onSuccess: () => {
+      toast.success("Payment added successfully!");
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      setIsPaymentModalOpen(false);
+      setNewPayment({ amount: 0, notes: '' });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to add payment."),
+  });
+
+  const handleAddDealSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createDealMutation.mutate(newDeal);
+  };
+
+  const handleAddPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDeal) return;
+    const paymentData: NewPaymentData = { dealId: selectedDeal._id, ...newPayment };
+    addPaymentMutation.mutate(paymentData);
+  };
+
+  const filteredDeals = useMemo(() => {
+    return deals.filter(deal => {
+      const matchesSearch = searchQuery === '' ||
+        deal.startupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deal.entrepreneurId?.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(deal.status);
+      return matchesSearch && matchesStatus;
+    });
+  }, [deals, searchQuery, selectedStatus]);
+
+  const { totalInvestment, activeDealsCount, portfolioCount } = useMemo(() => {
+    const total = deals.reduce((sum, deal) => {
+      if (deal.status === 'Closed') {
+        const value = parseFloat(deal.amount.replace(/[^0-9.]/g, ''));
+        const multiplier = deal.amount.toUpperCase().includes('M') ? 1000000 : deal.amount.toUpperCase().includes('K') ? 1000 : 1;
+        return sum + (value * multiplier);
+      }
+      return sum;
+    }, 0);
+    const active = deals.filter(d => d.status !== 'Closed' && d.status !== 'Passed').length;
+    const portfolio = deals.filter(d => d.status === 'Closed').length;
+    return { totalInvestment: total, activeDealsCount: active, portfolioCount: portfolio };
+  }, [deals]);
+
   const statuses = ['Due Diligence', 'Term Sheet', 'Negotiation', 'Closed', 'Passed'];
-  
+
   const toggleStatus = (status: string) => {
-    setSelectedStatus(prev => 
+    setSelectedStatus(prev =>
       prev.includes(status)
         ? prev.filter(s => s !== status)
         : [...prev, status]
     );
   };
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Due Diligence':
@@ -78,7 +161,7 @@ export const DealsPage: React.FC = () => {
         return 'gray';
     }
   };
-  
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -86,12 +169,12 @@ export const DealsPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Investment Deals</h1>
           <p className="text-gray-600">Track and manage your investment pipeline</p>
         </div>
-        
-        <Button className='w-fit'>
+
+        <Button onClick={() => setIsAddDealModalOpen(true)} leftIcon={<PlusCircle size={18} />} className='w-fit'>
           Add Deal
         </Button>
       </div>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -102,12 +185,12 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Investment</p>
-                <p className="text-lg font-semibold text-gray-900">$4.3M</p>
+                <p className="text-lg font-semibold text-gray-900">${(totalInvestment / 1000000).toFixed(1)}M</p>
               </div>
             </div>
           </CardBody>
         </Card>
-        
+
         <Card>
           <CardBody>
             <div className="flex items-center">
@@ -116,12 +199,12 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Active Deals</p>
-                <p className="text-lg font-semibold text-gray-900">8</p>
+                <p className="text-lg font-semibold text-gray-900">{activeDealsCount}</p>
               </div>
             </div>
           </CardBody>
         </Card>
-        
+
         <Card>
           <CardBody>
             <div className="flex items-center">
@@ -130,12 +213,12 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Portfolio Companies</p>
-                <p className="text-lg font-semibold text-gray-900">12</p>
+                <p className="text-lg font-semibold text-gray-900">{portfolioCount}</p>
               </div>
             </div>
           </CardBody>
         </Card>
-        
+
         <Card>
           <CardBody>
             <div className="flex items-center">
@@ -144,13 +227,13 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Closed This Month</p>
-                <p className="text-lg font-semibold text-gray-900">2</p>
+                <p className="text-lg font-semibold text-gray-900">0</p>
               </div>
             </div>
           </CardBody>
         </Card>
       </div>
-      
+
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-2/3">
@@ -162,7 +245,7 @@ export const DealsPage: React.FC = () => {
             fullWidth
           />
         </div>
-        
+
         <div className="w-full md:w-1/3">
           <div className="flex items-center gap-2">
             <Filter size={18} className="text-gray-500" />
@@ -181,7 +264,7 @@ export const DealsPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Deals table */}
       <Card>
         <CardHeader>
@@ -216,22 +299,23 @@ export const DealsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {deals.map(deal => (
-                  <tr key={deal.id} className="hover:bg-gray-50">
+                {isLoading && <tr><td colSpan={7} className="text-center p-4">Loading deals...</td></tr>}
+                {filteredDeals.map(deal => (
+                  <tr key={deal._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Avatar
-                          src={deal.startup.logo}
-                          alt={deal.startup.name}
+                          src={deal.entrepreneurId?.avatarUrl}
+                          alt={deal.startupName}
                           size="sm"
                           className="flex-shrink-0"
                         />
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {deal.startup.name}
+                            {deal.startupName}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {deal.startup.industry}
+                            {deal.entrepreneurId.name}
                           </div>
                         </div>
                       </div>
@@ -252,7 +336,7 @@ export const DealsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {new Date(deal.lastActivity).toLocaleDateString()}
+                        {format(new Date(deal.updatedAt), 'MMM d, yyyy')}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -267,6 +351,65 @@ export const DealsPage: React.FC = () => {
           </div>
         </CardBody>
       </Card>
+
+      {/* --- MODALS --- */}
+
+      {/* Add Deal Modal */}
+      <Modal isOpen={isAddDealModalOpen} onRequestClose={() => setIsAddDealModalOpen(false)} style={modalStyles}>
+        <h2 className="text-xl font-bold mb-4">Add New Deal</h2>
+        <form onSubmit={handleAddDealSubmit} className="space-y-4">
+          <Input label="Startup Name" value={newDeal.startupName} onChange={e => setNewDeal({ ...newDeal, startupName: e.target.value })} required />
+          <Input label="Entrepreneur User ID" value={newDeal.entrepreneurId} onChange={e => setNewDeal({ ...newDeal, entrepreneurId: e.target.value })} required />
+          <Input label="Investment Amount" value={newDeal.amount} onChange={e => setNewDeal({ ...newDeal, amount: e.target.value })} placeholder="$1.5M" required />
+          <Input label="Equity Percentage" value={newDeal.equity} onChange={e => setNewDeal({ ...newDeal, equity: e.target.value })} placeholder="15%" required />
+          <Input label="Stage" value={newDeal.stage} onChange={e => setNewDeal({ ...newDeal, stage: e.target.value })} placeholder="Series A" required />
+          <div>
+            <label className="block text-sm font-medium mb-1">Status</label>
+            <select value={newDeal.status} onChange={e => setNewDeal({ ...newDeal, status: e.target.value as Deal['status'] })} className="w-full border-gray-300 rounded-md">
+              <option>Due Diligence</option>
+              <option>Term Sheet</option>
+              <option>Negotiation</option>
+              <option>Closed</option>
+              <option>Passed</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsAddDealModalOpen(false)}>Cancel</Button>
+            <Button type="submit" isLoading={createDealMutation.isPending}>Save Deal</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* View/Payment Modal */}
+      {selectedDeal && (
+        <Modal isOpen={!!selectedDeal} onRequestClose={() => { setSelectedDeal(null); setIsPaymentModalOpen(false); }} style={modalStyles}>
+          {!isPaymentModalOpen ? (
+            // View Details
+            <div>
+              <h2 className="text-xl font-bold mb-2">{selectedDeal.startupName}</h2>
+              {/* ... Display all deal details here ... */}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setSelectedDeal(null)}>Close</Button>
+                <Button onClick={() => setIsPaymentModalOpen(true)}>Add Payment</Button>
+              </div>
+            </div>
+          ) : (
+            // Add Payment Form
+            <div>
+              <h2 className="text-xl font-bold mb-4">Add Payment for {selectedDeal.startupName}</h2>
+              <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
+                <Input label="Amount (USD)" type="number" value={newPayment.amount} onChange={e => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) })} required />
+                <Input label="Notes (Optional)" value={newPayment.notes} onChange={e => setNewPayment({ ...newPayment, notes: e.target.value })} />
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsPaymentModalOpen(false)}>Back</Button>
+                  <Button type="submit" isLoading={addPaymentMutation.isPending}>Confirm Payment</Button>
+                </div>
+              </form>
+            </div>
+          )}
+        </Modal>
+      )}
+
     </div>
   );
 };
