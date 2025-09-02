@@ -189,7 +189,7 @@ export const VideoCallPage: React.FC = () => {
             <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2 overflow-hidden">
                 {/* Remote Video (Main View) */}
                 <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
-                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain" />
+                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
                         <p className="text-sm">{remoteUser?.name}</p>
                         <p className="text-xs">{connectionStatus}</p>
@@ -198,7 +198,7 @@ export const VideoCallPage: React.FC = () => {
 
                 {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
                 <div className="bg-black rounded-lg overflow-hidden flex-shrink-0 w-full h-1/3 md:w-1/4 md:h-full">
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                 </div>
             </div>
 
