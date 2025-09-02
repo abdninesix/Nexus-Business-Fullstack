@@ -198,7 +198,7 @@ export const VideoCallPage: React.FC = () => {
                 {/* Remote User Info */}
                 <div className="absolute top-2 left-2 bg-black/50 px-3 py-2 rounded-lg text-sm z-10">
                     <p className="font-medium">{remoteUser?.name || 'Waiting...'}</p>
-                    <p className="text-xs">{connectionStatus}</p>
+                    <p className={`text-xs ${connectionStatus === 'Connected' ? 'text-primary-700' : 'text-red-600'}`}>{connectionStatus}</p>
                 </div>
 
                 {/* Local Video (Overlay) */}
