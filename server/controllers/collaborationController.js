@@ -31,7 +31,7 @@ export const getReceivedRequests = async (req, res) => {
 export const getSentRequests = async (req, res) => {
   try {
     // Find all requests where the investorId matches the current user
-    const requests = await Collaboration.find({ investorId: req.user._id });
+    const requests = await Collaboration.find({ investorId: req.user._id }).populate('entrepreneurId', 'name avatarUrl entrepreneurProfile');;
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch sent requests' });

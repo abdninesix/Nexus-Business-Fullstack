@@ -10,6 +10,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData } from '../../api/deals';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns/format';
+import { CollaborationRequest, fetchSentRequests } from '../../api/collaborations';
+import { User } from '../../types';
 
 Modal.setAppElement('#root');
 
@@ -76,6 +78,33 @@ export const DealsPage: React.FC = () => {
 
   // --- DATA FETCHING & MUTATIONS ---
   const { data: deals = [], isLoading } = useQuery<Deal[]>({ queryKey: ['deals'], queryFn: fetchDeals });
+
+  // Fetch sent requests to determine connections ---
+  const { data: sentRequests = [] } = useQuery<CollaborationRequest[]>({
+    queryKey: ['sentRequests'],
+    queryFn: fetchSentRequests,
+    enabled: isAddDealModalOpen, // Only fetch when the modal is opened
+  });
+
+  // Derive the list of connections from the fetched data ---
+  const connections = useMemo((): User[] => {
+    if (!sentRequests) return [];
+
+    // We use `reduce` to iterate through the list and build a new, correctly typed array.
+    return sentRequests.reduce((accumulator: User[], currentRequest) => {
+      // Check for the two conditions at once
+      if (
+        currentRequest.status === 'accepted' &&
+        typeof currentRequest.entrepreneurId === 'object' && // Type guard: is it an object?
+        currentRequest.entrepreneurId !== null // Type guard: is it not null?
+      ) {
+        // If both are true, TypeScript now knows `currentRequest.entrepreneurId` is a User.
+        // We can safely add it to our accumulator array.
+        accumulator.push(currentRequest.entrepreneurId);
+      }
+      return accumulator;
+    }, []); // The initial value of our accumulator is an empty User array.
+  }, [sentRequests]);
 
   const createDealMutation = useMutation({
     mutationFn: createDeal,
@@ -364,8 +393,34 @@ export const DealsPage: React.FC = () => {
       <Modal isOpen={isAddDealModalOpen} onRequestClose={() => setIsAddDealModalOpen(false)} style={modalStyles}>
         <h2 className="text-xl font-bold mb-4">Add New Deal</h2>
         <form onSubmit={handleAddDealSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Select Entrepreneur</label>
+            <select
+              value={newDeal.entrepreneurId}
+              onChange={e => {
+                const selectedId = e.target.value;
+                // Find the selected entrepreneur to auto-fill their startup name
+                const selectedEntrepreneur = connections.find(c => c._id === selectedId);
+                const startupName = selectedEntrepreneur?.entrepreneurProfile?.startupName || selectedEntrepreneur?.name || '';
+
+                setNewDeal({
+                  ...newDeal,
+                  entrepreneurId: selectedId,
+                  startupName: startupName // Auto-fill the startup name
+                });
+              }}
+              required
+              className="w-full border-gray-300 rounded-md p-2"
+            >
+              <option value="" disabled>-- Choose a Connection --</option>
+              {connections.map(entrepreneur => (
+                <option key={entrepreneur._id} value={entrepreneur._id}>
+                  {entrepreneur.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <Input label="Startup Name" value={newDeal.startupName} onChange={e => setNewDeal({ ...newDeal, startupName: e.target.value })} required />
-          <Input label="Entrepreneur User ID" value={newDeal.entrepreneurId} onChange={e => setNewDeal({ ...newDeal, entrepreneurId: e.target.value })} required />
           <Input label="Investment Amount" value={newDeal.amount} onChange={e => setNewDeal({ ...newDeal, amount: e.target.value })} placeholder="$1.5M" required />
           <Input label="Equity Percentage" value={newDeal.equity} onChange={e => setNewDeal({ ...newDeal, equity: e.target.value })} placeholder="15%" required />
           <Input label="Stage" value={newDeal.stage} onChange={e => setNewDeal({ ...newDeal, stage: e.target.value })} placeholder="Series A" required />
