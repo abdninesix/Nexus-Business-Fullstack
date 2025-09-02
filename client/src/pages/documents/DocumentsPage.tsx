@@ -177,7 +177,7 @@ export const DocumentsPage: React.FC = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2 mt-3 sm:mt-0 sm:ml-4">
+                      <div className="flex justify-end gap-2 mt-3 sm:mt-0 sm:ml-4">
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
                           <Button variant="ghost" size="sm" className="p-2" aria-label="View">
                             <View size={18} />
