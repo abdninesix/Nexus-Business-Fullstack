@@ -87,8 +87,8 @@ export const CollaborationRequestCard: React.FC<CollaborationRequestCardProps> =
 
       <CardFooter className="border-t border-gray-100 bg-gray-50">
         {request.status === 'pending' ? (
-          <div className="flex items-center justify-between w-full">
-            <div className="space-x-2 space-y-2">
+          <div className="flex items-start justify-between w-full">
+            <div className="flex flex-wrap gap-2 items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
