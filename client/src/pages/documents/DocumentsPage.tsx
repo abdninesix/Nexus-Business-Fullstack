@@ -152,36 +152,54 @@ export const DocumentsPage: React.FC = () => {
                 {isError && <p className="text-red-500">Failed to load documents.</p>}
                 {documents.length === 0 ? (<p>No documents uploaded</p>) :
                   documents.map(doc => (
-                    <div key={doc._id} className="flex items-center p-4 hover:bg-gray-50 rounded-lg">
-                      <div className="p-2 bg-primary-50 rounded-lg mr-4"><FileText size={24} className="text-primary-600" /></div>
+                    <div
+                      key={doc._id}
+                      className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 rounded-lg gap-3 sm:gap-0"
+                    >
+                      {/* Icon */}
+                      <div className="p-2 bg-primary-50 rounded-lg sm:mr-4 w-fit self-start sm:self-auto">
+                        <FileText size={24} className="text-primary-600" />
+                      </div>
+
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
                           <Badge variant="secondary" size="sm">Shared</Badge>
                         </div>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-sm text-gray-500">
                           <span>{doc.type}</span>
                           <span>{formatBytes(doc.size)}</span>
                           <span>Modified {formatDate(doc.updatedAt)}</span>
                         </div>
-
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        {/* <Button variant="ghost" size="sm" className="p-2" aria-label="View" onClick={() => setViewingDoc(doc)}>
-                          <View size={18} />
-                        </Button> */}
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:ml-4 mt-2 sm:mt-0">
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="View"><View size={18} /></Button>
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="View">
+                            <View size={18} />
+                          </Button>
                         </a>
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download"><Download size={18} /></Button>
+                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download">
+                            <Download size={18} />
+                          </Button>
                         </a>
-                        <Button variant="ghost" size="sm" className="p-2" aria-label="Share"><Share2 size={18} /></Button>
+                        <Button variant="ghost" size="sm" className="p-2" aria-label="Share">
+                          <Share2 size={18} />
+                        </Button>
                         <Button
-                          variant="ghost" size="sm" className="p-2 text-error-600 hover:text-error-700"
-                          aria-label="Delete" onClick={() => handleDelete(doc._id)}
+                          variant="ghost"
+                          size="sm"
+                          className="p-2 text-error-600 hover:text-error-700"
+                          aria-label="Delete"
+                          onClick={() => handleDelete(doc._id)}
                           isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}
-                        ><Trash2 size={18} /></Button>
+                        >
+                          <Trash2 size={18} />
+                        </Button>
                       </div>
                     </div>
                   ))}
