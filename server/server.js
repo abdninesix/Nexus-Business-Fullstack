@@ -8,6 +8,8 @@ import transactionRoutes from './routes/transactionRoutes.js';
 import userRoutes from './routes/userRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
 import collaborationRoutes from './routes/collaborationRoutes.js';
+import dealRoutes from './routes/dealRoutes.js';
+
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -20,6 +22,7 @@ app.use(express.json());
 
 // --- SOCKET.IO INTEGRATION ---
 const httpServer = createServer(app); // Wrap the Express app
+
 const io = new Server(httpServer, {
   cors: {
     // origin: "http://localhost:5173",

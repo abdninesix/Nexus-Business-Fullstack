@@ -1,4 +1,3 @@
-// routes/dealRoutes.js
 import express from 'express';
 import { getDeals, createDeal, addPayment } from '../controllers/dealController.js';
 import { protect } from '../middleware/authMiddleware.js';

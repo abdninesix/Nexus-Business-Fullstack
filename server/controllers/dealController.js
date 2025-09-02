@@ -1,4 +1,3 @@
-// controllers/dealController.js
 import Deal from '../models/Deal.js';
 import Transaction from '../models/Transaction.js';
 
