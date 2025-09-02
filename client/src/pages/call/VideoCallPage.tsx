@@ -183,31 +183,61 @@ export const VideoCallPage: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] w-full flex flex-col items-center justify-center p-2 sm:p-4 text-white relative">
+        <div className="bg-gray-900 rounded-lg h-[85vh] md:h-[80vh] w-full flex flex-col items-center justify-between p-2 sm:p-4 text-white relative">
 
-            {/* --- RESPONSIVE VIDEO CONTAINER --- */}
-            <div className="relative w-full flex-1 flex flex-col md:flex-row gap-2 overflow-hidden">
-                {/* Remote Video (Main View) */}
-                <div className="w-full h-full bg-black rounded-lg overflow-hidden relative flex items-center justify-center">
-                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    <div className="absolute top-2 left-2 bg-black bg-opacity-50 p-2 rounded-lg z-10">
-                        <p className="text-sm">{remoteUser?.name}</p>
-                        <p className="text-xs">{connectionStatus}</p>
-                    </div>
+            {/* --- Video Container --- */}
+            <div className="relative w-full flex-1 flex items-center justify-center bg-black rounded-lg overflow-hidden">
+                {/* Remote Video (Main) */}
+                <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                />
+
+                {/* Remote User Info */}
+                <div className="absolute top-2 left-2 bg-black/50 px-3 py-2 rounded-lg text-sm z-10">
+                    <p className="font-medium">{remoteUser?.name || 'Waiting...'}</p>
+                    <p className="text-xs">{connectionStatus}</p>
                 </div>
 
-                {/* Local Video (Picture-in-Picture on Desktop, Stacked on Mobile) */}
-                <div className="bg-black rounded-lg overflow-hidden flex-shrink-0 w-full h-1/3 md:w-1/4 md:h-full">
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                {/* Local Video (Overlay) */}
+                <div className="absolute bottom-2 right-2 w-28 sm:w-40 md:w-1/4 max-w-[200px] bg-black rounded-lg overflow-hidden border border-white/20 shadow-lg">
+                    <video
+                        ref={localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-contain bg-black"
+                    />
                 </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex-shrink-0 flex items-center gap-4 p-3 mt-2">
-                <Button onClick={toggleMute} variant={isMuted ? 'error' : 'secondary'} className="rounded-full size-12 sm:size-14">{isMuted ? <MicOff /> : <Mic />}</Button>
-                <Button onClick={toggleVideo} variant={isVideoOff ? 'error' : 'secondary'} className="rounded-full size-12 sm:size-14">{isVideoOff ? <VideoOff /> : <Video />}</Button>
-                <Button onClick={handleHangUp} variant="error" className="rounded-full size-12 sm:size-14"><PhoneOff /></Button>
+            {/* --- Controls --- */}
+            <div className="flex-shrink-0 flex items-center justify-center gap-4 p-3 mt-2">
+                <Button
+                    onClick={toggleMute}
+                    variant={isMuted ? 'error' : 'secondary'}
+                    className="rounded-full size-14 sm:size-12"
+                >
+                    {isMuted ? <MicOff /> : <Mic />}
+                </Button>
+                <Button
+                    onClick={toggleVideo}
+                    variant={isVideoOff ? 'error' : 'secondary'}
+                    className="rounded-full size-14 sm:size-12"
+                >
+                    {isVideoOff ? <VideoOff /> : <Video />}
+                </Button>
+                <Button
+                    onClick={handleHangUp}
+                    variant="error"
+                    className="rounded-full size-14 sm:size-12"
+                >
+                    <PhoneOff />
+                </Button>
             </div>
         </div>
+
     );
 };

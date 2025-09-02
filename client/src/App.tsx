@@ -112,9 +112,7 @@ function App() {
                 <Route path=":meetingId" element={<CallLobby />} />
               </Route>
 
-              <Route path="/call" element={<DashboardLayout />}>
-                <Route path=":meetingId" element={<VideoCallPage />} />
-              </Route>
+              <Route path="/call/:meetingId" element={<VideoCallPage />} />
 
               {/* Chat Routes */}
               <Route path="/chat" element={<DashboardLayout />}>
