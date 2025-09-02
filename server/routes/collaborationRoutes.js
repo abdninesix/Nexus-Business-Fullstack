@@ -1,7 +1,7 @@
 // routes/collaborationRoutes.js
 import express from 'express';
 import { createRequest, deleteRequest, getReceivedRequests, getRequestStatus, getSentRequests, updateRequestStatus } from '../controllers/collaborationController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

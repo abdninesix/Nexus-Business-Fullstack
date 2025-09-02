@@ -1,7 +1,7 @@
 // routes/messageRoutes.js
 import express from 'express';
 import { getConversations, getMessages, getUnreadCount, markMessagesAsRead, sendMessage } from '../controllers/messageController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

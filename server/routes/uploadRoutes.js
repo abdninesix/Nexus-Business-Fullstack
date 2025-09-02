@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { removeProfilePicture, uploadProfilePicture } from '../controllers/uploadController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
