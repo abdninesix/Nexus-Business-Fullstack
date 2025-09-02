@@ -154,10 +154,10 @@ export const DocumentsPage: React.FC = () => {
                   documents.map(doc => (
                     <div
                       key={doc._id}
-                      className="flex flex-col sm:flex-row sm:items-center p-4 hover:bg-gray-50 rounded-lg gap-3 sm:gap-0"
+                      className="flex items-start sm:items-center p-4 hover:bg-gray-50 rounded-lg"
                     >
                       {/* Icon */}
-                      <div className="p-2 bg-primary-50 rounded-lg sm:mr-4 w-fit self-start sm:self-auto">
+                      <div className="p-2 bg-primary-50 rounded-lg mr-4">
                         <FileText size={24} className="text-primary-600" />
                       </div>
 
@@ -168,7 +168,7 @@ export const DocumentsPage: React.FC = () => {
                           <Badge variant="secondary" size="sm">Shared</Badge>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-sm text-gray-500">
+                        <div className="flex flex-wrap gap-2 sm:gap-4 mt-1 text-sm text-gray-500">
                           <span>{doc.type}</span>
                           <span>{formatBytes(doc.size)}</span>
                           <span>Modified {formatDate(doc.updatedAt)}</span>
@@ -176,24 +176,24 @@ export const DocumentsPage: React.FC = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:ml-4 mt-2 sm:mt-0">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 ml-4">
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="View">
+                          <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="View">
                             <View size={18} />
                           </Button>
                         </a>
                         <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="p-2" aria-label="Download">
+                          <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="Download">
                             <Download size={18} />
                           </Button>
                         </a>
-                        <Button variant="ghost" size="sm" className="p-2" aria-label="Share">
+                        <Button variant="ghost" size="sm" className="p-2 w-full sm:w-auto" aria-label="Share">
                           <Share2 size={18} />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-2 text-error-600 hover:text-error-700"
+                          className="p-2 w-full sm:w-auto text-error-600 hover:text-error-700"
                           aria-label="Delete"
                           onClick={() => handleDelete(doc._id)}
                           isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}
