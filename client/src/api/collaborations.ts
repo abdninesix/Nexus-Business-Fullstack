@@ -5,7 +5,7 @@ import api from './axios';
 export interface CollaborationRequest {
   _id: string;
   investorId: User;
-  entrepreneurId: string; // This might just be an ID if not populated
+  entrepreneurId: User;
   message: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string; // ISO date string

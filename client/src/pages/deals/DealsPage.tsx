@@ -11,7 +11,6 @@ import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData }
 import toast from 'react-hot-toast';
 import { format } from 'date-fns/format';
 import { CollaborationRequest, fetchSentRequests } from '../../api/collaborations';
-import { User } from '../../types';
 
 Modal.setAppElement('#root');
 
@@ -87,23 +86,12 @@ export const DealsPage: React.FC = () => {
   });
 
   // Derive the list of connections from the fetched data ---
-  const connections = useMemo((): User[] => {
-    if (!sentRequests) return [];
-    // We use `reduce` to iterate through the list and build a new, correctly typed array.
-    return sentRequests.reduce((accumulator: User[], currentRequest) => {
-      // Check for the two conditions at once
-      if (
-        currentRequest.status === 'accepted' &&
-        typeof currentRequest.entrepreneurId === 'object' && // Type guard: is it an object?
-        currentRequest.entrepreneurId !== null // Type guard: is it not null?
-      ) {
-        // If both are true, TypeScript now knows `currentRequest.entrepreneurId` is a User.
-        // We can safely add it to our accumulator array.
-        accumulator.push(currentRequest.entrepreneurId);
-      }
-      return accumulator;
-    }, []); // The initial value of our accumulator is an empty User array.
-  }, [sentRequests]);
+  const connections = useMemo(() =>
+    sentRequests
+      .filter(req => req.status === 'accepted')
+      .map(req => req.entrepreneurId) // Assuming entrepreneurId is populated
+      .filter(Boolean as any) // Filter out any potential null/undefined values
+    , [sentRequests]);
 
   const createDealMutation = useMutation({
     mutationFn: createDeal,

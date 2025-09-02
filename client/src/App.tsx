@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Layouts
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -39,6 +39,14 @@ import { VideoCallPage } from './pages/call/VideoCallPage';
 import { PublicRoute } from './components/auth/PublicRoute';
 import { Toaster } from 'react-hot-toast';
 import { CallLobby } from './pages/call/CallLobby';
+import { EntrepreneurDealsPage } from './pages/deals/EntrepreneurDealsPage';
+
+const DealsRedirect: React.FC = () => {
+  const { user } = useAuth();
+  if (user?.role === 'entrepreneur') return <EntrepreneurDealsPage />;
+  if (user?.role === 'investor') return <DealsPage />;
+  return null; // Or a fallback
+};
 
 function App() {
   return (
@@ -101,7 +109,7 @@ function App() {
               </Route>
 
               <Route path="/deals" element={<DashboardLayout />}>
-                <Route index element={<DealsPage />} />
+                <Route index element={<DealsRedirect />} />
               </Route>
 
               <Route path="/calendar" element={<DashboardLayout />}>

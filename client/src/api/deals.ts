@@ -6,12 +6,12 @@ import { User } from '../types';
 
 export interface Deal {
     _id: string;
-    investorId: string;
+    investorId: User;
     entrepreneurId: User; // Populated by the backend
     startupName: string;
     amount: string;
     equity: string;
-    status: 'Due Diligence' | 'Term Sheet' | 'Negotiation' | 'Closed' | 'Passed';
+    status: 'Proposed' | 'Due Diligence' | 'Term Sheet' | 'Negotiation' | 'Closed' | 'Passed' | 'Rejected';
     stage: string;
     createdAt: string;
     updatedAt: string; // Used for lastActivity
@@ -51,5 +51,18 @@ export const createDeal = async (dealData: NewDealData): Promise<Deal> => {
 // 3. Add a payment to a specific deal
 export const addPayment = async (paymentData: NewPaymentData): Promise<any> => {
     const { data } = await api.post('/deals/payment', paymentData);
+    return data;
+};
+
+// Fetch deals received by the entrepreneur
+export const fetchReceivedDeals = async (): Promise<Deal[]> => {
+    const { data } = await api.get('/deals/received');
+    return data;
+};
+
+// Update a deal's status
+export const updateDealStatus = async (payload: { id: string, status: 'accepted' | 'rejected' }): Promise<Deal> => {
+    const { id, status } = payload;
+    const { data } = await api.patch(`/deals/${id}/status`, { status });
     return data;
 };
