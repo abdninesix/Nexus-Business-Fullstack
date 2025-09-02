@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
 import collaborationRoutes from './routes/collaborationRoutes.js';
 import dealRoutes from './routes/dealRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 import cors from 'cors';
 import { createServer } from 'http';
@@ -125,6 +126,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/collaborations', collaborationRoutes);
 app.use('/api/deals', dealRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => {
   res.send('Nexus API is running...');

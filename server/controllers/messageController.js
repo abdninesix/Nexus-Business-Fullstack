@@ -1,6 +1,7 @@
 // controllers/messageController.js
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
+import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { getUserSocketId, io } from '../server.js';
 
@@ -98,20 +99,30 @@ export const sendMessage = async (req, res) => {
 
     // --- EMIT NOTIFICATION ---
     const receiverSocketId = getUserSocketId(receiverId);
+
     if (receiverSocketId) {
       const sender = await User.findById(senderId).select('name');
-      io.to(receiverSocketId).emit("getNotification", {
+      const notificationData = {
         senderName: sender.name,
         type: "newMessage",
         message: `You have a new message from ${sender.name}`,
         createdAt: new Date(),
-        relatedData: {
-          chatId: senderId,
-        }
+        relatedData: { chatId: senderId },
+      };
+
+      // 7. Create the notification in the DB
+      await Notification.create({
+        recipient: receiverId,
+        sender: senderId,
+        type: 'newMessage',
+        message: notificationData.message,
+        link: `/chat/${senderId}`
       });
+
+      io.to(receiverSocketId).emit("getNotification", notificationData);
     }
 
-    // 7. Respond with the successfully saved message.
+    // 8. Respond with the successfully saved message.
     res.status(201).json(savedMessage);
 
   } catch (error) {

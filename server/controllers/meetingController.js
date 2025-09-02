@@ -1,5 +1,6 @@
 import Meeting from '../models/Meeting.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import { io, getUserSocketId } from '../server.js';
 
 // Get all meetings for the current user
@@ -29,12 +30,12 @@ export const createMeeting = async (req, res) => {
 
     // 1. Check if the start time is in the past
     if (startTime < tolerantNow) {
-        return res.status(400).json({ message: "Cannot schedule a meeting in the past." });
+      return res.status(400).json({ message: "Cannot schedule a meeting in the past." });
     }
-    
+
     // 2. Check if the end time is before the start time
     if (endTime <= startTime) {
-        return res.status(400).json({ message: "Meeting end time must be after the start time." });
+      return res.status(400).json({ message: "Meeting end time must be after the start time." });
     }
     // --- END OF VALIDATION ---
 
@@ -72,18 +73,29 @@ export const createMeeting = async (req, res) => {
     // We need to notify everyone EXCEPT the person who created the meeting (the organizer)
     const participantsToNotify = allParticipantIds.filter(id => id !== organizerId.toString());
 
-    participantsToNotify.forEach(participantId => {
+    participantsToNotify.forEach(async (participantId) => {
+
       const participantSocketId = getUserSocketId(participantId);
+
+      const notificationData = {
+        senderName: sender.name,
+        type: "newMessage",
+        message: `You have a new message from ${sender.name}`,
+        createdAt: new Date(),
+        relatedData: { chatId: senderId },
+      };
+
+      // Create notification in DB
+      await Notification.create({
+        recipient: participantId,
+        sender: organizerId,
+        type: 'newMeeting',
+        message: notificationData.message,
+        link: `/calendar` // Or a specific meeting link
+      });
+
       if (participantSocketId) {
-        console.log(`Sending meeting notification to participant: ${participantId}`);
-        io.to(participantSocketId).emit("getNotification", {
-          senderName: organizer.name,
-          type: "newMeeting", // <-- A new notification type
-          message: `${organizer.name} has scheduled a new meeting with you: "${title}"`,
-          createdAt: new Date(),
-        });
-      } else {
-        console.log(`Participant ${participantId} is offline. No meeting notification sent.`);
+        io.to(participantSocketId).emit("getNotification", notificationData);
       }
     });
     // --- END OF NOTIFICATION ---

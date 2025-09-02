@@ -8,11 +8,34 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useSocket } from '../../context/SocketContext';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAllUsers } from '../../api/users'; // We need this to get user avatars
+import { fetchNotifications, markAllNotificationsAsRead, Notification } from '../../api/notifications';
+import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 export const NotificationsPage: React.FC = () => {
-  const { notifications, clearNotifications } = useSocket();
+  const queryClient = useQueryClient();
+
+  // 1. Fetch persistent notifications from the API
+  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
+    queryKey: ['notifications'],
+    queryFn: fetchNotifications,
+  });
+
+  // 2. Mutation to mark all as read
+  const markAsReadMutation = useMutation({
+    mutationFn: markAllNotificationsAsRead,
+    onSuccess: () => {
+      // On success, invalidate the query to refetch and update the UI
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: () => toast.error("Failed to mark notifications as read."),
+  });
+
+  const handleMarkAllAsRead = () => {
+    markAsReadMutation.mutate();
+  };
 
   // Fetch all users to easily look up avatars by sender name.
   // This will be cached by Tanstack Query, so it's efficient.
@@ -50,8 +73,9 @@ export const NotificationsPage: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={clearNotifications}
-          disabled={notifications.length === 0} 
+          onClick={handleMarkAllAsRead}
+          isLoading={markAsReadMutation.isPending}
+          disabled={notifications.length === 0}
           className='w-fit'
         >
           Mark all as read
@@ -59,30 +83,26 @@ export const NotificationsPage: React.FC = () => {
       </div>
 
       <div className="space-y-4">
+        {isLoading && <p>Loading notifications...</p>}
         {notifications.length > 0 ? (
-          notifications.map((notification, index) => {
-            // Find the sender's avatar from our map
-            const senderAvatar = userAvatarMap.get(notification.senderName);
-
-            return (
+          notifications.map(notification => (
+            <Link to={notification.link || '#'} key={notification._id}>
               <Card
-                key={index}
                 // For now, all live notifications are considered "unread"
                 className="transition-colors duration-200 bg-primary-50"
               >
                 <CardBody className="flex items-start p-4">
                   <Avatar
                     // Use the found avatar, or a default/placeholder if not found
-                    src={senderAvatar}
-                    alt={notification.senderName}
+                    src={notification.sender.avatarUrl}
+                    alt={notification.sender.name}
                     size="md"
                     className="flex-shrink-0 mr-4"
                   />
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-900">
-                        {notification.senderName}
+                        {notification.sender.name}
                       </span>
                       <Badge variant="primary" size="sm" rounded>New</Badge>
                     </div>
@@ -98,10 +118,11 @@ export const NotificationsPage: React.FC = () => {
                       <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                     </div>
                   </div>
+                  {!notification.isRead && <div className="w-3 h-3 bg-primary-500 rounded-full ml-auto" />}
                 </CardBody>
               </Card>
-            )
-          })
+            </Link>
+          ))
         ) : (
           <Card>
             <CardBody className="text-center p-12">

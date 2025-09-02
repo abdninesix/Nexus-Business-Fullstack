@@ -5,10 +5,11 @@ import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
 import { Bell, Calendar, MessageCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
-interface Notification {
+interface LiveNotification {
     senderName: string;
-    type: 'newMessage' | 'newMeeting' | 'requestAccepted';
+    type: 'newMessage' | 'newMeeting' | 'requestAccepted' | 'newDeal';
     message: string;
     createdAt: string;
     relatedData?: {
@@ -19,10 +20,7 @@ interface Notification {
 
 interface SocketContextType {
     socket: Socket | null;
-    setSocket: (socket: Socket | null) => void; // Expose setters
-    notifications: Notification[];
-    setNotifications: (notifications: React.SetStateAction<Notification[]>) => void; // Expose setters
-    clearNotifications: () => void;
+    setSocket: (socket: Socket | null) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -35,13 +33,8 @@ export const useSocket = () => {
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    const clearNotifications = () => {
-        setNotifications([]);
-    };
-
-    const value = { socket, setSocket, notifications, setNotifications, clearNotifications };
+    const value = { socket, setSocket };
 
     return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };
@@ -49,9 +42,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 // This is a "headless" component. It renders nothing, but contains all the logic.
 const SocketHandler: React.FC = () => {
     const { user, fetchAndUpdateUnreadCount } = useAuth();
-    // It's safe to use these hooks here because this component will be inside the router
-    const { setSocket, setNotifications } = useSocket();
     const navigate = useNavigate();
+    const queryClient = useQueryClient(); // <-- 4. Get the query client instance
+    const { socket, setSocket } = useSocket();
 
     useEffect(() => {
         if (user) {
@@ -61,8 +54,10 @@ const SocketHandler: React.FC = () => {
             newSocket.emit("addNewUser", user._id);
 
             // The notification listener logic is moved here
-            newSocket.on("getNotification", (data: Notification) => {
-                setNotifications((prev) => [data, ...prev]);
+            newSocket.on("getNotification", (data: LiveNotification) => {
+                // Invalidate the 'notifications' query. This tells Tanstack Query to refetch
+                // the data on the NotificationsPage, making it update with the new notification.
+                queryClient.invalidateQueries({ queryKey: ['notifications'] });
 
                 let icon = <Bell />;
                 let path = '/notifications';
@@ -123,7 +118,7 @@ const SocketHandler: React.FC = () => {
                 setSocket(null);
             };
         }
-    }, [user, setSocket, setNotifications, fetchAndUpdateUnreadCount, navigate]);
+    }, [user, queryClient, fetchAndUpdateUnreadCount, navigate]);
 
     return null; // This component does not render any UI
 };
