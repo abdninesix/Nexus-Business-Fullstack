@@ -89,7 +89,6 @@ export const DealsPage: React.FC = () => {
   // Derive the list of connections from the fetched data ---
   const connections = useMemo((): User[] => {
     if (!sentRequests) return [];
-
     // We use `reduce` to iterate through the list and build a new, correctly typed array.
     return sentRequests.reduce((accumulator: User[], currentRequest) => {
       // Check for the two conditions at once
