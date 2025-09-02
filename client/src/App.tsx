@@ -1,45 +1,45 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
+import { SocketHandler, SocketProvider } from './context/SocketContext';
 
 // Layouts
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
 // Auth Pages
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PublicRoute } from './components/auth/PublicRoute';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 
 // Dashboard Pages
+import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { EntrepreneurDashboard } from './pages/dashboard/EntrepreneurDashboard';
 import { InvestorDashboard } from './pages/dashboard/InvestorDashboard';
 
 // Profile Pages
+import { ProfilePage } from './pages/profile/ProfilePage';
 import { EntrepreneurProfile } from './pages/profile/EntrepreneurProfile';
 import { InvestorProfile } from './pages/profile/InvestorProfile';
 
 // Feature Pages
 import { InvestorsPage } from './pages/investors/InvestorsPage';
 import { EntrepreneursPage } from './pages/entrepreneurs/EntrepreneursPage';
-import { MessagesPage } from './pages/messages/MessagesPage';
 import { NotificationsPage } from './pages/notifications/NotificationsPage';
 import { DocumentsPage } from './pages/documents/DocumentsPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { HelpPage } from './pages/help/HelpPage';
 import { DealsPage } from './pages/deals/DealsPage';
+import { EntrepreneurDealsPage } from './pages/deals/EntrepreneurDealsPage';
+import { CalendarPage } from './pages/calendar/CalenderPage';
 
 // Chat Pages
+import { MessagesPage } from './pages/messages/MessagesPage';
 import { ChatPage } from './pages/chat/ChatPage';
-import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
-import { CalendarPage } from './pages/calendar/CalenderPage';
-import { DashboardPage } from './pages/dashboard/DashboardPage';
-import { ProfilePage } from './pages/profile/ProfilePage';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { SocketHandler, SocketProvider } from './context/SocketContext';
 import { VideoCallPage } from './pages/call/VideoCallPage';
-import { PublicRoute } from './components/auth/PublicRoute';
-import { Toaster } from 'react-hot-toast';
 import { CallLobby } from './pages/call/CallLobby';
-import { EntrepreneurDealsPage } from './pages/deals/EntrepreneurDealsPage';
 
 const DealsRedirect: React.FC = () => {
   const { user } = useAuth();
