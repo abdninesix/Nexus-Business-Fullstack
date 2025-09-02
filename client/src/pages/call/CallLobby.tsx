@@ -127,10 +127,10 @@ export const CallLobby: React.FC = () => {
 
                         <div className='text-lg flex items-center justify-center gap-4'>
                             <Link to="/calendar">
-                                <Button onClick={handleJoinCall}><ArrowLeft className="mr-2" /> Go back</Button>
+                                <Button onClick={handleJoinCall} leftIcon={<ArrowLeft size={16} />}>Go back</Button>
                             </Link>
-                            <Button onClick={handleJoinCall}>
-                                <Phone className="mr-2" /> Join Meeting
+                            <Button onClick={handleJoinCall} leftIcon={<Phone size={16} />}>
+                                Join Meeting
                             </Button>
                         </div>
                     </div>

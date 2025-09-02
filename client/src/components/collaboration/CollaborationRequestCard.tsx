@@ -55,7 +55,7 @@ export const CollaborationRequestCard: React.FC<CollaborationRequestCardProps> =
         return null;
     }
   };
-  
+
   return (
     <Card className="transition-all duration-300">
       <CardBody className="flex flex-col">
@@ -87,16 +87,8 @@ export const CollaborationRequestCard: React.FC<CollaborationRequestCardProps> =
 
       <CardFooter className="border-t border-gray-100 bg-gray-50">
         {request.status === 'pending' ? (
-          <div className="flex flex-col md:flex-row items-start justify-between w-full">
-            <div className="flex gap-2 items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                leftIcon={<X size={16} />}
-                onClick={handleReject}
-              >
-                Decline
-              </Button>
+          <div className="flex items-start justify-between w-full">
+            <div className="flex flex-col md:flex-row gap-2 items-center justify-between">
               <Button
                 variant="success"
                 size="sm"
@@ -104,6 +96,14 @@ export const CollaborationRequestCard: React.FC<CollaborationRequestCardProps> =
                 onClick={handleAccept}
               >
                 Accept
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<X size={16} />}
+                onClick={handleReject}
+              >
+                Decline
               </Button>
             </div>
 
