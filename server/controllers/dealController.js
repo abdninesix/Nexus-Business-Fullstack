@@ -1,6 +1,7 @@
 import Deal from '../models/Deal.js';
 import Transaction from '../models/Transaction.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 import { io, getUserSocketId } from '../server.js';
 
 // Get all deals for the logged-in investor
@@ -17,6 +18,12 @@ export const getDeals = async (req, res) => {
 export const createDeal = async (req, res) => {
   try {
     const { entrepreneurId } = req.body;
+    const investorId = req.user._id;
+
+    const investor = await User.findById(investorId);
+    if (!investor) {
+      return res.status(404).json({ message: "Investor profile not found." });
+    }
 
     // Set the status to 'Proposed' when creating the deal
     const newDealData = {
@@ -28,10 +35,10 @@ export const createDeal = async (req, res) => {
     const newDeal = await Deal.create(newDealData);
 
     // --- NOTIFY THE ENTREPRENEUR about the new proposal ---
-    const notificationMessage = `${req.user.name} has sent you a new deal proposal for "${newDeal.startupName}".`;
+    const notificationMessage = `${investor.name} has sent you a new deal proposal for "${newDeal.startupName}".`;
     await Notification.create({
       recipient: entrepreneurId,
-      sender: req.user._id,
+      sender: investorId,
       type: 'newDeal',
       message: notificationMessage,
       link: `/deals`
@@ -39,7 +46,7 @@ export const createDeal = async (req, res) => {
     const entrepreneurSocketId = getUserSocketId(entrepreneurId);
     if (entrepreneurSocketId) {
       io.to(entrepreneurSocketId).emit("getNotification", {
-        senderName: req.user.name,
+        senderName: investor.name,
         type: 'newDeal',
         message: notificationMessage,
         createdAt: new Date(),
