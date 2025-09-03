@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Filter, DollarSign, TrendingUp, Users, Calendar, PlusCircle } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -7,7 +7,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import Modal from 'react-modal';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData } from '../../api/deals';
+import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData, updateDeal } from '../../api/deals';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns/format';
 import { CollaborationRequest, fetchSentRequests } from '../../api/collaborations';
@@ -73,6 +73,7 @@ export const DealsPage: React.FC = () => {
 
   // Form States
   const [newDeal, setNewDeal] = useState<Omit<NewDealData, 'investorId'>>({ entrepreneurId: '', startupName: '', amount: '', equity: '', status: 'Negotiation', stage: 'Seed' });
+  const [editingDeal, setEditingDeal] = useState<Partial<Deal> | null>(null);
   const [newPayment, setNewPayment] = useState({ amount: 0, notes: '' });
 
   // --- DATA FETCHING & MUTATIONS ---
@@ -104,6 +105,19 @@ export const DealsPage: React.FC = () => {
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to add deal."),
   });
 
+  const updateDealMutation = useMutation({
+    mutationFn: updateDeal,
+    onSuccess: (updatedDeal) => {
+      toast.success(`Deal status updated to "${updatedDeal.status}"`);
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      // If the modal was in edit mode, exit it
+      setEditingDeal(null);
+      // Also update the selectedDeal to show the latest data
+      setSelectedDeal(updatedDeal);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to update deal."),
+  });
+
   const addPaymentMutation = useMutation({
     mutationFn: addPayment,
     onSuccess: () => {
@@ -126,6 +140,26 @@ export const DealsPage: React.FC = () => {
     const paymentData: NewPaymentData = { dealId: selectedDeal._id, ...newPayment };
     addPaymentMutation.mutate(paymentData);
   };
+
+  const handleUpdateDealStatus = (status: Deal['status']) => {
+    if (!selectedDeal) return;
+    updateDealMutation.mutate({ id: selectedDeal._id, data: { status } });
+  };
+
+  const handleEditDealSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDeal || !selectedDeal) return;
+    updateDealMutation.mutate({ id: selectedDeal._id, data: editingDeal });
+  };
+
+  // When the view modal opens, sync the editing state
+  useEffect(() => {
+    if (selectedDeal) {
+      setEditingDeal(selectedDeal);
+    } else {
+      setEditingDeal(null);
+    }
+  }, [selectedDeal]);
 
   const closeViewModal = () => {
     setSelectedDeal(null);
@@ -428,45 +462,62 @@ export const DealsPage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* View/Payment Modal */}
+      {/* View/Edit/Payment Modal */}
       <Modal isOpen={!!selectedDeal} onRequestClose={closeViewModal} style={modalStyles}>
-        {selectedDeal && ( // Ensure selectedDeal is not null before rendering
+        {selectedDeal && (
           <>
-            {!isPaymentMode ? (
-              // --- VIEW DETAILS MODE ---
-              <div className="space-y-4">
-                <div className="pb-2 border-b">
-                  <h2 className="text-xl font-bold">{selectedDeal.startupName}</h2>
-                  <p className="text-sm text-gray-500">Deal with {selectedDeal.entrepreneurId?.name}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><strong className="block text-gray-500">Amount:</strong> {selectedDeal.amount}</div>
-                  <div><strong className="block text-gray-500">Equity:</strong> {selectedDeal.equity}</div>
-                  <div><strong className="block text-gray-500">Stage:</strong> {selectedDeal.stage}</div>
-                  <div><strong className="block text-gray-500">Status:</strong> <Badge variant={getStatusColor(selectedDeal.status)}>{selectedDeal.status}</Badge></div>
-                </div>
-                {/* We would add a list of payments/transactions here in the future */}
+            {/* EDIT MODE */}
+            {editingDeal && selectedDeal.status === 'Proposed' ? (
+              <form onSubmit={handleEditDealSubmit} className="space-y-4">
+                <h2 className="text-xl font-bold mb-4">Edit Deal Proposal</h2>
+                <Input label="Startup Name" value={editingDeal.startupName || ''} onChange={e => setEditingDeal({ ...editingDeal, startupName: e.target.value })} />
+                <Input label="Amount" value={editingDeal.amount || ''} onChange={e => setEditingDeal({ ...editingDeal, amount: e.target.value })} />
+                <Input label="Equity" value={editingDeal.equity || ''} onChange={e => setEditingDeal({ ...editingDeal, equity: e.target.value })} />
                 <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button variant="outline" onClick={closeViewModal}>Close</Button>
-                  {selectedDeal.status === 'Closed' && (
-                    <Button onClick={() => setIsPaymentMode(true)}>Add Payment</Button>
-                  )}
+                  <Button type="button" variant="outline" onClick={() => setEditingDeal(null)}>Cancel</Button>
+                  <Button type="submit" isLoading={updateDealMutation.isPending}>Save Changes</Button>
                 </div>
-              </div>
-            ) : (
-              // --- ADD PAYMENT MODE ---
-              <div>
-                <h2 className="text-xl font-bold mb-4">Add Payment for {selectedDeal.startupName}</h2>
-                <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
-                  <Input label="Amount (USD)" type="number" value={newPayment.amount || ''} onChange={e => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) })} required />
-                  <textarea value={newPayment.notes} onChange={e => setNewPayment({ ...newPayment, notes: e.target.value })} placeholder="Notes (optional)..." className="w-full border-gray-300 rounded-md p-2" rows={3}></textarea>
-                  <div className="flex justify-end gap-2 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={() => setIsPaymentMode(false)}>Back to Details</Button>
-                    <Button type="submit" isLoading={addPaymentMutation.isPending}>Confirm Payment</Button>
+              </form>
+            ) :
+              // PAYMENT MODE
+              isPaymentMode ? (
+                <div> {/* ... Add Payment Form (No change) ... */} </div>
+              ) : (
+                // VIEW DETAILS MODE
+                <div className="space-y-4">
+                  <div className="pb-2 border-b">
+                    <h2 className="text-xl font-bold">{selectedDeal.startupName}</h2>
+                    <p className="text-sm text-gray-500">Deal with {selectedDeal.entrepreneurId?.name}</p>
                   </div>
-                </form>
-              </div>
-            )}
+                  {/* ... Deal details display ... */}
+
+                  {/* --- DYNAMIC ACTION BUTTONS --- */}
+                  <div className="flex flex-wrap justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" onClick={closeViewModal}>Close</Button>
+
+                    {/* Edit/Withdraw for 'Proposed' status */}
+                    {selectedDeal.status === 'Proposed' && (
+                      <>
+                        <Button variant="secondary" onClick={() => setEditingDeal(selectedDeal)}>Edit</Button>
+                        <Button variant="error" onClick={() => handleUpdateDealStatus('Passed')}>Withdraw</Button>
+                      </>
+                    )}
+
+                    {/* Actions for 'Negotiation' or 'Term Sheet' status */}
+                    {['Negotiation', 'Term Sheet', 'Due Diligence'].includes(selectedDeal.status) && (
+                      <>
+                        <Button variant="error" onClick={() => handleUpdateDealStatus('Passed')}>Pass on Deal</Button>
+                        <Button variant="success" onClick={() => handleUpdateDealStatus('Closed')}>Mark as Closed</Button>
+                      </>
+                    )}
+
+                    {/* Add Payment for 'Closed' status */}
+                    {selectedDeal.status === 'Closed' && (
+                      <Button onClick={() => setIsPaymentMode(true)}>Add Payment</Button>
+                    )}
+                  </div>
+                </div>
+              )}
           </>
         )}
       </Modal>

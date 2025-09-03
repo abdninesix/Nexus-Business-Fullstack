@@ -27,6 +27,13 @@ export interface NewDealData {
     stage: string;
 }
 
+export interface UpdateDealData {
+    status?: Deal['status'];
+    amount?: string;
+    equity?: string;
+    stage?: string;
+}
+
 // Data needed to add a payment
 export interface NewPaymentData {
     dealId: string;
@@ -65,4 +72,11 @@ export const updateDealStatus = async (payload: { id: string, status: 'accepted'
     const { id, status } = payload;
     const { data } = await api.patch(`/deals/${id}/status`, { status });
     return data;
+};
+
+// Universal update function for an investor
+export const updateDeal = async (payload: { id: string; data: UpdateDealData }): Promise<Deal> => {
+    const { id, data } = payload;
+    const response = await api.patch(`/deals/${id}`, data);
+    return response.data;
 };
