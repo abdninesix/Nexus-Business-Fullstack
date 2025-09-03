@@ -26,12 +26,7 @@ export const createDeal = async (req, res) => {
     }
 
     // Set the status to 'Proposed' when creating the deal
-    const newDealData = {
-      ...req.body,
-      investorId: req.user._id,
-      status: 'Proposed'
-    };
-
+    const newDealData = { ...req.body, investorId: investorId, status: 'Proposed' };
     const newDeal = await Deal.create(newDealData);
 
     // --- NOTIFY THE ENTREPRENEUR about the new proposal ---
@@ -94,6 +89,11 @@ export const updateDealStatus = async (req, res) => {
       return res.status(400).json({ message: 'Deal status can no longer be changed.' });
     }
 
+    const entrepreneur = await User.findById(req.user._id);
+    if (!entrepreneur) {
+      return res.status(404).json({ message: "Your user profile was not found." });
+    }
+
     deal.status = status === 'accepted' ? 'Negotiation' : 'Rejected';
     await deal.save();
 
@@ -101,7 +101,7 @@ export const updateDealStatus = async (req, res) => {
     const notificationMessage = `Your deal proposal for "${deal.startupName}" has been ${status === 'accepted' ? 'accepted' : 'rejected'}.`;
     await Notification.create({
       recipient: deal.investorId,
-      sender: req.user._id,
+      sender: entrepreneur._id,
       type: 'dealStatusUpdate', // A new type
       message: notificationMessage,
       link: `/deals`
@@ -110,7 +110,7 @@ export const updateDealStatus = async (req, res) => {
     const investorSocketId = getUserSocketId(deal.investorId.toString());
     if (investorSocketId) {
       io.to(investorSocketId).emit("getNotification", {
-        senderName: req.user.name,
+        senderName: entrepreneur.name,
         type: 'dealStatusUpdate',
         message: notificationMessage,
         createdAt: new Date(),
@@ -132,6 +132,11 @@ export const updateDealByInvestor = async (req, res) => {
       return res.status(404).json({ message: 'Deal not found or not authorized.' });
     }
 
+    const investor = await User.findById(req.user._id);
+    if (!investor) {
+      return res.status(404).json({ message: "Your user profile was not found." });
+    }
+
     // Apply updates
     if (status) deal.status = status;
     if (amount) deal.amount = amount;
@@ -141,10 +146,10 @@ export const updateDealByInvestor = async (req, res) => {
     const updatedDeal = await deal.save();
 
     // --- NOTIFY THE ENTREPRENEUR about the update ---
-    const notificationMessage = `${req.user.name} has updated the deal for "${deal.startupName}". The new status is: ${deal.status}.`;
+    const notificationMessage = `${investor.name} has updated the deal for "${deal.startupName}". The new status is: ${deal.status}.`;
     await Notification.create({
       recipient: deal.entrepreneurId,
-      sender: req.user._id,
+      sender: investor._id,
       type: 'dealStatusUpdate',
       message: notificationMessage,
       link: `/deals`
@@ -152,7 +157,7 @@ export const updateDealByInvestor = async (req, res) => {
     const entrepreneurSocketId = getUserSocketId(deal.entrepreneurId.toString());
     if (entrepreneurSocketId) {
       io.to(entrepreneurSocketId).emit("getNotification", {
-        senderName: req.user.name,
+        senderName: investor.name,
         type: 'dealStatusUpdate',
         message: notificationMessage,
         createdAt: new Date(),
