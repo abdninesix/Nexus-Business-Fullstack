@@ -1,6 +1,6 @@
 // src/pages/notifications/NotificationsPage.tsx
 import React from 'react';
-import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Card, CardBody } from '../../components/ui/Card';
@@ -8,7 +8,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchNotifications, markAllNotificationsAsRead, Notification } from '../../api/notifications';
+import { deleteNotification, fetchNotifications, markAllNotificationsAsRead, Notification } from '../../api/notifications';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 
@@ -31,8 +31,28 @@ export const NotificationsPage: React.FC = () => {
     onError: () => toast.error("Failed to mark notifications as read."),
   });
 
+  // 3. Mutation to delete a specific notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: () => {
+      toast.success("Notification deleted.");
+      // Invalidate the query to refetch the list and remove the deleted item from the UI
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete notification.");
+    }
+  });
+
   const handleMarkAllAsRead = () => {
     markAsReadMutation.mutate();
+  };
+
+  const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    deleteNotificationMutation.mutate(notificationId);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -104,6 +124,18 @@ export const NotificationsPage: React.FC = () => {
                       {/* Use date-fns for a dynamic "x minutes ago" timestamp */}
                       <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                     </div>
+                  </div>
+                  <div className="ml-auto pl-4 flex-shrink-0 self-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600"
+                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                      isLoading={deleteNotificationMutation.isPending && deleteNotificationMutation.variables === notification._id}
+                      aria-label="Delete notification"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
                   </div>
                   {!notification.isRead && <div className="w-3 h-3 bg-primary-500 rounded-full ml-auto self-center flex-shrink-0" />}
                 </CardBody>
