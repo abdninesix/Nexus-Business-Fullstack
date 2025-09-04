@@ -5,7 +5,6 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// This route gets the list of conversations for the sidebar
 router.get('/', protect, getConversations);
 router.get('/unread-count', protect, getUnreadCount);
 router.get('/:otherUserId', protect, getMessages);
