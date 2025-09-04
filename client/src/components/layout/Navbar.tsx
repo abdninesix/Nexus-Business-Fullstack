@@ -122,7 +122,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-white shadow-md">
-      <div className="mx-auto">
+      <div className="mx-auto px-6">
         <div className="flex justify-between h-16">
           {/* Logo and brand */}
           <div className="flex-shrink-0 flex items-center">
