@@ -16,8 +16,12 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 // Document APIs
 router.post('/', protect, upload.single('file'), uploadDocument);
 router.get('/', protect, getDocuments);
-router.delete('/:id', protect, deleteDocument);
-router.patch('/:id/sign', protect, addSignature);
+
+// More specific routes first
 router.get('/user/:userId', protect, getUserDocuments);
+router.patch('/:id/sign', protect, addSignature);
+
+// Generic route last
+router.delete('/:id', protect, deleteDocument);
 
 export default router;

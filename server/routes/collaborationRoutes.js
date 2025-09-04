@@ -5,11 +5,16 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Create request
 router.post('/', protect, createRequest);
+
+// Get requests
 router.get('/received', protect, getReceivedRequests);
-router.patch('/:id', protect, updateRequestStatus);
-router.get('/status/:entrepreneurId', protect, getRequestStatus);
-router.delete('/:id', protect, deleteRequest);
 router.get('/sent', protect, getSentRequests);
+router.get('/status/:entrepreneurId', protect, getRequestStatus);
+
+// Update/Delete requests (keep dynamic last)
+router.patch('/:id', protect, updateRequestStatus);
+router.delete('/:id', protect, deleteRequest);
 
 export default router;
