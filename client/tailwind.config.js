@@ -70,12 +70,12 @@ export default {
       },
       keyframes: {
         'toast-enter': {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0)' },
+          '0%': { transform: 'translateX(100%)', 'opacity': '0' },
+          '100%': { transform: 'translateX(0)', 'opacity': '1' },
         },
         'toast-leave': {
-          '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(100%)' },
+          '0%': { transform: 'translateX(0)', 'opacity': '1' },
+          '100%': { transform: 'translateX(100%)', 'opacity': '0' },
         },
         fadeIn: {
           '0%': { opacity: '0' },

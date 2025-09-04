@@ -20,11 +20,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   ...props
 }, ref) => {
   
-  const widthClass = fullWidth ? 'w-full' : '';
+  const widthClass = fullWidth ? 'w-full' : 'w-fit';
   const errorClass = error ? 'border-error-500 focus:border-error-500 focus:ring-error-500' : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500';
   
   const inputBaseClass = `block rounded-md shadow-sm p-2 border sm:text-sm ${errorClass}`;
-  const adornmentClass = startAdornment ? 'pl-10' : '';
+  const adornmentClass = startAdornment ? 'pl-8' : '';
   
   return (
     <div className={`${widthClass} ${className}`}>
@@ -36,7 +36,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       
       <div className="relative">
         {startAdornment && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+          <div className="absolute inset-y-0 left-0 ml-3 flex items-center pointer-events-none text-gray-500">
             {startAdornment}
           </div>
         )}
@@ -48,7 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         />
         
         {endAdornment && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+          <div className="absolute inset-y-0 right-0 mr-3 flex items-center pointer-events-none text-gray-500">
             {endAdornment}
           </div>
         )}

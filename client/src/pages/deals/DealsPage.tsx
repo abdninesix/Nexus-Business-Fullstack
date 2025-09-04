@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Search, Filter, DollarSign, TrendingUp, Users, Calendar, PlusCircle } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -7,10 +7,10 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import Modal from 'react-modal';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addPayment, createDeal, Deal, fetchDeals, NewDealData, NewPaymentData, updateDeal } from '../../api/deals';
+import { addPayment, createDeal, Deal, fetchDeals, fetchSentTransactions, NewDealData, NewPaymentData, Transaction, updateDeal } from '../../api/deals';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns/format';
 import { CollaborationRequest, fetchSentRequests } from '../../api/collaborations';
+import { format } from 'date-fns/format';
 
 Modal.setAppElement('#root');
 
@@ -18,48 +18,6 @@ const modalStyles = {
   overlay: { zIndex: 50, backgroundColor: 'rgba(0, 0, 0, 0.75)' },
   content: { top: '50%', left: '50%', right: 'auto', bottom: 'auto', marginRight: '-50%', transform: 'translate(-50%, -50%)', width: '90%', maxWidth: '500px' },
 };
-
-const dealsMock = [
-  {
-    id: 1,
-    startup: {
-      name: 'TechWave AI',
-      logo: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-      industry: 'FinTech'
-    },
-    amount: '$1.5M',
-    equity: '15%',
-    status: 'Due Diligence',
-    stage: 'Series A',
-    lastActivity: '2024-02-15'
-  },
-  {
-    id: 2,
-    startup: {
-      name: 'GreenLife Solutions',
-      logo: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg',
-      industry: 'CleanTech'
-    },
-    amount: '$2M',
-    equity: '20%',
-    status: 'Term Sheet',
-    stage: 'Seed',
-    lastActivity: '2024-02-10'
-  },
-  {
-    id: 3,
-    startup: {
-      name: 'HealthPulse',
-      logo: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
-      industry: 'HealthTech'
-    },
-    amount: '$800K',
-    equity: '12%',
-    status: 'Negotiation',
-    stage: 'Pre-seed',
-    lastActivity: '2024-02-05'
-  }
-];
 
 export const DealsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -84,6 +42,11 @@ export const DealsPage: React.FC = () => {
     queryKey: ['sentRequests'],
     queryFn: fetchSentRequests,
     enabled: isAddDealModalOpen, // Only fetch when the modal is opened
+  });
+
+  const { data: sentTransactions = [] } = useQuery<Transaction[]>({
+    queryKey: ['sentTransactions'],
+    queryFn: fetchSentTransactions,
   });
 
   // Derive the list of connections from the fetched data ---
@@ -129,9 +92,30 @@ export const DealsPage: React.FC = () => {
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to add payment."),
   });
 
+  const handleNewDealChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === 'equity') {
+      const numValue = Number(value);
+      // Only update if it's a valid number within the range
+      if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+        setNewDeal(prev => ({ ...prev, equity: value }));
+      } else if (value === '') { // Allow clearing the input
+        setNewDeal(prev => ({ ...prev, equity: '' }));
+      }
+    } else {
+      setNewDeal(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleAddDealSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createDealMutation.mutate(newDeal);
+    // Format the data before sending to the backend
+    const dataToSend = {
+      ...newDeal,
+      amount: `$${newDeal.amount}`, // Add the '$' sign
+      equity: `${newDeal.equity}%`, // Add the '%' sign
+    };
+    createDealMutation.mutate(dataToSend);
   };
 
   const handleAddPaymentSubmit = (e: React.FormEvent) => {
@@ -146,25 +130,46 @@ export const DealsPage: React.FC = () => {
     updateDealMutation.mutate({ id: selectedDeal._id, data: { status } });
   };
 
+  const handleEditDealChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === 'equity') {
+      const numValue = Number(value);
+      if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+        // Store the raw string value in the state
+        setEditingDeal(prev => ({ ...prev, equity: value }));
+      } else if (value === '') {
+        setEditingDeal(prev => ({ ...prev, equity: '' }));
+      }
+    } else {
+      setEditingDeal(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
   const handleEditDealSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDeal || !selectedDeal) return;
-    updateDealMutation.mutate({ id: selectedDeal._id, data: editingDeal });
+    const dataToSend = {
+      ...editingDeal,
+      amount: `$${editingDeal.amount}`,
+      equity: `${editingDeal.equity}%`,
+    };
+    updateDealMutation.mutate({ id: selectedDeal._id, data: dataToSend });
   };
 
-  // When the view modal opens, sync the editing state
-  useEffect(() => {
-    if (selectedDeal) {
-      setEditingDeal(selectedDeal);
-    } else {
-      setEditingDeal(null);
+  const handleUpdateStatus = (status: Deal['status']) => {
+    if (!selectedDeal) return;
+    // Optional confirmation for destructive actions
+    if (status === 'Passed' && !window.confirm("Are you sure you want to pass on this deal? This action cannot be undone.")) {
+      return;
     }
-  }, [selectedDeal]);
+    updateDealMutation.mutate({ id: selectedDeal._id, data: { status } });
+  };
 
   const closeViewModal = () => {
     setSelectedDeal(null);
     setIsPaymentMode(false); // Reset to view mode
     setNewPayment({ amount: 0, notes: '' }); // Reset payment form
+    setEditingDeal(null); // Reset the editing state when the modal closes
   };
 
   const filteredDeals = useMemo(() => {
@@ -177,21 +182,38 @@ export const DealsPage: React.FC = () => {
     });
   }, [deals, searchQuery, selectedStatus]);
 
-  const { totalInvestment, activeDealsCount, portfolioCount } = useMemo(() => {
-    const total = deals.reduce((sum, deal) => {
-      if (deal.status === 'Closed') {
-        const value = parseFloat(deal.amount.replace(/[^0-9.]/g, ''));
-        const multiplier = deal.amount.toUpperCase().includes('M') ? 1000000 : deal.amount.toUpperCase().includes('K') ? 1000 : 1;
-        return sum + (value * multiplier);
+  const { totalInvestment, activeDealsCount, closedDealsCount, portfolioCount } = useMemo(() => {
+    const dealsMap = new Map(deals.map(deal => [deal._id, deal]));
+    const totalValue = sentTransactions.reduce((sum, transaction) => {
+      // Find the parent deal for this transaction
+      const parentDeal = dealsMap.get(transaction.dealId);
+      if (parentDeal && parentDeal.status === 'Closed') {
+        const investmentAmount = transaction.amount;
+        const equityValue = parseFloat(parentDeal.equity.replace('%', ''));
+        if (!isNaN(equityValue) && equityValue > 0) {
+          return sum + ((equityValue / 100) * investmentAmount);
+        }
       }
       return sum;
     }, 0);
     const active = deals.filter(d => d.status !== 'Closed' && d.status !== 'Passed').length;
-    const portfolio = deals.filter(d => d.status === 'Closed').length;
-    return { totalInvestment: total, activeDealsCount: active, portfolioCount: portfolio };
-  }, [deals]);
+    const closedDeals = deals.filter(d => d.status === 'Closed');
+    const closed = closedDeals.length;
+    const uniqueEntrepreneurIds = new Set(
+      closedDeals.map(deal => deal.entrepreneurId?._id).filter(Boolean)
+    );
+    const portfolio = uniqueEntrepreneurIds.size;
+    return { totalInvestment: totalValue, activeDealsCount: active, closedDealsCount: closed, portfolioCount: portfolio };
+  }, [deals, sentTransactions]);
 
-  const statuses = ['Due Diligence', 'Term Sheet', 'Negotiation', 'Closed', 'Passed'];
+  // Helper to format large numbers for display
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+    return `$${value}`;
+  };
+
+  const statuses = ['Proposed', 'Negotiation', 'Due Diligence', 'Term Sheet', 'Closed', 'Passed', 'Rejected'];
 
   const toggleStatus = (status: string) => {
     setSelectedStatus(prev =>
@@ -241,7 +263,7 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Investment</p>
-                <p className="text-lg font-semibold text-gray-900">${(totalInvestment / 1000000).toFixed(1)}M</p>
+                <p className="text-lg font-semibold text-gray-900">{formatCurrency(totalInvestment)}</p>
               </div>
             </div>
           </CardBody>
@@ -283,7 +305,7 @@ export const DealsPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Closed This Month</p>
-                <p className="text-lg font-semibold text-gray-900">0</p>
+                <p className="text-lg font-semibold text-gray-900">{closedDealsCount}</p>
               </div>
             </div>
           </CardBody>
@@ -291,8 +313,8 @@ export const DealsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-2/3">
+      <div className="flex flex-col gap-4">
+        <div>
           <Input
             placeholder="Search deals by startup name or industry..."
             value={searchQuery}
@@ -302,9 +324,9 @@ export const DealsPage: React.FC = () => {
           />
         </div>
 
-        <div className="w-full md:w-1/3">
+        <div>
           <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500" />
+            <Filter size={18} className="text-gray-500" />Filters:
             <div className="flex flex-wrap gap-2">
               {statuses.map(status => (
                 <Badge
@@ -357,7 +379,7 @@ export const DealsPage: React.FC = () => {
               <tbody className="divide-y divide-gray-200">
                 {isLoading && <tr><td colSpan={7} className="text-center p-4">Loading deals...</td></tr>}
                 {filteredDeals.map(deal => (
-                  <tr key={deal._id} className="hover:bg-gray-50">
+                  <tr key={deal._id} className={`transition-colors duration-200 ${deal.status === 'Proposed' ? 'bg-primary-100 hover:bg-primary-200' : 'hover:bg-gray-50'}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Avatar
@@ -433,7 +455,7 @@ export const DealsPage: React.FC = () => {
               required
               className="w-full border-gray-300 rounded-md p-2"
             >
-              <option value="" disabled>-- Choose a Connection --</option>
+              <option value="" disabled>Choose a Connection</option>
               {connections.map(entrepreneur => (
                 <option key={entrepreneur._id} value={entrepreneur._id}>
                   {entrepreneur.name}
@@ -442,8 +464,8 @@ export const DealsPage: React.FC = () => {
             </select>
           </div>
           <Input label="Startup Name" value={newDeal.startupName} onChange={e => setNewDeal({ ...newDeal, startupName: e.target.value })} required />
-          <Input label="Investment Amount" value={newDeal.amount} onChange={e => setNewDeal({ ...newDeal, amount: e.target.value })} placeholder="$1.5M" required />
-          <Input label="Equity Percentage" value={newDeal.equity} onChange={e => setNewDeal({ ...newDeal, equity: e.target.value })} placeholder="15%" required />
+          <Input label="Investment Amount" name="amount" value={newDeal.amount} startAdornment="$" onChange={handleNewDealChange} placeholder="1.5M, 200K etc" required />
+          <Input label="Equity Percentage" name="equity" type="number" value={newDeal.equity || ''} endAdornment="%" placeholder="0-100" onChange={handleNewDealChange} min={0} max={100} required />
           <Input label="Stage" value={newDeal.stage} onChange={e => setNewDeal({ ...newDeal, stage: e.target.value })} placeholder="Series A" required />
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
@@ -467,12 +489,12 @@ export const DealsPage: React.FC = () => {
         {selectedDeal && (
           <>
             {/* EDIT MODE */}
-            {editingDeal && selectedDeal.status === 'Proposed' ? (
+            {editingDeal ? (
               <form onSubmit={handleEditDealSubmit} className="space-y-4">
                 <h2 className="text-xl font-bold mb-4">Edit Deal Proposal</h2>
                 <Input label="Startup Name" value={editingDeal.startupName || ''} onChange={e => setEditingDeal({ ...editingDeal, startupName: e.target.value })} />
-                <Input label="Amount" value={editingDeal.amount || ''} onChange={e => setEditingDeal({ ...editingDeal, amount: e.target.value })} />
-                <Input label="Equity" value={editingDeal.equity || ''} onChange={e => setEditingDeal({ ...editingDeal, equity: e.target.value })} />
+                <Input label="Amount" name="amount" value={String(editingDeal.amount || '').replace(/[^0-9.KkMm]/g, '')} startAdornment="$" placeholder="500K, 1.5M etc" onChange={handleEditDealChange} />
+                <Input label="Equity" name="equity" type="number" value={String(editingDeal.equity || '').replace('%', '')} endAdornment="%" placeholder="15, 20 etc" min={0} max={100} onChange={handleEditDealChange} />
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button type="button" variant="outline" onClick={() => setEditingDeal(null)}>Cancel</Button>
                   <Button type="submit" isLoading={updateDealMutation.isPending}>Save Changes</Button>
@@ -481,7 +503,17 @@ export const DealsPage: React.FC = () => {
             ) :
               // PAYMENT MODE
               isPaymentMode ? (
-                <div> {/* ... Add Payment Form (No change) ... */} </div>
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Add Payment for {selectedDeal.startupName}</h2>
+                  <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
+                    <Input label="Amount" type="number" placeholder='Enter full figure' startAdornment="$" value={newPayment.amount || ''} onChange={e => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) })} required />
+                    <textarea value={newPayment.notes} onChange={e => setNewPayment({ ...newPayment, notes: e.target.value })} placeholder="Notes (optional)..." className="w-full border border-gray-300 rounded-md p-2" rows={3}></textarea>
+                    <div className="flex justify-end gap-2 pt-4 border-t">
+                      <Button type="button" variant="outline" onClick={() => setIsPaymentMode(false)}>Back to Details</Button>
+                      <Button type="submit" isLoading={addPaymentMutation.isPending}>Confirm Payment</Button>
+                    </div>
+                  </form>
+                </div>
               ) : (
                 // VIEW DETAILS MODE
                 <div className="space-y-4">
@@ -499,7 +531,7 @@ export const DealsPage: React.FC = () => {
                     {selectedDeal.status === 'Proposed' && (
                       <>
                         <Button variant="secondary" onClick={() => setEditingDeal(selectedDeal)}>Edit</Button>
-                        <Button variant="error" onClick={() => handleUpdateDealStatus('Passed')}>Withdraw</Button>
+                        <Button variant="error" onClick={() => handleUpdateStatus('Passed')}>Withdraw</Button>
                       </>
                     )}
 
@@ -508,12 +540,13 @@ export const DealsPage: React.FC = () => {
                       <>
                         <Button variant="error" onClick={() => handleUpdateDealStatus('Passed')}>Pass on Deal</Button>
                         <Button variant="success" onClick={() => handleUpdateDealStatus('Closed')}>Mark as Closed</Button>
+                        <Button onClick={() => setIsPaymentMode(true)}>Add Payment</Button>
                       </>
                     )}
 
                     {/* Add Payment for 'Closed' status */}
                     {selectedDeal.status === 'Closed' && (
-                      <Button onClick={() => setIsPaymentMode(true)}>Add Payment</Button>
+                      <Button onClick={() => setIsPaymentMode(true)}>Add Follow-on Payment</Button>
                     )}
                   </div>
                 </div>

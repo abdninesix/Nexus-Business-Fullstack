@@ -41,6 +41,15 @@ export interface NewPaymentData {
     notes?: string;
 }
 
+export interface Transaction {
+    _id: string;
+    dealId: string;
+    investorId: string;
+    amount: number;
+    date: string;
+    notes?: string;
+}
+
 // --- API FUNCTIONS ---
 
 // 1. Fetch all deals for the logged-in investor
@@ -61,22 +70,40 @@ export const addPayment = async (paymentData: NewPaymentData): Promise<any> => {
     return data;
 };
 
-// Fetch deals received by the entrepreneur
+// 4. Fetch deals received by the entrepreneur
 export const fetchReceivedDeals = async (): Promise<Deal[]> => {
     const { data } = await api.get('/deals/received');
     return data;
 };
 
-// Update a deal's status
+// 5. Update a deal's status
 export const updateDealStatus = async (payload: { id: string, status: 'accepted' | 'rejected' }): Promise<Deal> => {
     const { id, status } = payload;
     const { data } = await api.patch(`/deals/${id}/status`, { status });
     return data;
 };
 
-// Universal update function for an investor
+// 6. Universal update function for an investor
 export const updateDeal = async (payload: { id: string; data: UpdateDealData }): Promise<Deal> => {
     const { id, data } = payload;
     const response = await api.patch(`/deals/${id}`, data);
     return response.data;
+};
+
+// 7. Fetch all transactions received by an entrepreneur
+export const fetchReceivedTransactions = async (): Promise<Transaction[]> => {
+    const { data } = await api.get('/deals/transactions/received');
+    return data;
+};
+
+// 8. Fetch transactions for a single deal
+export const fetchTransactionsForDeal = async (dealId: string): Promise<Transaction[]> => {
+    const { data } = await api.get(`/deals/${dealId}/transactions`);
+    return data;
+};
+
+// 9. Fetch all transactions sent by an investor
+export const fetchSentTransactions = async (): Promise<Transaction[]> => {
+    const { data } = await api.get('/deals/transactions/sent');
+    return data;
 };

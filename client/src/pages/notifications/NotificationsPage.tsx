@@ -1,6 +1,6 @@
 // src/pages/notifications/NotificationsPage.tsx
 import React from 'react';
-import { Bell, MessageCircle, UserPlus, DollarSign, Calendar } from 'lucide-react';
+import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Card, CardBody } from '../../components/ui/Card';
@@ -37,16 +37,16 @@ export const NotificationsPage: React.FC = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'newMessage':
-        return <MessageCircle size={16} className="text-primary-600" />;
-      case 'newMeeting':
-        return <Calendar size={16} className="text-green-600" />;
-      case 'connection':
-        return <UserPlus size={16} className="text-secondary-600" />;
-      case 'investment':
-        return <DollarSign size={16} className="text-accent-600" />;
-      default:
-        return <Bell size={16} className="text-gray-600" />;
+      case 'newMessage': return <MessageCircle size={18} className="text-primary-600" />;
+      case 'newMeeting': return <Calendar size={18} className="text-green-600" />;
+      case 'meetingCancelled': return <CalendarX size={18} className="text-red-500" />;
+      case 'newDeal': return <Handshake size={18} className="text-blue-500" />;
+      case 'dealStatusUpdate': return <Handshake size={18} className="text-yellow-500" />;
+      case 'newTransaction': return <DollarSign size={18} className="text-green-600" />;
+      case 'newConnectionRequest': return <UserPlus size={18} className="text-secondary-600" />;
+      case 'connectionRequestAccepted': return <CheckCircle size={18} className="text-green-600" />;
+      case 'connectionRequestRejected': return <XCircle size={18} className="text-red-500" />;
+      default: return <Bell size={18} className="text-gray-600" />;
     }
   };
 

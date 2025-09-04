@@ -1,4 +1,7 @@
 import Collaboration from '../models/Collaboration.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
+import { getUserSocketId, io } from '../server.js';
 
 // Create a new request (Investor action)
 export const createRequest = async (req, res) => {
@@ -8,13 +11,48 @@ export const createRequest = async (req, res) => {
 
     // Check if a request already exists
     const existingRequest = await Collaboration.findOne({ investorId, entrepreneurId });
+
+    let collaboration;
+    let isNewRequest = false;
+
     if (existingRequest) {
-      return res.status(409).json({ message: 'Request already sent.' });
+      // If it was accepted or is still pending, they cannot send another one.
+      if (existingRequest.status === 'accepted' || existingRequest.status === 'pending') {
+        return res.status(409).json({ message: `A request has already been sent and is currently ${existingRequest.status}.` });
+      }
+      // If it was 'rejected', we can revive it.
+      else if (existingRequest.status === 'rejected') {
+        existingRequest.status = 'pending';
+        existingRequest.message = message; // Update with the new message
+        collaboration = await existingRequest.save();
+      }
+    } else {
+      // 3. If no request ever existed, create a brand new one.
+      collaboration = await Collaboration.create({ investorId, entrepreneurId, message, status: 'pending' });
+      isNewRequest = true;
     }
 
-    const newRequest = await Collaboration.create({ investorId, entrepreneurId, message });
-    // TODO: Emit a 'newRequest' notification to the entrepreneur
-    res.status(201).json(newRequest);
+    // --- NOTIFY THE ENTREPRENEUR of the new request ---
+    const notificationMessage = `${req.user.name} wants to connect with you.`;
+    await Notification.create({
+      recipient: entrepreneurId,
+      sender: investorId,
+      type: 'newConnectionRequest',
+      message: notificationMessage,
+      link: `/profile/investor/${investorId}`
+    });
+    const entrepreneurSocketId = getUserSocketId(entrepreneurId);
+    if (entrepreneurSocketId) {
+      io.to(entrepreneurSocketId).emit("getNotification", {
+        senderName: req.user.name,
+        type: 'newConnectionRequest',
+        message: notificationMessage,
+        createdAt: new Date(),
+        relatedData: { investorId: investorId }
+      });
+    }
+
+    res.status(isNewRequest ? 201 : 200).json(collaboration);
   } catch (error) { res.status(500).json({ message: 'Failed to create request' }); }
 };
 
@@ -43,6 +81,7 @@ export const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body; // 'accepted' or 'rejected'
     const request = await Collaboration.findById(req.params.id);
+    const entrepreneurId = req.user._id;
 
     if (!request || request.entrepreneurId.toString() !== req.user._id.toString()) {
       return res.status(404).json({ message: 'Request not found or not authorized.' });
@@ -50,7 +89,35 @@ export const updateRequestStatus = async (req, res) => {
 
     request.status = status;
     await request.save();
-    // TODO: Emit a 'requestUpdated' notification to the investor
+
+    const entrepreneur = await User.findById(entrepreneurId);
+    if (!entrepreneur) {
+      return res.status(200).json(request);
+    }
+
+    // --- NOTIFY THE INVESTOR of the response ---
+    const notificationType = status === 'accepted' ? 'connectionRequestAccepted' : 'connectionRequestRejected';
+    const notificationMessage = `${req.user.name} has ${status} your connection request.`;
+
+    await Notification.create({
+      recipient: request.investorId,
+      sender: req.user._id,
+      type: notificationType,
+      message: notificationMessage,
+      link: `/profile/entrepreneur/${req.user._id}`
+    });
+
+    const investorSocketId = getUserSocketId(request.investorId.toString());
+    if (investorSocketId) {
+      io.to(investorSocketId).emit("getNotification", {
+        senderName: req.user.name,
+        type: notificationType,
+        message: notificationMessage,
+        createdAt: new Date(),
+        relatedData: { entrepreneurId: entrepreneurId.toString() }
+      });
+    }
+
     res.status(200).json(request);
   } catch (error) { res.status(500).json({ message: 'Failed to update request' }); }
 };

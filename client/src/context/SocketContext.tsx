@@ -3,20 +3,37 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
-import { Bell, Calendar, MessageCircle, X } from 'lucide-react';
+import { Bell, Calendar, CalendarX, CheckCircle, DollarSign, Handshake, MessageCircle, UserPlus, X, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
-interface LiveNotification {
+// 1. Define the base structure for all notifications
+interface BaseNotification {
     senderName: string;
-    type: 'newMessage' | 'newMeeting' | 'requestAccepted' | 'newDeal';
     message: string;
     createdAt: string;
-    relatedData?: {
-        chatId?: string;
-        meetingId?: string;
-    };
 }
+
+// 2. Define the specific shapes for each notification type
+interface NewMessageNotification extends BaseNotification { type: 'newMessage'; relatedData: { chatId: string; }; }
+interface NewMeetingNotification extends BaseNotification { type: 'newMeeting'; relatedData: { meetingId: string; }; }
+interface MeetingCancelledNotification extends BaseNotification { type: 'meetingCancelled'; }
+interface NewDealNotification extends BaseNotification { type: 'newDeal' | 'dealStatusUpdate'; relatedData: { dealId: string; }; }
+interface NewTransactionNotification extends BaseNotification { type: 'newTransaction'; relatedData: { dealId: string; }; }
+interface NewConnectionRequestNotification extends BaseNotification { type: 'newConnectionRequest'; relatedData: { investorId: string; }; }
+interface ConnectionRequestAcceptedNotification extends BaseNotification { type: 'connectionRequestAccepted'; relatedData: { entrepreneurId: string; }; }
+interface ConnectionRequestRejectedNotification extends BaseNotification { type: 'connectionRequestRejected'; relatedData: { entrepreneurId: string; }; }
+
+// 3. The final Discriminated Union Type
+type LiveNotification =
+    | NewMessageNotification
+    | NewMeetingNotification
+    | MeetingCancelledNotification
+    | NewDealNotification
+    | NewTransactionNotification
+    | NewConnectionRequestNotification
+    | ConnectionRequestAcceptedNotification
+    | ConnectionRequestRejectedNotification;
 
 interface SocketContextType {
     socket: Socket | null;
@@ -62,13 +79,55 @@ const SocketHandler: React.FC = () => {
                 let icon = <Bell />;
                 let path = '/notifications';
 
-                if (data.type === 'newMessage') {
-                    icon = <MessageCircle />;
-                    path = data.relatedData?.chatId ? `/chat/${data.relatedData.chatId}` : '/messages';
-                    fetchAndUpdateUnreadCount();
-                } else if (data.type === 'newMeeting') {
-                    icon = <Calendar />;
-                    path = '/calendar';
+                switch (data.type) {
+                    case 'newMessage':
+                        icon = <MessageCircle />;
+                        path = `/chat/${data.relatedData.chatId}`;
+                        fetchAndUpdateUnreadCount();
+                        break;
+
+                    case 'newMeeting':
+                        icon = <Calendar />;
+                        path = '/calendar';
+                        queryClient.invalidateQueries({ queryKey: ['meetings'] });
+                        break;
+
+                    case 'meetingCancelled':
+                        icon = <CalendarX className="text-red-500" />;
+                        path = '/calendar';
+                        queryClient.invalidateQueries({ queryKey: ['meetings'] });
+                        break;
+
+                    case 'newDeal':
+                    case 'dealStatusUpdate':
+                        icon = <Handshake />;
+                        path = '/deals';
+                        queryClient.invalidateQueries({ queryKey: ['deals', 'receivedDeals'] });
+                        break;
+
+                    case 'newTransaction':
+                        icon = <DollarSign className="text-green-500" />;
+                        path = '/deals';
+                        queryClient.invalidateQueries({ queryKey: ['deals', 'receivedDeals'] });
+                        break;
+
+                    case 'newConnectionRequest':
+                        icon = <UserPlus />;
+                        path = `/profile/investor/${data.relatedData.investorId}`;
+                        queryClient.invalidateQueries({ queryKey: ['collaborationRequests'] });
+                        break;
+
+                    case 'connectionRequestAccepted':
+                        icon = <CheckCircle className="text-green-500" />;
+                        path = `/profile/entrepreneur/${data.relatedData.entrepreneurId}`;
+                        queryClient.invalidateQueries({ queryKey: ['sentRequests'] });
+                        break;
+
+                    case 'connectionRequestRejected':
+                        icon = <XCircle className="text-red-500" />;
+                        path = `/profile/entrepreneur/${data.relatedData.entrepreneurId}`;
+                        queryClient.invalidateQueries({ queryKey: ['sentRequests'] });
+                        break;
                 }
 
                 toast.custom((t) => (

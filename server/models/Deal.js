@@ -8,8 +8,8 @@ const dealSchema = new mongoose.Schema({
   equity: { type: String, required: true },
   status: { 
     type: String, 
-    enum: ['Due Diligence', 'Term Sheet', 'Negotiation', 'Closed', 'Passed'], 
-    default: 'Negotiation' 
+    enum: ['Due Diligence', 'Term Sheet', 'Negotiation', 'Closed', 'Passed', 'Proposed', 'Rejected'], 
+    default: 'Proposed'
   },
   stage: { type: String }, // Pre-seed, Seed, Series A, etc.
 }, { timestamps: true }); // `updatedAt` will serve as lastActivity

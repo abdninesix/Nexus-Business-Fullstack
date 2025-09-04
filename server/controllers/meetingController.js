@@ -68,34 +68,29 @@ export const createMeeting = async (req, res) => {
     });
 
     // --- EMIT NOTIFICATION TO ALL PARTICIPANTS ---
-    const organizer = await User.findById(organizerId).select('name');
-
-    // We need to notify everyone EXCEPT the person who created the meeting (the organizer)
-    const participantsToNotify = allParticipantIds.filter(id => id !== organizerId.toString());
+    const organizer = await User.findById(req.user._id);
+    const participantsToNotify = newMeeting.participants.filter(pId => pId.toString() !== req.user._id.toString());
 
     participantsToNotify.forEach(async (participantId) => {
+      const notificationMessage = `${organizer.name} has scheduled a meeting with you: "${newMeeting.title}"`;
 
-      const participantSocketId = getUserSocketId(participantId);
-
-      const notificationData = {
-        senderName: sender.name,
-        type: "newMessage",
-        message: `You have a new message from ${sender.name}`,
-        createdAt: new Date(),
-        relatedData: { chatId: senderId },
-      };
-
-      // Create notification in DB
       await Notification.create({
         recipient: participantId,
-        sender: organizerId,
+        sender: req.user._id,
         type: 'newMeeting',
-        message: notificationData.message,
-        link: `/calendar` // Or a specific meeting link
+        message: notificationMessage,
+        link: `/calendar`
       });
 
-      if (participantSocketId) {
-        io.to(participantSocketId).emit("getNotification", notificationData);
+      const socketId = getUserSocketId(participantId.toString());
+      if (socketId) {
+        io.to(socketId).emit("getNotification", {
+          senderName: organizer.name,
+          type: 'newMeeting',
+          message: notificationMessage,
+          createdAt: new Date(),
+          relatedData: { meetingId: newMeeting._id }
+        });
       }
     });
     // --- END OF NOTIFICATION ---
@@ -116,6 +111,32 @@ export const deleteMeeting = async (req, res) => {
     if (meeting.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only the organizer can delete this meeting.' });
     }
+
+    // --- NOTIFY OTHER PARTICIPANTS of Cancellation ---
+    const canceller = req.user;
+    const participantsToNotify = meeting.participants.filter(p => p._id.toString() !== canceller._id.toString());
+
+    participantsToNotify.forEach(async (participant) => {
+      const notificationMessage = `Your meeting "${meeting.title}" with ${canceller.name} has been cancelled.`;
+
+      await Notification.create({
+        recipient: participant._id,
+        sender: canceller._id,
+        type: 'meetingCancelled', // <-- A NEW TYPE
+        message: notificationMessage,
+        link: `/calendar`
+      });
+
+      const socketId = getUserSocketId(participant._id.toString());
+      if (socketId) {
+        io.to(socketId).emit("getNotification", {
+          senderName: canceller.name,
+          type: 'meetingCancelled',
+          message: notificationMessage,
+          createdAt: new Date(),
+        });
+      }
+    });
 
     await meeting.deleteOne();
     res.status(200).json({ message: 'Meeting deleted successfully.' });

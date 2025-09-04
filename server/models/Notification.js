@@ -10,7 +10,24 @@ const notificationSchema = new mongoose.Schema({
     // The type of notification
     type: {
         type: String,
-        enum: ['newMessage', 'newMeeting', 'requestAccepted', 'newDeal'], // Add more as needed
+        enum: [
+            // Message Notifications
+            'newMessage',
+
+            // Meeting Notifications
+            'newMeeting',
+            'meetingCancelled',
+
+            // Collaboration Notifications
+            'newConnectionRequest',
+            'connectionRequestAccepted',
+            'connectionRequestRejected',
+
+            // Deal Notifications
+            'newDeal',
+            'dealStatusUpdate',
+            'newTransaction'
+        ],
         required: true,
     },
 
