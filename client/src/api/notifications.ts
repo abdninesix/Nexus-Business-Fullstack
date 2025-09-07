@@ -6,7 +6,7 @@ export interface Notification {
   _id: string;
   recipient: string;
   sender: User; // Populated by backend
-  type: 'newMessage' | 'newMeeting' | 'requestAccepted' | 'newDeal';
+  type: 'newMessage' | 'newMeeting' | 'meetingCancelled' | 'meetingResponse' | 'newConnectionRequest' | 'connectionRequestAccepted' | 'connectionRequestRejected' | 'newDeal' | 'dealStatusUpdate' | 'newTransaction' | 'newDeal';
   message: string;
   isRead: boolean;
   link?: string;

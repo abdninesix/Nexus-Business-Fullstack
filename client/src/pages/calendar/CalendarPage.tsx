@@ -1,4 +1,3 @@
-// src/pages/calendar/CalendarPage.tsx
 import React, { useState, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
@@ -7,18 +6,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Modal from 'react-modal';
 
-import { fetchMeetings, createMeeting, deleteMeeting, Meeting, NewMeetingData } from '../../api/meetings';
-import { fetchAllUsers } from '../../api/users';
+import { fetchMeetings, createMeeting, deleteMeeting, Meeting, NewMeetingData, respondToMeeting } from '../../api/meetings';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { CustomDateTimePicker } from '../../components/ui/DateTimePicker';
 import { User } from '../../types';
-import { Clock, Users, X } from 'lucide-react';
-import { Avatar } from '../../components/ui/Avatar';
+import { Clock, Users } from 'lucide-react';
 import { enUS } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
-import { useDebounce } from '../../hooks/useDebouce';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '../../components/ui/Badge';
+import { CollaborationRequest, fetchReceivedRequests, fetchSentRequests } from '../../api/collaborations';
 
 // Setup for react-big-calendar
 const locales = { 'en-US': enUS };
@@ -43,6 +41,7 @@ Modal.setAppElement('#root');
 export const CalendarPage: React.FC = () => {
     const queryClient = useQueryClient();
     const { user: currentUser } = useAuth();
+    const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -51,20 +50,25 @@ export const CalendarPage: React.FC = () => {
     const initialStartTime = new Date();
     const initialEndTime = new Date(initialStartTime.getTime() + 60 * 60 * 1000);
 
-    const [newEvent, setNewEvent] = useState({ title: '', start: initialStartTime, end: initialEndTime });
-    const [selectedParticipants, setSelectedParticipants] = useState<User[]>([]);
-    const [userSearch, setUserSearch] = useState('');
-    const debouncedUserSearch = useDebounce(userSearch, 300);
+    const [newEvent, setNewEvent] = useState({ title: '', start: initialStartTime, end: initialEndTime, participantId: '' });
 
     const { data: meetings = [], isLoading } = useQuery<Meeting[]>({
         queryKey: ['meetings'],
         queryFn: fetchMeetings,
     });
 
-    const { data: allUsers = [] } = useQuery<User[]>({
-        queryKey: ['allUsers'],
-        queryFn: fetchAllUsers,
-        enabled: isModalOpen, // Crucial for performance!
+    const connectionsQueryFn = currentUser?.role === 'investor'
+        ? fetchSentRequests
+        : fetchReceivedRequests;
+
+    const connectionsQueryKey = currentUser?.role === 'investor'
+        ? 'sentRequests'
+        : 'receivedRequests';
+
+    const { data: requests = [] } = useQuery<CollaborationRequest[]>({
+        queryKey: [connectionsQueryKey],
+        queryFn: connectionsQueryFn,
+        enabled: isModalOpen && !!currentUser, // Only run when modal is open and user exists
     });
 
     const createMeetingMutation = useMutation({
@@ -91,6 +95,16 @@ export const CalendarPage: React.FC = () => {
         }
     });
 
+    const respondMutation = useMutation({
+        mutationFn: respondToMeeting,
+        onSuccess: () => {
+            toast.success("Your response has been recorded.");
+            queryClient.invalidateQueries({ queryKey: ['meetings'] });
+            closeDetailModal();
+        },
+        onError: (err: any) => toast.error(err.response?.data?.message || "Action failed."),
+    });
+
     const events = useMemo(() => meetings.map(meeting => ({
         title: meeting.title,
         start: new Date(meeting.start),
@@ -98,12 +112,12 @@ export const CalendarPage: React.FC = () => {
         resource: meeting,
     })), [meetings]);
 
-    const filteredUsers = useMemo(() =>
-        allUsers.filter(user =>
-            user.name.toLowerCase().includes(debouncedUserSearch.toLowerCase()) &&
-            !selectedParticipants.some(p => p._id === user._id) // Don't show already selected users
-        ), [debouncedUserSearch, selectedParticipants]
-    );
+    const connections = useMemo(() =>
+        requests
+            .filter(req => req.status === 'accepted')
+            .map(req => currentUser?.role === 'investor' ? req.entrepreneurId : req.investorId)
+            .filter((user): user is User => typeof user === 'object' && user !== null),
+        [requests, currentUser]);
 
     const handleSelectEvent = (event: { resource: Meeting }) => {
         setSelectedMeeting(event.resource); // Get the original meeting object
@@ -117,39 +131,51 @@ export const CalendarPage: React.FC = () => {
         }
     };
 
+    const handleJoinMeeting = () => {
+        if (!selectedMeeting) return;
+
+        if (selectedMeeting.status !== 'confirmed') {
+            toast.error("This meeting has not been confirmed by all participants yet.");
+            return;
+        }
+
+        if (new Date(selectedMeeting.end) < new Date()) {
+            toast.error("This meeting has already ended.");
+            return;
+        }
+
+        navigate(`/lobby/${selectedMeeting._id}`);
+    };
+
     const closeDetailModal = () => {
         setIsDetailModalOpen(false);
         setSelectedMeeting(null);
     };
 
-    const handleToggleParticipant = (user: User) => {
-        setSelectedParticipants(prev =>
-            prev.some(p => p._id === user._id)
-                ? prev.filter(p => p._id !== user._id)
-                // Add new user, but don't allow more than, say, 5 participants for sanity
-                : [...prev, user]
-        );
-    };
-
     const handleCreateMeeting = (e: React.FormEvent) => {
         e.preventDefault();
-        if (selectedParticipants.length === 0) {
-            toast.error("Please select at least one participant.");
+        if (!newEvent.participantId) {
+            toast.error("Please select a participant for the meeting.");
             return;
         }
         const dataToSend: NewMeetingData = {
-            ...newEvent,
-            participantIds: selectedParticipants.map(p => p._id),
+            title: newEvent.title,
+            start: newEvent.start,
+            end: newEvent.end,
+            participantIds: [newEvent.participantId],
         };
         createMeetingMutation.mutate(dataToSend);
+    };
+
+    const handleRespondToMeeting = (status: 'accepted' | 'rejected') => {
+        if (!selectedMeeting) return;
+        respondMutation.mutate({ id: selectedMeeting._id, status });
     };
 
     const openModal = () => setIsModalOpen(true);
     const closeAndResetModal = () => {
         setIsModalOpen(false);
-        setNewEvent({ title: '', start: initialStartTime, end: initialEndTime });
-        setSelectedParticipants([]);
-        setUserSearch('');
+        setNewEvent({ title: '', start: initialStartTime, end: initialEndTime, participantId: '' });
     };
 
     if (!currentUser) return null;
@@ -191,37 +217,20 @@ export const CalendarPage: React.FC = () => {
 
                     {/* --- NEW PARTICIPANT SELECTOR --- */}
                     <div>
-                        <label className="block text-sm font-medium mb-1">Participants</label>
-                        <div className="border rounded-md p-2 space-y-2">
-                            {/* Selected Participants Pills */}
-                            <div className="flex flex-wrap gap-2">
-                                {selectedParticipants.map(p => (
-                                    <div key={p._id} className="flex items-center bg-gray-200 rounded-full pl-3 pr-2 py-1 text-sm">
-                                        <span>{p.name}</span>
-                                        <button type="button" onClick={() => handleToggleParticipant(p)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14} /></button>
-                                    </div>
-                                ))}
-                            </div>
-                            {/* Search Input */}
-                            <Input placeholder="Search for users to invite..." value={userSearch} onChange={e => setUserSearch(e.target.value)} />
-                            {/* User List */}
-                            <div className="max-h-32 overflow-y-auto">
-                                {filteredUsers.map(user => (
-                                    <button
-                                        type="button"
-                                        key={user._id}
-                                        onClick={() => handleToggleParticipant(user)}
-                                        className="w-full flex items-center p-2 text-left hover:bg-gray-100 rounded-md"
-                                    >
-                                        <Avatar src={user.avatarUrl} alt={user.name} size="sm" className="mr-3" />
-                                        <div>
-                                            <p className="text-sm font-medium">{user.name}</p>
-                                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        <label className="block text-sm font-medium mb-1">Select Participant</label>
+                        <select
+                            value={newEvent.participantId}
+                            onChange={e => setNewEvent({ ...newEvent, participantId: e.target.value })}
+                            required
+                            className="w-full border-gray-300 rounded-md p-2 bg-white"
+                        >
+                            <option value="" disabled>-- Choose a Connection --</option>
+                            {connections.map(person => (
+                                <option key={person._id} value={person._id}>
+                                    {person.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="flex justify-end gap-4 pt-4 border-t">
@@ -245,23 +254,46 @@ export const CalendarPage: React.FC = () => {
                                 <Users size={16} className="mr-2" />
                                 <span>With: {selectedMeeting.participants.map(p => p.name).join(', ')}</span>
                             </div>
+                            <div className="flex items-center">
+                                <span className="mr-2">Status:</span>
+                                <Badge>{selectedMeeting.status}</Badge>
+                            </div>
                         </div>
 
-                        {/* Show delete button ONLY if the current user is the organizer */}
-                        <div className="flex justify-end gap-4 pt-4 border-t">
-                            {currentUser._id === selectedMeeting.organizer._id && (
-                                <Button
-                                    variant="error"
-                                    onClick={handleDeleteMeeting}
-                                    isLoading={deleteMeetingMutation.isPending}
-                                >
-                                    Delete Meeting
-                                </Button>
-                            )}
-                            <Link to={`/lobby/${selectedMeeting._id}`}>
-                                <Button>Join Meeting</Button>
-                            </Link>
-                        </div>
+                        {(() => {
+                            const myResponse = selectedMeeting.participantResponses.find(p => p.userId === currentUser._id);
+                            const isOrganizer = selectedMeeting.organizer._id === currentUser._id;
+
+                            return (
+                                <div className="flex flex-wrap justify-end gap-2 pt-4 border-t">
+                                    <Button variant="outline" onClick={closeDetailModal}>Close</Button>
+
+                                    {/* Accept/Decline for invitees with pending status */}
+                                    {myResponse?.status === 'pending' && !isOrganizer && (
+                                        <>
+                                            <Button variant="error" onClick={() => handleRespondToMeeting('rejected')} isLoading={respondMutation.isPending}>Decline</Button>
+                                            <Button variant="success" onClick={() => handleRespondToMeeting('accepted')} isLoading={respondMutation.isPending}>Accept</Button>
+                                        </>
+                                    )}
+
+                                    {/* Delete for the organizer */}
+                                    {isOrganizer && (
+                                        <Button variant="error" onClick={handleDeleteMeeting} isLoading={deleteMeetingMutation.isPending}>
+                                            Delete Meeting
+                                        </Button>
+                                    )}
+
+                                    {/* --- CONSOLIDATED & FUNCTIONAL Join Button --- */}
+                                    {<Button
+                                        onClick={handleJoinMeeting}
+                                        disabled={selectedMeeting.status !== 'confirmed'}
+                                    >
+                                        Join the meeting
+                                    </Button>}
+                                </div>
+                            );
+                        })()}
+
                     </div>
                 )}
             </Modal>

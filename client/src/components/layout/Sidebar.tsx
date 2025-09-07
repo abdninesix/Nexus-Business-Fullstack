@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Home, Building2, CircleDollarSign, Users, MessageCircle,
   Bell, FileText, Settings, HelpCircle,
-  Calendar
+  VideoIcon,
+  Handshake
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNotifications } from '../../api/notifications';
@@ -66,8 +67,8 @@ export const Sidebar: React.FC = () => {
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
     { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
-    { to: '/deals', icon: <FileText size={20} />, text: 'Deals' },
-    { to: '/calendar', icon: <Calendar size={20} />, text: 'Calendar' },
+    { to: '/deals', icon: <Handshake size={20} />, text: 'Deals' },
+    { to: '/calendar', icon: <VideoIcon size={20} />, text: 'Meetings' },
   ];
 
   const investorItems = [
@@ -76,9 +77,8 @@ export const Sidebar: React.FC = () => {
     { to: '/entrepreneurs', icon: <Users size={20} />, text: 'Find Startups' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
-    { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
-    { to: '/deals', icon: <FileText size={20} />, text: 'Deals' },
-    { to: '/calendar', icon: <Calendar size={20} />, text: 'Calendar' },
+    { to: '/deals', icon: <Handshake size={20} />, text: 'Deals' },
+    { to: '/calendar', icon: <VideoIcon size={20} />, text: 'Meetings' },
   ];
 
   const sidebarItems = user.role === 'entrepreneur' ? entrepreneurItems : investorItems;

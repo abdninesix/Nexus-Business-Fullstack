@@ -33,7 +33,7 @@ import { SettingsPage } from './pages/settings/SettingsPage';
 import { HelpPage } from './pages/help/HelpPage';
 import { DealsPage } from './pages/deals/DealsPage';
 import { EntrepreneurDealsPage } from './pages/deals/EntrepreneurDealsPage';
-import { CalendarPage } from './pages/calendar/CalenderPage';
+import { CalendarPage } from './pages/calendar/CalendarPage';
 
 // Chat Pages
 import { MessagesPage } from './pages/messages/MessagesPage';

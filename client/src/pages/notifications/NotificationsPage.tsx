@@ -1,6 +1,6 @@
 // src/pages/notifications/NotificationsPage.tsx
 import React from 'react';
-import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle, Trash2, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Card, CardBody } from '../../components/ui/Card';
@@ -60,6 +60,8 @@ export const NotificationsPage: React.FC = () => {
       case 'newMessage': return <MessageCircle size={18} className="text-primary-600" />;
       case 'newMeeting': return <Calendar size={18} className="text-green-600" />;
       case 'meetingCancelled': return <CalendarX size={18} className="text-red-500" />;
+      case 'meetingResponse': return <Info size={18} className="text-blue-500" />;
+      case 'meetingConfirmed': return <CheckCircle size={18} className="text-green-600" />;
       case 'newDeal': return <Handshake size={18} className="text-blue-500" />;
       case 'dealStatusUpdate': return <Handshake size={18} className="text-yellow-500" />;
       case 'newTransaction': return <DollarSign size={18} className="text-green-600" />;

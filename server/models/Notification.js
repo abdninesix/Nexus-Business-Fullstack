@@ -17,6 +17,8 @@ const notificationSchema = new mongoose.Schema({
             // Meeting Notifications
             'newMeeting',
             'meetingCancelled',
+            'meetingResponse',
+            'meetingConfirmed',
 
             // Collaboration Notifications
             'newConnectionRequest',

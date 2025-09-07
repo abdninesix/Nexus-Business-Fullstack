@@ -25,13 +25,22 @@ export const register = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({
+    const userData = {
       _id: newUser._id,
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
-      token: generateToken(newUser),
-    });
+      isOnline: newUser.isOnline,
+      avatarUrl: newUser.avatarUrl,
+      bio: newUser.bio,
+      profile: newUser.role === 'entrepreneur'
+        ? newUser.entrepreneurProfile
+        : newUser.investorProfile,
+    };
+
+    const token = generateToken(newUser);
+
+    res.status(201).json({ user: userData, token: token, });
 
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -58,24 +67,23 @@ export const login = async (req, res) => {
     await user.save();
 
     // Prepare the response payload
-    const payload = {
+    const userData = {
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      isOnline: user.isOnline,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
-      token: generateToken(user),
+      profile: user.role === 'entrepreneur'
+        ? user.entrepreneurProfile
+        : user.investorProfile,
     };
 
-    // Attach the correct profile based on the user's role
-    if (user.role === 'entrepreneur') {
-      payload.profile = user.entrepreneurProfile;
-    } else if (user.role === 'investor') {
-      payload.profile = user.investorProfile;
-    }
+    // --- Build token separately ---
+    const token = generateToken(user);
 
-    res.json(payload);
+    res.json({ user: userData, token: token, });
 
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: error.message });
@@ -186,7 +194,7 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// NEW Logout User controller
+// Logout User controller
 export const logout = async (req, res) => {
   try {
     // req.user is added by your 'protect' middleware

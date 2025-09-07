@@ -58,18 +58,28 @@ export const createMeeting = async (req, res) => {
     }
     // --- END OF CLASH DETECTION ---
 
+    // --- Initialize participantResponses ---
+    const participantResponses = allParticipantIds.map(id => ({
+      userId: id,
+      status: id.toString() === organizerId.toString() ? 'accepted' : 'pending'
+    }));
+
+    const allAccepted = participantResponses.every(p => p.status === 'accepted');
+
     const newMeeting = await Meeting.create({
       title,
       start: startTime,
       end: endTime,
       participants: allParticipantIds,
       organizer: organizerId,
+      participantResponses,
+      status: allAccepted ? 'confirmed' : 'pending',
       location,
     });
 
     // --- EMIT NOTIFICATION TO ALL PARTICIPANTS ---
-    const organizer = await User.findById(req.user._id);
-    const participantsToNotify = newMeeting.participants.filter(pId => pId.toString() !== req.user._id.toString());
+    const organizer = await User.findById(organizerId);
+    const participantsToNotify = participantResponses.filter(p => p.status === 'pending').map(p => p.userId);
 
     participantsToNotify.forEach(async (participantId) => {
       const notificationMessage = `${organizer.name} has scheduled a meeting with you: "${newMeeting.title}"`;
@@ -99,6 +109,96 @@ export const createMeeting = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Failed to create meeting' });
   }
+};
+
+// Respond to a meeting invitation (Accept/Decline)
+export const respondToMeeting = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const meeting = await Meeting.findById(req.params.id);
+    const userId = req.user._id;
+
+    // Fetch the full user document for the person who is responding.
+    const respondingUser = await User.findById(userId);
+    if (!respondingUser) {
+      return res.status(404).json({ message: "Responding user not found." });
+    }
+
+    if (!meeting) return res.status(404).json({ message: "Meeting not found." });
+
+    // Find the user in the participant responses
+    const userResponse = meeting.participantResponses.find(p => p.userId.toString() === userId.toString());
+    if (!userResponse) return res.status(403).json({ message: "You are not a participant of this meeting." });
+    if (userResponse.status !== 'pending') return res.status(400).json({ message: "You have already responded." });
+
+    userResponse.status = status;
+
+    // If this user rejects, the whole meeting is effectively cancelled
+    if (status === 'rejected') {
+      meeting.status = 'cancelled';
+    }
+
+    // If this user accepts, check if ALL participants have now accepted
+    const allAccepted = meeting.participantResponses.every(p => p.status === 'accepted');
+    if (allAccepted) {
+      meeting.status = 'confirmed';
+    }
+
+    const updatedMeeting = await meeting.save();
+
+    const otherParticipantIds = meeting.participants
+      .filter(pId => pId.toString() !== userId.toString())
+      .map(pId => pId.toString())
+
+    const actionText = status === 'accepted' ? 'accepted' : 'declined';
+    const notificationMessage = `${respondingUser.name} has ${actionText} the meeting: "${meeting.title}".`;
+
+    // --- THIS IS THE FIX ---
+    otherParticipantIds.forEach(async (participantId) => { // `participantId` is now a STRING
+      await Notification.create({
+        recipient: participantId,
+        sender: userId,
+        type: 'meetingResponse',
+        message: notificationMessage,
+        link: `/calendar`
+      });
+
+      // Now this call is guaranteed to work because `participantId` is a string
+      const socketId = getUserSocketId(participantId);
+      if (socketId) {
+        io.to(socketId).emit("getNotification", {
+          senderName: respondingUser.name,
+          type: 'meetingResponse',
+          message: notificationMessage,
+          createdAt: new Date(),
+        });
+      }
+    });
+
+    // If the meeting is now confirmed, send a second, global notification
+    if (updatedMeeting.status === 'confirmed') {
+      const confirmedMessage = `The meeting "${meeting.title}" is now confirmed!`;
+      otherParticipantIds.forEach(async (participantId) => {
+        await Notification.create({
+          recipient: participantId,
+          sender: userId,
+          type: 'meetingConfirmed',
+          message: confirmedMessage,
+          link: `/calendar`
+        });
+
+        const socketId = getUserSocketId(participantId.toString());
+        if (socketId) io.to(socketId).emit("getNotification", {
+          senderName: respondingUser.name,
+          type: 'meetingConfirmed',
+          message: confirmedMessage,
+          createdAt: new Date(),
+        });
+      });
+    }
+
+    res.status(200).json(updatedMeeting);
+  } catch (error) { res.status(500).json({ message: 'Failed to respond to meeting.' }); }
 };
 
 // Delete a meeting
@@ -149,6 +249,19 @@ export const getMeetingById = async (req, res) => {
   try {
     const meeting = await Meeting.findById(req.params.id).populate('participants', 'name avatarUrl');
     if (!meeting) return res.status(404).json({ message: 'Meeting not found' });
+
+    // --- NEW VALIDATION ---
+    const now = new Date();
+    // Check if the meeting end time has passed
+    if (new Date(meeting.end) < now) {
+      return res.status(403).json({ message: 'This meeting has already ended.' });
+    }
+    // Check if the meeting is not confirmed
+    if (meeting.status !== 'confirmed') {
+      return res.status(403).json({ message: 'This meeting is not confirmed and cannot be joined.' });
+    }
+    // ----------------------
+
     res.status(200).json(meeting);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch meeting' });

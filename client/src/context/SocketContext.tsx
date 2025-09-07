@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
-import { Bell, Calendar, CalendarX, CheckCircle, DollarSign, Handshake, MessageCircle, UserPlus, X, XCircle } from 'lucide-react';
+import { Bell, Calendar, CalendarX, CheckCircle, DollarSign, Handshake, Info, MessageCircle, UserPlus, X, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -18,6 +18,8 @@ interface BaseNotification {
 interface NewMessageNotification extends BaseNotification { type: 'newMessage'; relatedData: { chatId: string; }; }
 interface NewMeetingNotification extends BaseNotification { type: 'newMeeting'; relatedData: { meetingId: string; }; }
 interface MeetingCancelledNotification extends BaseNotification { type: 'meetingCancelled'; }
+interface MeetingResponseNotification extends BaseNotification { type: 'meetingResponse'; }
+interface MeetingConfirmedNotification extends BaseNotification { type: 'meetingConfirmed'; }
 interface NewDealNotification extends BaseNotification { type: 'newDeal' | 'dealStatusUpdate'; relatedData: { dealId: string; }; }
 interface NewTransactionNotification extends BaseNotification { type: 'newTransaction'; relatedData: { dealId: string; }; }
 interface NewConnectionRequestNotification extends BaseNotification { type: 'newConnectionRequest'; relatedData: { investorId: string; }; }
@@ -29,6 +31,8 @@ type LiveNotification =
     | NewMessageNotification
     | NewMeetingNotification
     | MeetingCancelledNotification
+    | MeetingResponseNotification
+    | MeetingConfirmedNotification
     | NewDealNotification
     | NewTransactionNotification
     | NewConnectionRequestNotification
@@ -94,6 +98,18 @@ const SocketHandler: React.FC = () => {
 
                     case 'meetingCancelled':
                         icon = <CalendarX className="text-red-500" />;
+                        path = '/calendar';
+                        queryClient.invalidateQueries({ queryKey: ['meetings'] });
+                        break;
+
+                    case 'meetingResponse':
+                        icon = <Info className="text-blue-500" />;
+                        path = '/calendar';
+                        queryClient.invalidateQueries({ queryKey: ['meetings'] });
+                        break;
+
+                    case 'meetingConfirmed':
+                        icon = <CheckCircle className="text-green-500" />;
                         path = '/calendar';
                         queryClient.invalidateQueries({ queryKey: ['meetings'] });
                         break;

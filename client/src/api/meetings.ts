@@ -8,6 +8,8 @@ export interface Meeting {
   start: string; // ISO date string
   end: string;   // ISO date string
   participants: User[];
+  status: 'pending' | 'confirmed' | 'cancelled';
+  participantResponses: { userId: string, status: 'pending' | 'accepted' | 'rejected' }[];
   organizer: User;
   location?: string;
 }
@@ -28,6 +30,12 @@ export const fetchMeetings = async (): Promise<Meeting[]> => {
 export const createMeeting = async (meetingData: NewMeetingData): Promise<Meeting> => {
   const { data } = await api.post('/meetings', meetingData);
   return data;
+};
+
+export const respondToMeeting = async (payload: { id: string, status: 'accepted' | 'rejected' }): Promise<Meeting> => {
+    const { id, status } = payload;
+    const { data } = await api.patch(`/meetings/${id}/respond`, { status });
+    return data;
 };
 
 export const deleteMeeting = async (meetingId: string): Promise<{ message: string }> => {

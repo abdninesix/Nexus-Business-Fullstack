@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Calendar, Settings, HelpCircle, FileText } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Settings, HelpCircle, FileText, Video, Handshake } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -61,8 +61,8 @@ export const Navbar: React.FC = () => {
       badge: notifications.length,
     },
     {
-      icon: <Calendar size={18} />,
-      text: 'Calendar',
+      icon: <Video size={18} />,
+      text: 'Meetings',
       path: user ? '/calendar' : '/login',
       badge: 0,
     }
@@ -94,14 +94,14 @@ export const Navbar: React.FC = () => {
       badge: 0,
     },
     {
-      icon: <FileText size={18} />,
+      icon: <Handshake size={18} />,
       text: 'Deals',
       path: user ? '/deals' : '/login',
       badge: 0,
     },
     {
-      icon: <Calendar size={18} />,
-      text: 'Calendar',
+      icon: <Video size={18} />,
+      text: 'Meetings',
       path: user ? '/calendar' : '/login',
       badge: 0,
     }

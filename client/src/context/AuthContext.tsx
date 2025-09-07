@@ -116,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     logout,
     updateUser,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user && !!token,
     isInitializing,
     unreadMessageCount,
     fetchAndUpdateUnreadCount,

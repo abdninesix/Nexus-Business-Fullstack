@@ -23,10 +23,8 @@ export const LoginPage: React.FC = () => {
     mutationFn: loginUser,
     onSuccess: (data) => {
       toast.success('Successfully logged in!');
-      login(data); // Update global state
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
+      login(data);
+      navigate('/dashboard');
     },
     // onError is handled by the `error` state variable from the hook
     onError: (error) => {

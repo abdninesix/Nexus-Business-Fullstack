@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { User, Mail, Lock, CircleDollarSign, Building2, AlertCircle } from 'lucide-react';
@@ -18,17 +18,18 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('entrepreneur');
 
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
       toast.success('Account created successfully!');
-      login(data); // Update the global state
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
+      login(data);
+      navigate('/dashboard');
     },
-    // onError is handled by the `error` state from the hook
+    onError: (error) => {
+      toast.error("Failed to create new account. Please try again.");
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {

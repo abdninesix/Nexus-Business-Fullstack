@@ -325,8 +325,8 @@ export const DealsPage: React.FC = () => {
         </div>
 
         <div>
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-500" />Filters:
+          <div className="flex gap-2">
+            <Filter className="text-gray-500 size-18" />Filters:
             <div className="flex flex-wrap gap-2">
               {statuses.map(status => (
                 <Badge
