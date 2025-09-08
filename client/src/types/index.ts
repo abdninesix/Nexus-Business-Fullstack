@@ -5,7 +5,6 @@ export interface EntrepreneurProfile {
   pitchSummary?: string;
   fundingNeeded?: string;
   industry?: string;
-  location?: string;
   foundedYear?: number;
   teamSize?: number;
 }

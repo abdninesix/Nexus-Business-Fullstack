@@ -255,8 +255,8 @@ export const SettingsPage: React.FC = () => {
                 <div className="space-y-6 pt-6 border-t">
                   <h3 className="text-md font-medium">Investor Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input label="Minimum Investment" name="minimumInvestment" value={profile.minimumInvestment} onChange={handleProfileChange} />
-                    <Input label="Maximum Investment" name="maximumInvestment" value={profile.maximumInvestment} onChange={handleProfileChange} />
+                    <Input label="Minimum Investment" name="minimumInvestment" startAdornment="$" placeholder='2B, 1M, 200K etc' value={profile.minimumInvestment} onChange={handleProfileChange} />
+                    <Input label="Maximum Investment" name="maximumInvestment" startAdornment="$" placeholder='2B, 1M, 200K etc' value={profile.maximumInvestment} onChange={handleProfileChange} />
                     <Input label="Total Investments (Number)" name="totalInvestments" type="number" value={profile.totalInvestments || ''} onChange={handleProfileChange} />
                   </div>
                   {/* Investment Stages (Array) */}

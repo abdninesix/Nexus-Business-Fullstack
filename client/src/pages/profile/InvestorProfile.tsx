@@ -194,7 +194,7 @@ export const InvestorProfile: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <span className="text-sm text-gray-500">Investment Range</span>
-                  <p className="text-lg font-semibold text-gray-900">{profile.minimumInvestment} - {profile.maximumInvestment}</p>
+                  <p className="text-lg font-semibold text-gray-900">${profile.minimumInvestment} - ${profile.maximumInvestment}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Total Investments</span>
