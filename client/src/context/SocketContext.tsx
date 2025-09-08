@@ -69,19 +69,11 @@ const SocketHandler: React.FC = () => {
 
     useEffect(() => {
         if (user) {
-
             const socketUrl =
                 import.meta.env.MODE === "production"
                     ? import.meta.env.VITE_SOCKET_URL_PROD
                     : import.meta.env.VITE_SOCKET_URL_DEV;
             const newSocket = io(socketUrl);
-            newSocket.on("connect", () => {
-                console.log("✅ Socket connected:", newSocket.id);
-            });
-
-            newSocket.on("connect_error", (err) => {
-                console.error("❌ Socket connect error:", err.message);
-            });
             setSocket(newSocket);
             newSocket.emit("addNewUser", user._id);
 
