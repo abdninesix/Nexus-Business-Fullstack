@@ -75,11 +75,15 @@ const SocketHandler: React.FC = () => {
                     ? import.meta.env.VITE_SOCKET_URL_PROD
                     : import.meta.env.VITE_SOCKET_URL_DEV;
             const newSocket = io(socketUrl);
+            newSocket.on("connect", () => {
+                console.log("✅ Socket connected:", newSocket.id);
+            });
+
+            newSocket.on("connect_error", (err) => {
+                console.error("❌ Socket connect error:", err.message);
+            });
             setSocket(newSocket);
             newSocket.emit("addNewUser", user._id);
-            
-            console.log("MODE:", import.meta.env.MODE);
-            console.log("SOCKET URL:", socketUrl);
 
             // The notification listener logic is moved here
             newSocket.on("getNotification", (data: LiveNotification) => {
