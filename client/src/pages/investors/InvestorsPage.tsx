@@ -49,10 +49,11 @@ export const InvestorsPage: React.FC = () => {
 
       const matchesStages = selectedStages.length === 0 || profile.investmentStage?.some(stage => selectedStages.includes(stage));
       const matchesInterests = selectedInterests.length === 0 || profile.investmentInterests?.some(interest => selectedInterests.includes(interest));
+      const matchesLocation = selectedLocations.length === 0 || (investor.location && selectedLocations.includes(investor.location));
 
-      return matchesSearch && matchesStages && matchesInterests;
+      return matchesSearch && matchesStages && matchesInterests && matchesLocation;
     });
-  }, [investors, searchQuery, selectedStages, selectedInterests]);
+  }, [investors, searchQuery, selectedStages, selectedInterests, selectedLocations]);
 
   const toggleStage = (stage: string) => {
     setSelectedStages(prev => prev.includes(stage) ? prev.filter(s => s !== stage) : [...prev, stage]);
@@ -87,7 +88,7 @@ export const InvestorsPage: React.FC = () => {
             <CardBody className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Investment Stage</h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {allStages.map(stage => (
                     <Badge
                       key={stage}
