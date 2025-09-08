@@ -2,8 +2,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://localhost:3000/api",
-  baseURL: "https://nexus-server-a951.onrender.com/api",
+  baseURL:
+    import.meta.env.MODE === "production"
+      ? import.meta.env.VITE_API_BASE_URL_PROD
+      : import.meta.env.VITE_API_BASE_URL_DEV,
   headers: {
     "Content-Type": "application/json",
   },

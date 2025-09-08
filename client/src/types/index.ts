@@ -29,6 +29,7 @@ export interface User {
   location: string;
   isOnline?: boolean;
   createdAt: string;
+  isTwoFactorEnabled?: boolean;
   entrepreneurProfile?: EntrepreneurProfile;
   investorProfile?: InvestorProfile;
 }

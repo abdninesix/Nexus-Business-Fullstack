@@ -14,6 +14,11 @@ interface LoginData {
   password: string;
 }
 
+interface TwoFactorResponse {
+  twoFactorRequired: true;
+  userId: string;
+}
+
 // API function to register a user
 export const registerUser = async (userData: RegisterData): Promise<AuthSuccessData> => {
   const { data } = await api.post('/auth/register', userData);
@@ -22,7 +27,7 @@ export const registerUser = async (userData: RegisterData): Promise<AuthSuccessD
 };
 
 // API function to log in a user
-export const loginUser = async (credentials: LoginData): Promise<AuthSuccessData> => {
+export const loginUser = async (credentials: LoginData): Promise<AuthSuccessData | TwoFactorResponse> => {
   const { data } = await api.post('/auth/login', credentials);
   return data;
 };
@@ -41,8 +46,22 @@ export const resetPasswordRequest = async (payload: { token: string; password: s
   return data;
 };
 
-// NEW function to call the logout endpoint
+// API function to call the logout endpoint
 export const logoutUser = async (): Promise<{ message: string }> => {
   const { data } = await api.post('/auth/logout');
+  return data;
+};
+
+// API function to toggle 2FA
+export const toggle2FA = async (): Promise<{ isEnabled: boolean, message: string }> => {
+  const { data } = await api.post('/auth/2fa/toggle');
+  return data;
+};
+
+// Verifies the 6-digit code from the email
+export const verifyLogin2FAToken = async (
+  payload: { userId: string; token: string }
+): Promise<AuthSuccessData> => {
+  const { data } = await api.post('/auth/2fa/login-verify', payload);
   return data;
 };

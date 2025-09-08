@@ -69,8 +69,13 @@ const SocketHandler: React.FC = () => {
 
     useEffect(() => {
         if (user) {
-            // const newSocket = io("http://localhost:3000");
-            const newSocket = io("https://nexus-server-a951.onrender.com");
+
+            const socketUrl =
+                import.meta.env.MODE === "production"
+                    ? import.meta.env.VITE_SOCKET_URL_PROD
+                    : import.meta.env.VITE_SOCKET_URL_DEV;
+                    
+            const newSocket = io(socketUrl);
             setSocket(newSocket);
             newSocket.emit("addNewUser", user._id);
 

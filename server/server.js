@@ -23,10 +23,14 @@ app.use(express.json());
 // --- SOCKET.IO INTEGRATION ---
 const httpServer = createServer(app); // Wrap the Express app
 
+const clientUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.CLIENT_URL_PROD
+    : process.env.CLIENT_URL_DEV;
+
 const io = new Server(httpServer, {
   cors: {
-    // origin: "http://localhost:5173",
-    origin: "https://nexus-by-abdullah.vercel.app",
+    origin: clientUrl,
     methods: ["GET", "POST"],
   },
 });

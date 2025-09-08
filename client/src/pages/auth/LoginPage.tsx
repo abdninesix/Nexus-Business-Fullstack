@@ -2,40 +2,73 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { User, CircleDollarSign, Building2, LogIn, AlertCircle, Mail, Lock } from 'lucide-react';
+import { CircleDollarSign, Building2, LogIn, AlertCircle, Mail, Lock, ShieldCheck } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
-import { loginUser } from '../../api/auth';
+import { loginUser, verifyLogin2FAToken } from '../../api/auth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { UserRole } from '../../types';
 
 export const LoginPage: React.FC = () => {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('entrepreneur');
 
+  const [is2FARequired, setIs2FARequired] = useState(false);
+  const [userIdFor2FA, setUserIdFor2FA] = useState('');
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // 1. Use Tanstack Query for the API call
+  // Use Tanstack Query for the API call
   const { mutate, isPending, error } = useMutation({
     mutationFn: loginUser,
-    onSuccess: (data) => {
-      toast.success('Successfully logged in!');
-      login(data);
-      navigate('/dashboard');
+    onSuccess: (data) => { // `data` is now `AuthSuccessData | TwoFactorResponse`
+
+      // Use a type guard to check the shape of the data
+      if ('twoFactorRequired' in data && data.twoFactorRequired) {
+        // TypeScript now knows that `data` is a `TwoFactorResponse`
+        toast.success("Verification code sent to your email.");
+        setUserIdFor2FA(data.userId);
+        setIs2FARequired(true);
+      } else if ('token' in data) {
+        // TypeScript now knows that `data` is an `AuthSuccessData`
+        toast.success('Successfully logged in!');
+        login(data);
+        navigate('/dashboard');
+      } else {
+        // This is a safety net for unexpected responses
+        toast.error("An unexpected error occurred during login.");
+      }
     },
-    // onError is handled by the `error` state variable from the hook
     onError: (error) => {
       toast.error("Invalid credentials. Please try again.");
     }
   });
 
-  // 2. The handleSubmit function now calls `mutate`
+  const verify2FAMutation = useMutation({
+    mutationFn: verifyLogin2FAToken,
+    onSuccess: (data) => {
+      // On successful code verification, complete the login
+      toast.success('Successfully verified!');
+      login(data);
+      navigate('/dashboard');
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Invalid verification code."),
+  });
+
+  // The handleSubmit function now calls `mutate`
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mutate({ email, password });
+  };
+
+  const handle2FASubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verify2FAMutation.mutate({ userId: userIdFor2FA, token: twoFactorToken });
   };
 
   // This function remains the same, as it only manipulates local state
@@ -71,95 +104,117 @@ export const LoginPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* 3. The error display now uses the `error` object from the hook */}
           {error && (
-            <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-start">
+            <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-center justify-center">
               <AlertCircle size={18} className="mr-2 mt-0.5" />
-              {/* @ts-ignore */}
-              <span>{error.response?.data?.message || 'Invalid credentials'}</span>
+              <span>Invalid credentials</span>
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'entrepreneur'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  onClick={() => setRole('entrepreneur')}
-                >
-                  <Building2 size={18} className="mr-2" />
-                  Entrepreneur
-                </button>
-                <button
-                  type="button"
-                  className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'investor'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  onClick={() => setRole('investor')}
-                >
-                  <CircleDollarSign size={18} className="mr-2" />
-                  Investor
-                </button>
+          {is2FARequired ? (
+            // --- 2FA VERIFICATION FORM ---
+            <form onSubmit={handle2FASubmit} className="space-y-6">
+              <h2 className="text-center text-2xl font-bold">Check your email</h2>
+              <p className="text-center text-sm text-gray-600">
+                We've sent a 6-digit verification code to your email address.
+              </p>
+              <Input
+                label="Verification Code"
+                type="text"
+                value={twoFactorToken}
+                onChange={(e) => setTwoFactorToken(e.target.value)}
+                required
+                fullWidth
+                startAdornment={<ShieldCheck size={18} />}
+                inputMode="numeric" // Helps mobile users get a number pad
+                autoComplete="one-time-code"
+              />
+              <Button type="submit" fullWidth isLoading={verify2FAMutation.isPending}>
+                Verify & Sign In
+              </Button>
+            </form>
+          ) : (
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'entrepreneur'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    onClick={() => setRole('entrepreneur')}
+                  >
+                    <Building2 size={18} className="mr-2" />
+                    Entrepreneur
+                  </button>
+                  <button
+                    type="button"
+                    className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${role === 'investor'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    onClick={() => setRole('investor')}
+                  >
+                    <CircleDollarSign size={18} className="mr-2" />
+                    Investor
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <Input
-              label="Email address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              fullWidth
-              startAdornment={<Mail size={18} />}
-            />
+              <Input
+                label="Email address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                fullWidth
+                startAdornment={<Mail size={18} />}
+              />
 
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              fullWidth
-              startAdornment={<Lock size={18} />}
-            />
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                fullWidth
+                startAdornment={<Lock size={18} />}
+              />
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                    Remember me
+                  </label>
+                </div>
+                <div className="text-sm">
+                  <a href="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
+                    Forgot your password?
+                  </a>
+                </div>
               </div>
-              <div className="text-sm">
-                <a href="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
-                  Forgot your password?
-                </a>
-              </div>
-            </div>
 
-            {/* 4. The isLoading prop now uses `isPending` from the hook */}
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isPending}
-              leftIcon={<LogIn size={18} />}
-            >
-              Sign in
-            </Button>
-          </form>
+              {/* 4. The isLoading prop now uses `isPending` from the hook */}
+              <Button
+                type="submit"
+                fullWidth
+                isLoading={isPending}
+                leftIcon={<LogIn size={18} />}
+              >
+                Sign in
+              </Button>
+            </form>
+          )}
 
-          <div className="mt-6">
+          < div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300"></div></div>
               <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">Demo Accounts</span></div>
@@ -198,6 +253,6 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };

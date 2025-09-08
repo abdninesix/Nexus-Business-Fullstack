@@ -72,7 +72,7 @@ export const EntrepreneurCard: React.FC<EntrepreneurCardProps> = ({
         <div className="mt-auto pt-3 flex justify-between items-center"> {/* Pushes to bottom */}
           <div>
             <span className="text-xs text-gray-500">Funding Need</span>
-            <p className="text-sm font-medium text-gray-900">{profile.fundingNeeded}</p>
+            <p className="text-sm font-medium text-gray-900">${profile.fundingNeeded}</p>
           </div>
 
           <div>

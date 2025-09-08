@@ -31,7 +31,10 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, default: '' },
   isOnline: { type: Boolean, default: true },
   location: { type: String, default: '' },
-  
+  isTwoFactorEnabled: { type: Boolean, default: false },
+  twoFactorCode: { type: String },
+  twoFactorCodeExpires: { type: Date },
+
   // Embed the role-specific schemas
   entrepreneurProfile: {
     type: entrepreneurSchema,
@@ -47,14 +50,14 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 // Compare password method
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { User as UserIcon, Lock, Bell, Globe, Palette, CreditCard } from 'lucide-react';
 
@@ -13,9 +13,11 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { EntrepreneurProfile, InvestorProfile, User } from '../../types';
+import { toggle2FA } from '../../api/auth';
 
 export const SettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for controlled form inputs
@@ -84,6 +86,23 @@ export const SettingsPage: React.FC = () => {
       updateUser(updatedUser); // Update the global state
     },
     onError: (error: any) => toast.error(error.response?.data?.message || 'Failed to remove picture.'),
+  });
+
+  const toggle2FAMutation = useMutation({
+    mutationFn: toggle2FA,
+    onSuccess: (data) => {
+      toast.success(data.message);
+      // Invalidate the user query ('profile') to refetch the latest user data
+      // which will include the updated `isTwoFactorEnabled` status.
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // You can also manually update the context user if you prefer
+      if (user) {
+        updateUser({ ...user, isTwoFactorEnabled: data.isEnabled });
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update 2FA status.");
+    }
   });
 
   // === EVENT HANDLERS ===
@@ -224,8 +243,8 @@ export const SettingsPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Input label="Startup Name" name="startupName" value={profile.startupName} onChange={handleProfileChange} />
                     <Input label="Industry" name="industry" value={profile.industry} onChange={handleProfileChange} />
-                    <Input label="Pitch Summary (1-2 sentences)" name="pitchSummary" value={profile.pitchSummary} onChange={handleProfileChange} />
-                    <Input label="Funding Needed" name="fundingNeeded" value={profile.fundingNeeded} onChange={handleProfileChange} />
+                    <Input label="Pitch Summary" name="pitchSummary" placeholder='Write 1-2 sentences' value={profile.pitchSummary} onChange={handleProfileChange} />
+                    <Input label="Funding Needed" name="fundingNeeded" placeholder='2B, 1M, 200K etc' startAdornment="$" value={profile.fundingNeeded} onChange={handleProfileChange} />
                     <Input label="Founded Year" name="foundedYear" type="number" value={profile.foundedYear || ''} onChange={handleProfileChange} />
                     <Input label="Team Size" name="teamSize" type="number" value={profile.teamSize || ''} onChange={handleProfileChange} />
                   </div>
@@ -298,10 +317,14 @@ export const SettingsPage: React.FC = () => {
                 <h3 className="text-sm font-medium text-gray-900 mb-4">Two-Factor Authentication</h3>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
-                    <Badge variant="error" className="mt-1">Not Enabled</Badge>
+                    <p className="text-sm text-gray-600">{user.isTwoFactorEnabled ? "2FA is currently enabled." : "Add an extra layer of security to your account."}</p>
+                    <Badge variant={user.isTwoFactorEnabled ? 'success' : 'gray'}>
+                      {user.isTwoFactorEnabled ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
-                  <Button variant="outline">Enable</Button>
+                  <Button variant={user.isTwoFactorEnabled ? 'error' : 'outline'} onClick={() => toggle2FAMutation.mutate()} isLoading={toggle2FAMutation.isPending}>
+                    {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}
+                  </Button>
                 </div>
               </div>
               <div className="pt-6 border-t border-gray-200">
