@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Settings, HelpCircle, FileText, Video, Handshake } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, LogOut, Building2, CircleDollarSign, Settings, HelpCircle, FileText, Video, Handshake, Receipt } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -87,16 +87,24 @@ export const Navbar: React.FC = () => {
       path: user ? '/notifications' : '/login',
       badge: notifications.length,
     },
-    {
-      icon: <FileText size={18} />,
-      text: 'Documents',
-      path: user ? '/documents' : '/login',
-      badge: 0,
-    },
+    ...(user?.role === 'entrepreneur' ? [
+      {
+        icon: <FileText size={18} />,
+        text: 'Documents',
+        path: user ? '/documents' : '/login',
+        badge: 0,
+      }]
+      : []),
     {
       icon: <Handshake size={18} />,
       text: 'Deals',
       path: user ? '/deals' : '/login',
+      badge: 0,
+    },
+    {
+      icon: <Receipt size={18} />,
+      text: 'Transactions',
+      path: user ? '/transactions' : '/login',
       badge: 0,
     },
     {

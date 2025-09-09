@@ -5,7 +5,8 @@ import {
   Home, Building2, CircleDollarSign, Users, MessageCircle,
   Bell, FileText, Settings, HelpCircle,
   VideoIcon,
-  Handshake
+  Handshake,
+  Receipt
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNotifications } from '../../api/notifications';
@@ -68,6 +69,7 @@ export const Sidebar: React.FC = () => {
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
     { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
     { to: '/deals', icon: <Handshake size={20} />, text: 'Deals' },
+    { to: '/transactions', icon: <Receipt size={20} />, text: 'Transactions' },
     { to: '/calendar', icon: <VideoIcon size={20} />, text: 'Meetings' },
   ];
 
@@ -78,6 +80,7 @@ export const Sidebar: React.FC = () => {
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
     { to: '/deals', icon: <Handshake size={20} />, text: 'Deals' },
+    { to: '/transactions', icon: <Receipt size={20} />, text: 'Transactions' },
     { to: '/calendar', icon: <VideoIcon size={20} />, text: 'Meetings' },
   ];
 
