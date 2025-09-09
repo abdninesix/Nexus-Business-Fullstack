@@ -40,6 +40,7 @@ import { MessagesPage } from './pages/messages/MessagesPage';
 import { ChatPage } from './pages/chat/ChatPage';
 import { VideoCallPage } from './pages/call/VideoCallPage';
 import { CallLobby } from './pages/call/CallLobby';
+import { TransactionsPage } from './pages/deals/TransactionsPage';
 
 const DealsRedirect: React.FC = () => {
   const { user } = useAuth();
@@ -110,6 +111,10 @@ function App() {
 
               <Route path="/deals" element={<DashboardLayout />}>
                 <Route index element={<DealsRedirect />} />
+              </Route>
+
+              <Route path="/transactions" element={<DashboardLayout />}>
+                <Route index element={<TransactionsPage />} />
               </Route>
 
               <Route path="/calendar" element={<DashboardLayout />}>

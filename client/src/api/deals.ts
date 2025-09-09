@@ -43,11 +43,19 @@ export interface NewPaymentData {
 
 export interface Transaction {
     _id: string;
-    dealId: string;
+    dealId: PopulatedDealInfo;
     investorId: string;
     amount: number;
     date: string;
     notes?: string;
+}
+
+interface PopulatedDealInfo {
+    _id: string;
+    startupName: string;
+    // These fields will be populated User objects
+    investorId: User;
+    entrepreneurId: User;
 }
 
 // --- API FUNCTIONS ---

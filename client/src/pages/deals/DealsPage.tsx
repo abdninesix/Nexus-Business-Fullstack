@@ -11,6 +11,7 @@ import { addPayment, createDeal, Deal, fetchDeals, fetchSentTransactions, NewDea
 import toast from 'react-hot-toast';
 import { CollaborationRequest, fetchSentRequests } from '../../api/collaborations';
 import { format } from 'date-fns/format';
+import { TransactionList } from '../../components/deals/TransactionList';
 
 Modal.setAppElement('#root');
 
@@ -186,7 +187,7 @@ export const DealsPage: React.FC = () => {
     const dealsMap = new Map(deals.map(deal => [deal._id, deal]));
     const totalValue = sentTransactions.reduce((sum, transaction) => {
       // Find the parent deal for this transaction
-      const parentDeal = dealsMap.get(transaction.dealId);
+      const parentDeal = dealsMap.get(transaction.dealId._id);
       if (parentDeal && parentDeal.status === 'Closed') {
         const investmentAmount = transaction.amount;
         const equityValue = parseFloat(parentDeal.equity.replace('%', ''));
@@ -521,7 +522,18 @@ export const DealsPage: React.FC = () => {
                     <h2 className="text-xl font-bold">{selectedDeal.startupName}</h2>
                     <p className="text-sm text-gray-500">Deal with {selectedDeal.entrepreneurId?.name}</p>
                   </div>
-                  {/* ... Deal details display ... */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><strong className="block text-gray-500">Amount:</strong> {selectedDeal.amount}</div>
+                    <div><strong className="block text-gray-500">Equity:</strong> {selectedDeal.equity}</div>
+                    <div><strong className="block text-gray-500">Stage:</strong> {selectedDeal.stage}</div>
+                    <div><strong className="block text-gray-500">Status:</strong> <Badge variant={getStatusColor(selectedDeal.status)}>{selectedDeal.status}</Badge></div>
+                  </div>
+
+                  {['Negotiation', 'Term Sheet', 'Due Diligence', 'Closed'].includes(selectedDeal.status) && (
+                    <div className="pt-4 border-t">
+                      <TransactionList dealId={selectedDeal._id} />
+                    </div>
+                  )}
 
                   {/* --- DYNAMIC ACTION BUTTONS --- */}
                   <div className="flex flex-wrap justify-end gap-2 pt-4 border-t">

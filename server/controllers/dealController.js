@@ -213,40 +213,46 @@ export const updateDealByInvestor = async (req, res) => {
   } catch (error) { res.status(500).json({ message: 'Failed to update deal' }); }
 };
 
-// Get all transactions for a logged-in entrepreneur
+// Get all transactions FOR a logged-in entrepreneur
 export const getTransactionsForEntrepreneur = async (req, res) => {
   try {
     const entrepreneurId = req.user._id;
-
-    // 1. Find all deals where the user is the entrepreneur
     const deals = await Deal.find({ entrepreneurId: entrepreneurId }).select('_id');
-
-    // 2. Extract just the IDs of those deals
     const dealIds = deals.map(deal => deal._id);
-
-    // 3. Find all transactions where the dealId is in our list of deal IDs
-    const transactions = await Transaction.find({ dealId: { $in: dealIds } });
+    const transactions = await Transaction.find({ dealId: { $in: dealIds } })
+      // Populate the deal information for each transaction
+      .populate({
+        path: 'dealId',
+        select: 'startupName investorId', // Select fields we need from the Deal
+        populate: {
+          path: 'investorId', // Further populate the investor within the deal
+          select: 'name'
+        }
+      })
+      .sort({ date: -1 });
 
     res.status(200).json(transactions);
-  } catch (error) {
-    console.error("Error fetching transactions for entrepreneur:", error);
-    res.status(500).json({ message: 'Failed to fetch transactions' });
-  }
+  } catch (error) { res.status(500).json({ message: 'Failed to fetch transactions' }); }
 };
 
 // Get all transactions SENT BY a logged-in investor
 export const getTransactionsForInvestor = async (req, res) => {
   try {
     const investorId = req.user._id;
-
-    // Find all transactions where the investorId matches the current user
-    const transactions = await Transaction.find({ investorId: investorId });
+    const transactions = await Transaction.find({ investorId: investorId })
+      // Populate the deal information for each transaction
+      .populate({
+        path: 'dealId',
+        select: 'startupName entrepreneurId', // Select fields we need from the Deal
+        populate: {
+          path: 'entrepreneurId', // Further populate the entrepreneur within the deal
+          select: 'name'
+        }
+      })
+      .sort({ date: -1 });
 
     res.status(200).json(transactions);
-  } catch (error) {
-    console.error("Error fetching transactions for investor:", error);
-    res.status(500).json({ message: 'Failed to fetch transactions' });
-  }
+  } catch (error) { res.status(500).json({ message: 'Failed to fetch transactions' }); }
 };
 
 // Get all transactions for a specific deal
