@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MessageCircle, Building2, MapPin, UserCircle, BarChart3, Briefcase } from 'lucide-react';
+import { MessageCircle, Building2, MapPin, UserCircle, BarChart3, Briefcase, FileText } from 'lucide-react';
 
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
@@ -10,6 +10,9 @@ import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { Document, fetchMyDocuments, fetchSharedDocuments } from '../../api/documents';
+import { DocumentViewer } from '../../components/documentViewer/DocumentViewer';
 
 // A loading skeleton that mimics the page layout
 const ProfileSkeleton = () => (
@@ -24,6 +27,8 @@ export const InvestorProfile: React.FC = () => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
 
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null);
+
   const { data: investor, isLoading, isError } = useQuery<User>({
     queryKey: ['user', id], // Unique key for this specific user
     queryFn: () => fetchUserById(id!), // API function to call
@@ -33,6 +38,17 @@ export const InvestorProfile: React.FC = () => {
   // Derived state after data is fetched
   const profile = investor?.investorProfile;
   const isCurrentUser = currentUser?._id === investor?._id;
+
+  // const isEntrepreneur = currentUser?.role === 'entrepreneur';
+
+  // --- DYNAMIC document fetching logic (same as entrepreneur profile) ---
+  const documentsQueryFn = isCurrentUser ? fetchMyDocuments : () => fetchSharedDocuments(id!);
+
+  const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<Document[]>({
+    queryKey: ['profileDocuments', id, isCurrentUser],
+    queryFn: documentsQueryFn,
+    enabled: !!id,
+  });
 
   // --- RENDER STATES ---
 
@@ -215,6 +231,45 @@ export const InvestorProfile: React.FC = () => {
               </div>
             </CardBody>
           </Card>
+
+          <Card>
+            <CardHeader><h2 className="text-lg font-medium text-gray-900">Shared Documents</h2></CardHeader>
+            <CardBody>
+              {isLoadingDocuments ? (
+                <p className="text-sm text-gray-500">Loading documents...</p>
+              ) : documents.length > 0 ? (
+                <div className="space-y-3">
+                  {documents.map(doc => (
+                    <a
+                      key={doc._id}
+                      onClick={() => setViewingDoc(doc)}
+                      className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="p-2 bg-primary-50 rounded-md mr-3">
+                        <FileText size={18} className="text-primary-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
+                        <p className="text-xs text-gray-500">Updated {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}</p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">
+                    This investor has not shared any documents with you.
+                  </p>
+                  {isCurrentUser && (
+                    <Button size="sm" className="mt-2" onClick={() => navigate('/documents')}>Manage Documents</Button>
+                  )}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
+          {/* Render the viewer modal */}
+          <DocumentViewer doc={viewingDoc} onClose={() => setViewingDoc(null)} />
 
           {/* Stats */}
           <Card>

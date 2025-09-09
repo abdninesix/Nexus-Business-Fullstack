@@ -36,7 +36,6 @@ const modalStyles = {
         zIndex: 51, // Even higher z-index for the modal content itself
     },
 };
-Modal.setAppElement('#root');
 
 export const CalendarPage: React.FC = () => {
     const queryClient = useQueryClient();

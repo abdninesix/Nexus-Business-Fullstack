@@ -14,7 +14,6 @@ import { Avatar } from '../../components/ui/Avatar';
 import { fetchReceivedDeals, updateDealStatus, Deal, Transaction, fetchReceivedTransactions } from '../../api/deals';
 import { TransactionList } from '../../components/deals/TransactionList';
 
-Modal.setAppElement('#root');
 const modalStyles = {
     overlay: { zIndex: 50, backgroundColor: 'rgba(0, 0, 0, 0.75)' },
     content: { top: '50%', left: '50%', right: 'auto', bottom: 'auto', marginRight: '-50%', transform: 'translate(-50%, -50%)', width: '90%', maxWidth: '500px' },

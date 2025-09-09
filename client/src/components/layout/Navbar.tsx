@@ -87,14 +87,12 @@ export const Navbar: React.FC = () => {
       path: user ? '/notifications' : '/login',
       badge: notifications.length,
     },
-    ...(user?.role === 'entrepreneur' ? [
-      {
-        icon: <FileText size={18} />,
-        text: 'Documents',
-        path: user ? '/documents' : '/login',
-        badge: 0,
-      }]
-      : []),
+    {
+      icon: <FileText size={18} />,
+      text: 'Documents',
+      path: user ? '/documents' : '/login',
+      badge: 0,
+    },
     {
       icon: <Handshake size={18} />,
       text: 'Deals',

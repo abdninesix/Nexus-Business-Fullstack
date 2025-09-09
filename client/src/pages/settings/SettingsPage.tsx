@@ -316,11 +316,11 @@ export const SettingsPage: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-4">Two-Factor Authentication</h3>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{user.isTwoFactorEnabled ? "2FA is currently enabled." : "Add an extra layer of security to your account."}</p>
+                  <div className='flex gap-2'>
                     <Badge variant={user.isTwoFactorEnabled ? 'success' : 'gray'}>
                       {user.isTwoFactorEnabled ? 'Active' : 'Inactive'}
                     </Badge>
+                    <p className="text-sm text-gray-600">{user.isTwoFactorEnabled ? "2FA is currently enabled." : "Add an extra layer of security to your account."}</p>
                   </div>
                   <Button variant={user.isTwoFactorEnabled ? 'error' : 'outline'} onClick={() => toggle2FAMutation.mutate()} isLoading={toggle2FAMutation.isPending}>
                     {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}

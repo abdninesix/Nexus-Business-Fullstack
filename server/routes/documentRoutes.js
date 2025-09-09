@@ -2,10 +2,12 @@ import express from 'express';
 import multer from 'multer';
 import {
   uploadDocument,
-  getDocuments,
   deleteDocument,
-  addSignature,
-  getUserDocuments,
+  shareDocument,
+  signDocument,
+  getSharedDocumentsForUser,
+  getDashboardDocuments,
+  requestSignature,
 } from '../controllers/documentController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,13 +17,15 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Document APIs
 router.post('/', protect, upload.single('file'), uploadDocument);
-router.get('/', protect, getDocuments);
+router.get('/', protect, getDashboardDocuments);
 
 // More specific routes first
-router.get('/user/:userId', protect, getUserDocuments);
-router.patch('/:id/sign', protect, addSignature);
+router.patch('/:id/share', protect, shareDocument);
+router.patch('/:id/request-signature', protect, requestSignature);
+router.patch('/:id/sign', protect, signDocument);
 
 // Generic route last
 router.delete('/:id', protect, deleteDocument);
+router.get('/user/:userId', protect, getSharedDocumentsForUser);
 
 export default router;

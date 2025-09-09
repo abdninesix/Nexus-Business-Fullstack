@@ -65,7 +65,7 @@ export const login = async (req, res) => {
       // --- 2FA ENABLED PATH ---
       const twoFactorCode = crypto.randomInt(100000, 999999).toString();
       user.twoFactorCode = twoFactorCode;
-      user.twoFactorCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+      user.twoFactorCodeExpires = Date.now() + 5 * 60 * 1000; // 10 minutes
 
       user.isOnline = true;
       await user.save();

@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
-import { Bell, Calendar, CalendarX, CheckCircle, DollarSign, Handshake, Info, MessageCircle, UserPlus, X, XCircle } from 'lucide-react';
+import { Bell, Calendar, CalendarX, Check, CheckCircle, DollarSign, Edit, Handshake, Info, MessageCircle, UserPlus, X, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -25,6 +25,8 @@ interface NewTransactionNotification extends BaseNotification { type: 'newTransa
 interface NewConnectionRequestNotification extends BaseNotification { type: 'newConnectionRequest'; relatedData: { investorId: string; }; }
 interface ConnectionRequestAcceptedNotification extends BaseNotification { type: 'connectionRequestAccepted'; relatedData: { entrepreneurId: string; }; }
 interface ConnectionRequestRejectedNotification extends BaseNotification { type: 'connectionRequestRejected'; relatedData: { entrepreneurId: string; }; }
+interface NewSignatureRequestNotification extends BaseNotification { type: 'newSignatureRequest'; relatedData: { documentId: string; }; }
+interface DocumentSignedNotification extends BaseNotification { type: 'documentSigned'; relatedData: { documentId: string; }; }
 
 // 3. The final Discriminated Union Type
 type LiveNotification =
@@ -37,11 +39,12 @@ type LiveNotification =
     | NewTransactionNotification
     | NewConnectionRequestNotification
     | ConnectionRequestAcceptedNotification
-    | ConnectionRequestRejectedNotification;
+    | ConnectionRequestRejectedNotification
+    | NewSignatureRequestNotification
+    | DocumentSignedNotification
 
 interface SocketContextType {
     socket: Socket | null;
-    setSocket: (socket: Socket | null) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -53,19 +56,10 @@ export const useSocket = () => {
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [socket, setSocket] = useState<Socket | null>(null);
-
-    const value = { socket, setSocket };
-
-    return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
-};
-
-// This is a "headless" component. It renders nothing, but contains all the logic.
-const SocketHandler: React.FC = () => {
     const { user, fetchAndUpdateUnreadCount } = useAuth();
+    const queryClient = useQueryClient();
     const navigate = useNavigate();
-    const queryClient = useQueryClient(); // <-- 4. Get the query client instance
-    const { socket, setSocket } = useSocket();
+    const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -147,6 +141,20 @@ const SocketHandler: React.FC = () => {
                         path = `/profile/entrepreneur/${data.relatedData.entrepreneurId}`;
                         queryClient.invalidateQueries({ queryKey: ['sentRequests'] });
                         break;
+
+                    case 'newSignatureRequest':
+                        icon = <Edit className="text-yellow-500" />;
+                        path = '/documents';
+                        queryClient.invalidateQueries({ queryKey: ['myDocuments'] });
+                        queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] });
+                        break;
+
+                    case 'documentSigned':
+                        icon = <Check className="text-green-500" />;
+                        path = '/documents';
+                        queryClient.invalidateQueries({ queryKey: ['myDocuments'] });
+                        queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] });
+                        break;
                 }
 
                 toast.custom((t) => (
@@ -193,12 +201,16 @@ const SocketHandler: React.FC = () => {
 
             return () => {
                 newSocket.disconnect();
-                setSocket(null);
             };
+        } else {
+            // If user logs out, ensure socket is disconnected and state is cleared
+            if (socket) {
+                socket.disconnect();
+                setSocket(null);
+            }
         }
-    }, [user, queryClient, fetchAndUpdateUnreadCount, navigate]);
+        // Add navigate and queryClient to dependencies
+    }, [user, fetchAndUpdateUnreadCount, navigate, queryClient]);
 
-    return null; // This component does not render any UI
+    return <SocketContext.Provider value={{ socket }}>{children}</SocketContext.Provider>;
 };
-
-export { SocketHandler };

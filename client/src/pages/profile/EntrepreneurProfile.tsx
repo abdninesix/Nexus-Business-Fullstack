@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -12,8 +12,9 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchUserById } from '../../api/users';
 import { User } from '../../types';
 import { fetchRequestStatus, createCollaborationRequest, deleteCollaborationRequest } from '../../api/collaborations';
-import { Document, fetchUserDocuments } from '../../api/documents';
+import { Document, fetchMyDocuments, fetchSharedDocuments } from '../../api/documents';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { DocumentViewer } from '../../components/documentViewer/DocumentViewer';
 
 // A loading skeleton that mimics the page layout
 const ProfileSkeleton = () => (
@@ -29,6 +30,8 @@ export const EntrepreneurProfile: React.FC = () => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
 
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null);
+
   const { data: entrepreneur, isLoading, isError } = useQuery<User>({
     queryKey: ['user', id], // Query key is unique to this user's ID
     queryFn: () => fetchUserById(id!), // Fetch the user data
@@ -40,12 +43,15 @@ export const EntrepreneurProfile: React.FC = () => {
   const isCurrentUser = currentUser?._id === entrepreneur?._id;
   const isInvestor = currentUser?.role === 'investor';
 
+
   // 1. Query to check if a request has already been sent
   const { data: collaborationInfo, refetch: refetchStatus } = useQuery({
     queryKey: ['collaborationStatus', id],
     queryFn: () => fetchRequestStatus(id!),
     enabled: isInvestor && !isCurrentUser && !!id, // Only run for investors viewing this profile
   });
+
+  const isConnected = collaborationInfo?.status === 'accepted';
 
   // 2. Mutation to send a new collaboration request
   const createRequestMutation = useMutation({
@@ -70,9 +76,11 @@ export const EntrepreneurProfile: React.FC = () => {
   });
 
   // 4. Query to fetch user's documents
+  const documentsQueryFn = isCurrentUser ? fetchMyDocuments : () => fetchSharedDocuments(id!);
+
   const { data: documents = [], isLoading: isLoadingDocuments } = useQuery<Document[]>({
-    queryKey: ['documents', id],
-    queryFn: () => fetchUserDocuments(id!),
+    queryKey: ['profileDocuments', id, isCurrentUser],
+    queryFn: documentsQueryFn,
     enabled: !!id, // Only run if the profile ID exists
   });
 
@@ -321,8 +329,9 @@ export const EntrepreneurProfile: React.FC = () => {
               </div>
             </CardBody>
           </Card>
+
           <Card>
-            <CardHeader><h2 className="text-lg font-medium text-gray-900">Documents</h2></CardHeader>
+            <CardHeader><h2 className="text-lg font-medium text-gray-900">Shared Documents</h2></CardHeader>
             <CardBody>
               {isLoadingDocuments ? (
                 <p className="text-sm text-gray-500">Loading documents...</p>
@@ -331,10 +340,8 @@ export const EntrepreneurProfile: React.FC = () => {
                   {documents.map(doc => (
                     <a
                       key={doc._id}
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                      onClick={() => setViewingDoc(doc)}
+                      className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <div className="p-2 bg-primary-50 rounded-md mr-3">
                         <FileText size={18} className="text-primary-700" />
@@ -343,7 +350,6 @@ export const EntrepreneurProfile: React.FC = () => {
                         <h3 className="text-sm font-medium text-gray-900 truncate">{doc.name}</h3>
                         <p className="text-xs text-gray-500">Updated {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}</p>
                       </div>
-                      <Button variant="outline" size="sm">View</Button>
                     </a>
                   ))}
                 </div>
@@ -352,7 +358,8 @@ export const EntrepreneurProfile: React.FC = () => {
                   <p className="text-sm text-gray-500">
                     {isCurrentUser
                       ? "You haven't uploaded any documents yet."
-                      : "Connect with this entrepreneur to view their documents."}
+                      : isConnected ? "This user hasn't shared any documents with you."
+                        : "Connect with this user to view their shared documents."}
                   </p>
                   {isCurrentUser && (
                     <Button size="sm" className="mt-2" onClick={() => navigate('/documents')}>Manage Documents</Button>
@@ -379,6 +386,9 @@ export const EntrepreneurProfile: React.FC = () => {
               )}
             </CardBody>
           </Card>
+
+          {/* Render the viewer modal */}
+          <DocumentViewer doc={viewingDoc} onClose={() => setViewingDoc(null)} />
         </div>
       </div>
     </div>

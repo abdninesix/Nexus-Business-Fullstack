@@ -1,6 +1,7 @@
 import Document from '../models/Document.js';
 import imageKit from '../config/imagekit.js';
-import Collaboration from '../models/Collaboration.js';
+import Notification from '../models/Notification.js';
+import { io, getUserSocketId } from '../server.js';
 
 // Upload a new document
 export const uploadDocument = async (req, res) => {
@@ -30,12 +31,28 @@ export const uploadDocument = async (req, res) => {
 };
 
 // Get all documents for current user
-export const getDocuments = async (req, res) => {
+export const getDashboardDocuments = async (req, res) => {
   try {
-    const documents = await Document.find({ uploadedBy: req.user._id }).sort({ createdAt: -1 });
-    res.json(documents);
+    const userId = req.user._id;
+
+    // Use an $or query to find documents that match ANY of these conditions:
+    // 1. I am the uploader.
+    // 2. I am the designated signer.
+    // 3. The document has been shared with me.
+    const documents = await Document.find({
+      $or: [
+        { uploadedBy: userId },
+        { signer: userId },
+        { sharedWith: userId }
+      ]
+    })
+      .populate('signer', 'name _id') // Populate signer info
+      .populate('uploadedBy', 'name') // Populate uploader info
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(documents);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to fetch dashboard documents' });
   }
 };
 
@@ -61,59 +78,120 @@ export const deleteDocument = async (req, res) => {
   }
 };
 
-// Add signature to a document
-export const addSignature = async (req, res) => {
+// Share a document with another user
+export const shareDocument = async (req, res) => {
   try {
+    const { shareWithUserId } = req.body;
     const document = await Document.findById(req.params.id);
-    if (!document) return res.status(404).json({ message: 'Document not found.' });
+    if (!document || document.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ message: "Document not found or not authorized." });
+    }
 
-    if (!req.file) return res.status(400).json({ message: 'No signature uploaded.' });
-
-    const result = await imageKit.upload({
-      file: req.file.buffer,
-      fileName: req.file.originalname,
-      folder: '/nexus/documents',
-    });
-
-    document.signatureUrl = result.url;
-    document.status = 'signed';
-    await document.save();
-
-    res.json(document);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+    // Add user to the sharedWith array if not already present
+    if (!document.sharedWith.includes(shareWithUserId)) {
+      document.sharedWith.push(shareWithUserId);
+      if (document.status === 'Private') document.status = 'Shared';
+      await document.save();
+    }
+    res.status(200).json(document);
+  } catch (error) { res.status(500).json({ message: 'Failed to share document.' }); }
 };
 
-// Function to get documents for a specific user (publicly, with checks)
-export const getUserDocuments = async (req, res) => {
+// Request a signature (Investor action)
+export const requestSignature = async (req, res) => {
   try {
-    const ownerId = req.params.userId; // The ID of the entrepreneur whose documents we want
-    const requesterId = req.user._id;   // The ID of the person making the request (the logged-in user)
-
-    // Case 1: The user is requesting their own documents
-    if (ownerId === requesterId.toString()) {
-      const documents = await Document.find({ uploadedBy: ownerId }).sort({ createdAt: -1 });
-      return res.status(200).json(documents);
+    const { signerId } = req.body; // The entrepreneur's ID
+    const document = await Document.findById(req.params.id);
+    if (!document || document.uploadedBy.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ message: "Document not found or not authorized." });
     }
 
-    // Case 2: An investor is requesting an entrepreneur's documents
-    // We must check if they are connected (collaboration status is 'accepted')
-    const connection = await Collaboration.findOne({
-      investorId: requesterId,
-      entrepreneurId: ownerId,
-      status: 'accepted',
+    document.signer = signerId;
+    document.status = 'Awaiting Signature';
+    await document.save();
+
+    // --- NOTIFY THE SIGNER ---
+    const notificationMessage = `${req.user.name} has requested your signature on: "${document.name}".`;
+
+    await Notification.create({
+      recipient: signerId,
+      sender: req.user._id,
+      type: 'newSignatureRequest',
+      message: notificationMessage,
+      link: `/documents` // Links to their documents page
     });
 
-    if (connection) {
-      const documents = await Document.find({ uploadedBy: ownerId }).sort({ createdAt: -1 });
-      return res.status(200).json(documents);
+    const signerSocketId = getUserSocketId(signerId);
+    if (signerSocketId) {
+      io.to(signerSocketId).emit("getNotification", {
+        senderName: req.user.name,
+        type: 'newSignatureRequest',
+        message: notificationMessage,
+        createdAt: new Date(),
+        relatedData: { documentId: document._id }
+      });
+    }
+    // --- END NOTIFICATION ---
+
+    res.status(200).json(document);
+  } catch (error) { res.status(500).json({ message: "Failed to request signature." }); }
+};
+
+// Sign a document (Entrepreneur action)
+export const signDocument = async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.id);
+    if (!document || document.signer.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ message: "You are not the designated signer for this document." });
+    }
+    if (document.status !== 'Awaiting Signature') {
+      return res.status(400).json({ message: "Document is not awaiting a signature." });
     }
 
-    // Case 3: The user is not authorized
-    return res.status(200).json([]); // Return an empty array if not authorized, instead of an error
+    document.status = 'Signed';
+    document.signedUrl = document.url; // Mock: re-use the same URL
+    document.signedAt = new Date();
+    await document.save();
 
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch documents' });
-  }
+    // --- NOTIFY THE DOCUMENT OWNER ---
+    const ownerId = document.uploadedBy;
+    const notificationMessage = `${req.user.name} has signed the document: "${document.name}".`;
+
+    await Notification.create({
+      recipient: ownerId,
+      sender: req.user._id,
+      type: 'documentSigned',
+      message: notificationMessage,
+      link: `/documents`
+    });
+
+    const ownerSocketId = getUserSocketId(ownerId.toString());
+    if (ownerSocketId) {
+      io.to(ownerSocketId).emit("getNotification", {
+        senderName: req.user.name,
+        type: 'documentSigned',
+        message: notificationMessage,
+        createdAt: new Date(),
+        relatedData: { documentId: document._id }
+      });
+    }
+    // --- END NOTIFICATION ---
+
+    res.status(200).json(document);
+  } catch (error) { res.status(500).json({ message: "Failed to sign document." }); }
+};
+
+// Get documents FOR another user's profile (e.g., Investor viewing Entrepreneur profile)
+export const getSharedDocumentsForUser = async (req, res) => {
+  try {
+    const ownerId = req.params.userId;
+    const requesterId = req.user._id;
+
+    // Find documents that are owned by the user AND shared with the requester
+    const documents = await Document.find({
+      uploadedBy: ownerId,
+      sharedWith: requesterId
+    });
+    res.status(200).json(documents);
+  } catch (error) { res.status(500).json({ message: 'Failed to fetch shared documents' }); }
 };

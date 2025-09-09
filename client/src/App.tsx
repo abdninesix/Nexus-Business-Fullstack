@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
-import { SocketHandler, SocketProvider } from './context/SocketContext';
+import Modal from 'react-modal';
 
 // Layouts
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -41,6 +41,9 @@ import { ChatPage } from './pages/chat/ChatPage';
 import { VideoCallPage } from './pages/call/VideoCallPage';
 import { CallLobby } from './pages/call/CallLobby';
 import { TransactionsPage } from './pages/deals/TransactionsPage';
+import { SocketProvider } from './context/SocketContext';
+
+Modal.setAppElement('#root');
 
 const DealsRedirect: React.FC = () => {
   const { user } = useAuth();
@@ -52,10 +55,11 @@ const DealsRedirect: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <SocketProvider>
-        <Toaster />
-        <Router>
-          <SocketHandler />
+      <Router>
+
+        <SocketProvider>
+          <Toaster />
+
           <Routes>
             {/* Authentication Routes */}
             <Route element={<PublicRoute />}>
@@ -140,8 +144,10 @@ function App() {
             {/* Catch all other routes and redirect to login */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        </Router>
-      </SocketProvider>
+
+        </SocketProvider>
+
+      </Router>
     </AuthProvider >
   );
 }

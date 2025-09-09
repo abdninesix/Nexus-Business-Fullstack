@@ -1,6 +1,6 @@
 // src/pages/notifications/NotificationsPage.tsx
 import React from 'react';
-import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle, Trash2, Info } from 'lucide-react';
+import { Bell, MessageCircle, UserPlus, DollarSign, Calendar, CalendarX, Handshake, CheckCircle, XCircle, Trash2, Info, Edit, Check } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Card, CardBody } from '../../components/ui/Card';
@@ -68,6 +68,8 @@ export const NotificationsPage: React.FC = () => {
       case 'newConnectionRequest': return <UserPlus size={18} className="text-secondary-600" />;
       case 'connectionRequestAccepted': return <CheckCircle size={18} className="text-green-600" />;
       case 'connectionRequestRejected': return <XCircle size={18} className="text-red-500" />;
+      case 'newSignatureRequest': return <Edit size={18} className="text-yellow-500" />;
+      case 'documentSigned': return <Check size={18} className="text-green-600" />;
       default: return <Bell size={18} className="text-gray-600" />;
     }
   };
@@ -139,7 +141,7 @@ export const NotificationsPage: React.FC = () => {
                       <Trash2 size={16} />
                     </Button>
                   </div>
-                  {!notification.isRead && <div className="w-3 h-3 bg-primary-500 rounded-full ml-auto self-center flex-shrink-0" />}
+                  {!notification.isRead && <div className="size-4 bg-primary-500 rounded-full ml-2 self-center flex-shrink-0" />}
                 </CardBody>
               </Card>
             </Link>

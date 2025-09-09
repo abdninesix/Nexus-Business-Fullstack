@@ -79,6 +79,7 @@ export const Sidebar: React.FC = () => {
     { to: '/entrepreneurs', icon: <Users size={20} />, text: 'Find Startups' },
     { to: '/messages', icon: <MessageCircle size={20} />, text: 'Messages', badge: unreadMessageCount },
     { to: '/notifications', icon: <Bell size={20} />, text: 'Notifications', badge: unreadNotificationsCount },
+    { to: '/documents', icon: <FileText size={20} />, text: 'Documents' },
     { to: '/deals', icon: <Handshake size={20} />, text: 'Deals' },
     { to: '/transactions', icon: <Receipt size={20} />, text: 'Transactions' },
     { to: '/calendar', icon: <VideoIcon size={20} />, text: 'Meetings' },

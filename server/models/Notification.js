@@ -20,6 +20,10 @@ const notificationSchema = new mongoose.Schema({
             'meetingResponse',
             'meetingConfirmed',
 
+            // Document Notifications
+            'newSignatureRequest',
+            'documentSigned',
+
             // Collaboration Notifications
             'newConnectionRequest',
             'connectionRequestAccepted',
