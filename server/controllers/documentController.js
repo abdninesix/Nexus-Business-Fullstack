@@ -106,6 +106,13 @@ export const requestSignature = async (req, res) => {
       return res.status(404).json({ message: "Document not found or not authorized." });
     }
 
+    if (document.status === 'Awaiting Signature') {
+      return res.status(400).json({ message: "A signature has already been requested for this document." });
+    }
+    if (document.status === 'Signed') {
+      return res.status(400).json({ message: "This document has already been signed." });
+    }
+
     document.signer = signerId;
     document.status = 'Awaiting Signature';
     await document.save();

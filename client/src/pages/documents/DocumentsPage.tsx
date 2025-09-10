@@ -237,7 +237,7 @@ export const DocumentsPage: React.FC = () => {
                     <div key={doc._id} className="flex flex-col sm:flex-row p-4 hover:bg-amber-50 rounded-lg">
                       {/* Icon and Content */}
                       <div className="flex flex-1 items-center">
-                        <div className="p-2 bg-white rounded-lg mr-4">
+                        <div className="h-fit p-2 bg-white rounded-lg mr-4">
                           <FileText size={24} className="text-amber-600" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -253,7 +253,7 @@ export const DocumentsPage: React.FC = () => {
                         </div>
                       </div>
                       {/* Actions */}
-                      <div className="flex justify-end gap-2 mt-3 sm:mt-0">
+                      <div className="flex justify-end gap-2 mt-2 sm:mt-0">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -302,7 +302,7 @@ export const DocumentsPage: React.FC = () => {
                     >
                       {/* Icon + Content */}
                       <div className="flex flex-1">
-                        <div className="p-2 bg-primary-50 rounded-lg mr-4">
+                        <div className="h-fit p-2 bg-primary-50 rounded-lg mr-4">
                           <FileText size={24} className="text-primary-600" />
                         </div>
 
@@ -319,7 +319,7 @@ export const DocumentsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 mt-3 sm:mt-0">
+                      <div className="flex justify-end gap-2 mt-2 sm:mt-0">
                         <Button size="sm" variant="ghost" onClick={() => setViewingDoc(doc)}><View size={18} /></Button>
                         <Button size="sm" variant="ghost" onClick={() => setShareActionDoc(doc)}><Share2 size={18} /></Button>
                         {doc.status === 'Signed' &&
@@ -344,15 +344,29 @@ export const DocumentsPage: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Manage "{shareActionDoc.name}"</h2>
             <p className="text-sm text-gray-600">Select a connection to share with or request a signature from.</p>
-            <select onChange={e => setSelectedConnectionId(e.target.value)} className="w-full p-2 border rounded-md">
-              <option>-- Select a Connection --</option>
-              {connections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-            </select>
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={() => setShareActionDoc(null)}>Cancel</Button>
-              {isInvestor && <Button leftIcon={<Send size={16} />} onClick={handleRequestSignature}>Request Signature</Button>}
-              <Button leftIcon={<UserPlus size={16} />} onClick={handleShare}>Share Access</Button>
-            </div>
+            {['Private', 'Shared'].includes(shareActionDoc.status) ? (
+              <>
+                <select onChange={e => setSelectedConnectionId(e.target.value)} className="w-full p-2 border rounded-md">
+                  <option>-- Select a Connection --</option>
+                  {connections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                </select>
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShareActionDoc(null)}>Cancel</Button>
+                  {isInvestor && <Button leftIcon={<Send size={16} />} onClick={handleRequestSignature}>Request Signature</Button>}
+                  <Button leftIcon={<UserPlus size={16} />} onClick={handleShare}>Share Access</Button>
+                </div>
+              </>
+            ) : (
+              <div className="p-4 bg-gray-100 rounded-md text-center">
+                <p className="text-sm font-medium text-gray-800">
+                  This document cannot be shared.
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Its current status is: <Badge>{shareActionDoc.status}</Badge>
+                </p>
+                <Button variant="outline" className="mt-4" onClick={() => setShareActionDoc(null)}>Close</Button>
+              </div>
+            )}
           </div>
         )}
       </Modal>
