@@ -74,7 +74,7 @@ export const DocumentsPage: React.FC = () => {
   const { data: requests = [] } = useQuery<CollaborationRequest[]>({
     queryKey: [isInvestor ? 'sentRequests' : 'receivedRequests'],
     queryFn: connectionsQueryFn,
-    enabled: !!signActionDoc, // Only fetch when a modal is open
+    // enabled: !!signActionDoc,
   });
 
   const connections = useMemo(() => requests
@@ -343,16 +343,11 @@ export const DocumentsPage: React.FC = () => {
         {shareActionDoc && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Manage "{shareActionDoc.name}"</h2>
-            {isLoading ? (
-              <p>Loading connections...</p>
-            ) : (
-              <>
-                <p className="text-sm text-gray-600">Select a connection to share with or request a signature from.</p>
-                <select onChange={e => setSelectedConnectionId(e.target.value)} className="w-full p-2 border rounded-md">
-                  <option>-- Select a Connection --</option>
-                  {connections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
-              </>)}
+            <p className="text-sm text-gray-600">Select a connection to share with or request a signature from.</p>
+            <select onChange={e => setSelectedConnectionId(e.target.value)} className="w-full p-2 border rounded-md">
+              <option>-- Select a Connection --</option>
+              {connections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+            </select>
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setShareActionDoc(null)}>Cancel</Button>
               {isInvestor && <Button leftIcon={<Send size={16} />} onClick={handleRequestSignature}>Request Signature</Button>}
