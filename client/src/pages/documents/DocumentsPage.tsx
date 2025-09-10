@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Upload, Trash2, Share2, View, UserPlus, Send, PencilIcon } from 'lucide-react';
+import { FileText, Upload, Trash2, Share2, View, UserPlus, Send, PencilIcon, FileCheck } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -320,11 +320,11 @@ export const DocumentsPage: React.FC = () => {
                       </div>
 
                       <div className="flex justify-end gap-2 mt-3 sm:mt-0">
-                        {doc.status === 'Signed'
-                          ? <a href={doc.signedUrl} target="_blank" rel="noreferrer" className="flex items-center"><Button size="sm" variant="ghost" className='h-full'><View size={18} /></Button></a>
-                          : <Button size="sm" variant="ghost" onClick={() => setViewingDoc(doc)}><View size={18} /></Button>
-                        }
+                        <Button size="sm" variant="ghost" onClick={() => setViewingDoc(doc)}><View size={18} /></Button>
                         <Button size="sm" variant="ghost" onClick={() => setShareActionDoc(doc)}><Share2 size={18} /></Button>
+                        {doc.status === 'Signed' &&
+                          <a href={doc.signedUrl} target="_blank" rel="noreferrer" className="flex items-center"><Button size="sm" variant="ghost" className='h-full text-green-600'><FileCheck size={18} /></Button></a>
+                        }
                         <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDelete(doc._id)} isLoading={deleteMutation.isPending && deleteMutation.variables === doc._id}><Trash2 size={18} /></Button>
                       </div>
                     </div>
