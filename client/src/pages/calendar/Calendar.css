@@ -1,0 +1,181 @@
+/* Calendar.css */
+
+/* ============================= */
+/* Base Calendar Styling */
+/* ============================= */
+.modern-calendar {
+    font-family: 'Inter', sans-serif;
+    border-radius: 0;
+    /* ⬅ removed rounded corners */
+    overflow: hidden;
+    background: white;
+}
+
+/* Header (days of week) */
+.rbc-header {
+    background-color: #f9fafb;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #374151;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+/* Current day highlight */
+.rbc-today {
+    background-color: #f0f9ff !important;
+    border: 1px solid #38bdf8 !important;
+}
+
+/* Time slots */
+.rbc-time-slot {
+    border-color: #f3f4f6 !important;
+}
+
+/* ============================= */
+/* Events */
+/* ============================= */
+.rbc-event {
+    background-color: #3b82f6 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    /* ⬅ removed rounded corners */
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white !important;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.rbc-event:hover {
+    background-color: #2563eb !important;
+    transform: scale(1.03);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Selected event */
+.rbc-selected {
+    outline: 2px solid #2563eb !important;
+}
+
+/* ============================= */
+/* Toolbar */
+/* ============================= */
+.rbc-toolbar {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.rbc-toolbar button {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0;
+    /* ⬅ removed rounded corners */
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.rbc-toolbar button:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0369a1;
+}
+
+.rbc-toolbar-label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #111827;
+}
+
+/* ============================= */
+/* Mobile Responsiveness */
+/* ============================= */
+@media (max-width: 640px) {
+
+    /* Keep toolbar buttons inline (so prev/next stay side-by-side) */
+    .rbc-toolbar {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+
+    .rbc-toolbar button {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    /* Make month view cells taller for touch */
+    .rbc-month-row {
+        min-height: 80px !important;
+    }
+
+    /* Shrink text sizes */
+    .rbc-header {
+        font-size: 0.75rem;
+        padding: 0.25rem;
+    }
+
+    .rbc-event {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.3rem;
+    }
+}
+
+/* ============================= */
+/* Dark Mode Support */
+/* ============================= */
+.dark .modern-calendar {
+    background: #1f2937;
+}
+
+.dark .rbc-header {
+    background-color: #111827;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+.dark .rbc-today {
+    background-color: #1e3a8a !important;
+    border-color: #3b82f6 !important;
+}
+
+.dark .rbc-event {
+    background-color: #2563eb !important;
+}
+
+/* Date boxes (month view) */
+.rbc-month-view {
+    border: none !important;
+}
+
+.rbc-month-row {
+    border: none !important;
+}
+
+.rbc-date-cell {
+    padding: 0.5rem;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Dates from other months */
+.rbc-off-range {
+    color: #9ca3af !important;
+}
+
+/* Today’s date number */
+.rbc-now .rbc-button-link {
+    background: #3b82f6;
+    color: white !important;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+}

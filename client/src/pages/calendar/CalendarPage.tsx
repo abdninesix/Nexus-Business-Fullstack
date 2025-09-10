@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './Calendar.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Modal from 'react-modal';
@@ -198,6 +199,7 @@ export const CalendarPage: React.FC = () => {
                         endAccessor="end"
                         style={{ height: '100%' }}
                         onSelectEvent={handleSelectEvent}
+                        className="modern-calendar"
                     />}
             </div>
 
