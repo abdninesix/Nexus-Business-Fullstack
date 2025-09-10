@@ -192,12 +192,12 @@ export const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
-              className="relative inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-50 focus:outline-none"
+              className="relative inline-flex items-center justify-center rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-50 focus:outline-none"
             >
               {isMenuOpen ? (
-                <X className="block h-6 w-6" />
+                <X className="block size-8" />
               ) : (
-                <Menu className="block h-6 w-6" />
+                <Menu className="block size-8" />
               )}
               {(unreadMessageCount + notifications.length > 0) && !isMenuOpen && (
                 <div className="absolute bottom-1 left-1 block h-2.5 w-2.5 rounded-full bg-primary-600 ring-2 ring-white" />
