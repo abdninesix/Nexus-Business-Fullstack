@@ -87,7 +87,7 @@ export const DocumentsPage: React.FC = () => {
     mutationFn: uploadDocument,
     onSuccess: () => {
       toast.success('Document uploaded successfully!');
-      queryClient.invalidateQueries({ queryKey: ['documents'] }); // Refetch the documents list
+      queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] }); // Refetch the documents list
     },
     onError: (error: any) => toast.error(error.response?.data?.message || 'Upload failed.'),
   });
@@ -96,26 +96,26 @@ export const DocumentsPage: React.FC = () => {
     mutationFn: deleteDocument,
     onSuccess: () => {
       toast.success('Document deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['documents'] }); // Refetch the documents list
+      queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] }); // Refetch the documents list
     },
     onError: (error: any) => toast.error(error.response?.data?.message || 'Delete failed.'),
   });
 
   const shareMutation = useMutation({
     mutationFn: shareDocument,
-    onSuccess: () => { toast.success("Document shared!"); queryClient.invalidateQueries({ queryKey: ['myDocuments'] }); setShareActionDoc(null); },
+    onSuccess: () => { toast.success("Document shared!"); queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] }); setShareActionDoc(null); },
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to share.")
   });
 
   const requestSignatureMutation = useMutation({
     mutationFn: requestSignature,
-    onSuccess: () => { toast.success("Signature request sent!"); queryClient.invalidateQueries({ queryKey: ['myDocuments'] }); setShareActionDoc(null); },
+    onSuccess: () => { toast.success("Signature request sent!"); queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] }); setShareActionDoc(null); },
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to send request.")
   });
 
   const signDocumentMutation = useMutation({
     mutationFn: signDocument,
-    onSuccess: () => { toast.success("Document signed successfully!"); queryClient.invalidateQueries({ queryKey: ['myDocuments'] }); setSignActionDoc(null); },
+    onSuccess: () => { toast.success("Document signed successfully!"); queryClient.invalidateQueries({ queryKey: ['dashboardDocuments'] }); setSignActionDoc(null); },
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to sign.")
   });
 
