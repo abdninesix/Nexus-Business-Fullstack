@@ -184,7 +184,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
                 toast.custom((t) => (
                     <div
-                        className={`${t.visible ? 'animate-enter' : 'animate-leave'
+                        className={`${t.visible ? 'animate-toast-enter' : 'animate-toast-leave'
                             } max-w-sm w-full  bg-gray-900 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden cursor-pointer`}
                         onClick={() => {
                             navigate(path);
