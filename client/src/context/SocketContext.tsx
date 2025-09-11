@@ -61,6 +61,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const navigate = useNavigate();
     const [socket, setSocket] = useState<Socket | null>(null);
 
+    const playNotificationSound = () => {
+        const audio = new Audio("/noti.mp3");
+        audio.play().catch((err) => {
+            console.log("Autoplay blocked:", err);
+        });
+    };
+
     useEffect(() => {
         if (user) {
             const socketUrl =
@@ -76,6 +83,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 // Invalidate the 'notifications' query. This tells Tanstack Query to refetch
                 // the data on the NotificationsPage, making it update with the new notification.
                 queryClient.invalidateQueries({ queryKey: ['notifications'] });
+                
+                playNotificationSound(); // Play the notification sound
 
                 let icon = <Bell />;
                 let path = '/notifications';
