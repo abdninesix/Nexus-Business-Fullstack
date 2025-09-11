@@ -62,7 +62,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [socket, setSocket] = useState<Socket | null>(null);
 
     // Inside SocketProvider, before useEffect:
-    const notificationAudio = new Audio("/notification.mp3");
+    const notificationAudio = new Audio("/noti.mp3");
     // Unlock audio on first user click
     useEffect(() => {
         const unlockAudio = () => {
