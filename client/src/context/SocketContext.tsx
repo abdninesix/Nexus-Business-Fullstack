@@ -69,7 +69,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             notificationAudio.play().then(() => {
                 notificationAudio.pause();
                 notificationAudio.currentTime = 0;
-                console.log("🔓 Audio unlocked");
                 window.removeEventListener("click", unlockAudio);
             }).catch(err => console.log("Audio unlock blocked:", err));
         };
