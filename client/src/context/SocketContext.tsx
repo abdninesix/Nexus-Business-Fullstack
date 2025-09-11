@@ -61,12 +61,28 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const navigate = useNavigate();
     const [socket, setSocket] = useState<Socket | null>(null);
 
+    // Inside SocketProvider, before useEffect:
+    const notificationAudio = new Audio("/notification.mp3");
+    // Unlock audio on first user click
+    useEffect(() => {
+        const unlockAudio = () => {
+            notificationAudio.play().then(() => {
+                notificationAudio.pause();
+                notificationAudio.currentTime = 0;
+                console.log("🔓 Audio unlocked");
+                window.removeEventListener("click", unlockAudio);
+            }).catch(err => console.log("Audio unlock blocked:", err));
+        };
+
+        window.addEventListener("click", unlockAudio);
+        return () => window.removeEventListener("click", unlockAudio);
+    }, []);
+    // Helper
     const playNotificationSound = () => {
-        const audio = new Audio("/noti.mp3");
-        audio.play().catch((err) => {
-            console.log("Autoplay blocked:", err);
-        });
+        notificationAudio.currentTime = 0;
+        notificationAudio.play().catch(err => console.log("Play blocked:", err));
     };
+
 
     useEffect(() => {
         if (user) {
@@ -83,7 +99,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 // Invalidate the 'notifications' query. This tells Tanstack Query to refetch
                 // the data on the NotificationsPage, making it update with the new notification.
                 queryClient.invalidateQueries({ queryKey: ['notifications'] });
-                
+
                 playNotificationSound(); // Play the notification sound
 
                 let icon = <Bell />;
