@@ -201,7 +201,7 @@ export const forgotPassword = async (req, res) => {
         ? process.env.CLIENT_URL_PROD
         : process.env.CLIENT_URL_DEV;
 
-    const resetURL = process.env.NODE_ENV === "production" ? `${process.env.CLIENT_URL_PROD}/reset-password/${token}` : `${process.env.CLIENT_URL_DEV}/reset-password/${token}`;
+    const resetURL = `${clientUrl}/reset-password/${token}`;
     await sendEmail({
       to: user.email,
       subject: 'Password Reset',
