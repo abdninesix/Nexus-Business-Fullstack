@@ -196,7 +196,12 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetURL = `http://localhost:5173/reset-password/${token}`;
+    const clientUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.CLIENT_URL_PROD
+        : process.env.CLIENT_URL_DEV;
+
+    const resetURL = process.env.NODE_ENV === "production" ? `${process.env.CLIENT_URL_PROD}/reset-password/${token}` : `${process.env.CLIENT_URL_DEV}/reset-password/${token}`;
     await sendEmail({
       to: user.email,
       subject: 'Password Reset',
